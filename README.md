@@ -3,7 +3,7 @@
    * define a cold wallet address (account) as the entity allow to migrate the data and NAS from temporary deposit contract
    * use normal account to deploy the smart conract 
 
-- Migrate the data to new NAT.js (cold env) -- Need UI design
+- Migrate the data to new NAT.js (cold env) -- **Need UI design**
   * Only the pre-defined specific addresses(accounts) allow to do the migration
   * New deposit will be closed after migration
   * Migration all the data and the NAS into new NAT.js
@@ -17,7 +17,7 @@
   * Use official web wallet to broadcast the RawTranscation file
 
 
--  Deposit NAS get NAT (Cold Envrionment) -- Need UI design
+-  Deposit NAS get NAT (Cold Envrionment) -- **Need UI design**
    * Load keystore & passcode
    * Two input
      - Amount of NAS
