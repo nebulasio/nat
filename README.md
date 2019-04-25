@@ -1,3 +1,24 @@
+### NAT.js
+- Milestone:
+  * simple contract debug tool -- by April 25th -- ping
+  * temporary deposit contract -- by April 26th -- ping
+  * client tool design ready   -- by April 26th, Meng 
+  * contract migrate test      -- by April 26th - Zhuoer 
+  * deposit contract test start  -- April 26th - Liang
+  * code review                   -- April 27th -- Qiyuan
+  * NR data import contract(import, get NR list from contract) -- by April 27th 
+    - research team give us the address list file
+  * multisig update the config -- by April 27th
+  * vote (gonetbulas, campaign) data contract -- by April 29th 
+  * vote logic feature -- by April 30th
+  * airdrop logic feature -- by April 30th
+  * migrate deposit contract to main nat.js -- by Arpil 30th 
+  * code review to qiyuan -- by May 4th
+  * contract migration  -- by May 10th
+  * tempoarary deposit contract deployment -- May 4th
+  * full nat.js testing -- May 5 - 12th
+  * migrate tempoarary deposit into new nat.j.s -- May 13th
+
 ### Temporary NAS/NAT Deposit Contract
 - Smart contract deployment
    * define a cold wallet address (account) as the entity allow to migrate the data and NAS from temporary deposit contract
