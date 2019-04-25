@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Pledge Contract Test</title>
+    <script type="text/javascript" src="../libs/nebulas.js"></script>
+    <script type="text/javascript" src="../neb_context.js"></script>
+    <script type="text/javascript" src="contract.js"></script>
+    <script type="text/javascript" src="test_nat.js"></script>
+
+    <script type="text/javascript">
+        localStorage.clear();
+
+        let pledgeContractAddress = "n1fSCnEm4iTmxeQh31gJVJcNtsXPdS4ByQW";
+        let natContractAddress = "n1EvmW3zzu7zmgoez9uvMMGhPzZ5LCdcFRm";
+
+        let managerAddress = "n1Y46QgEgdpK7hygMmtWtwikJ7kNaC6Dfuh";
+        let customerAddress = "n1YPMjEDMrZhroKmB1xDBhadygwWHC4zTwm";
+
+        BlockchainTool.transfer(null, customerAddress, 1000);
+
+        BlockchainTool.registerContract(pledgeContractAddress, Pledge);
+        BlockchainTool.registerContract(natContractAddress, TestNat);
+
+        function saveTest(value, num) {
+            BlockchainTool.callContract(customerAddress, pledgeContractAddress, value, "pledge", [num]);
+        }
+
+        function exportTest() {
+            BlockchainTool.callContract(managerAddress, pledgeContractAddress, 0, "stopAndExportDataToNat", [natContractAddress]);
+        }
+
+        function getPledgesTest() {
+            let r = BlockchainTool.callContract(customerAddress, pledgeContractAddress, 0, "getPledges", [0]);
+            alert(JSON.stringify(r));
+        }
+
+        function main() {
+            try {
+                saveTest(123, 2);
+                exportTest();
+                getPledgesTest();
+            } catch (e) {
+                alert(e);
+            }
+        }
+
+        main();
+
+
+    </script>
+</head>
+<body>
+
+</body>
+</html>

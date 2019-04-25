@@ -1,0 +1,5 @@
+function NrDataSource() {
+
+}
+
+NrDataSource.prototype = {};

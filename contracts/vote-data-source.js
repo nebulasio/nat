@@ -1,0 +1,5 @@
+function VoteDataSource() {
+
+}
+
+VoteDataSource.prototype = {};
