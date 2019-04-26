@@ -40,9 +40,9 @@ let NasBalance = new MapStorage("__NEBULAS_BALANCE", function (val) {
     }
 }, function (val) {
     if (!val) {
-        return NebUtils.toBigNumber(0);
+        return new BigNumber(0);
     }
-    return NebUtils.toBigNumber(val);
+    return new BigNumber(val);
 });
 
 
@@ -90,7 +90,7 @@ let BlockchainTool = {
         return {
             from: from,
             to: to,
-            value: NebUtils.toBigNumber(value)
+            value: new BigNumber(value)
         };
     },
 
@@ -99,7 +99,7 @@ let BlockchainTool = {
     },
 
     transfer: function (from, to, val) {
-        val = NebUtils.toBigNumber(val);
+        val = new BigNumber(val);
         if (from) {
             let b = NasBalance.get(from);
             if (val.gt(b)) {
@@ -127,7 +127,7 @@ let BlockchainTool = {
 
 function BlockContract(address) {
     this.address = address;
-    this.amount = NebUtils.toBigNumber(0);
+    this.amount = new BigNumber(0);
     let clz = BlockchainTool._getContract(address);
     if (!clz) {
         throw ("contract " + address + " not found.");
@@ -137,7 +137,7 @@ function BlockContract(address) {
 
 BlockContract.prototype = {
     value: function (amount) {
-        this.amount = NebUtils.toBigNumber(amount);
+        this.amount = new BigNumber(amount);
     },
     call: function () {
         let tx = BlockchainTool._newTransaction(Blockchain.transaction.to, this.address, this.amount);
@@ -158,6 +158,47 @@ BlockContract.prototype = {
  *
  */
 
+function BigNumber(n) {
+    this.v = NebUtils.toBigNumber(n);
+}
+
+BigNumber.prototype = {
+    plus: function (n) {
+        this.v = this.v.plus(new BigNumber(n).v);
+        return this;
+    },
+    sub: function (n) {
+        this.v = this.v.sub(new BigNumber(n).v);
+        return this;
+    },
+    mul: function (n) {
+        this.v = this.v.mul(new BigNumber(n).v);
+        return this;
+    },
+    div: function (n) {
+        this.v = this.v.div(new BigNumber(n).v);
+        return this;
+    },
+    pow: function (n) {
+        this.v = this.v.pow(new BigNumber(n).v);
+        return this;
+    },
+    gt: function (n) {
+        return this.v.gt(new BigNumber(n).v);
+    },
+    gte: function (n) {
+        return this.v.gte(new BigNumber(n).v);
+    },
+    lt: function (n) {
+        return this.v.lt(new BigNumber(n).v);
+    },
+    lte: function (n) {
+        return this.v.lte(new BigNumber(n).v);
+    },
+    toString: function (base) {
+        return this.v.toString(base);
+    }
+};
 
 let LocalContractStorage = {
 

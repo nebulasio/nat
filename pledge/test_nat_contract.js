@@ -13,6 +13,15 @@ function TestNat() {
 
 TestNat.prototype = {
     receivePledgeData: function (data) {
-        console.log("onReceiveData", data);
+    },
+
+    accept: function () {
+        Event.Trigger("transfer", {
+            Transfer: {
+                from: Blockchain.transaction.from,
+                to: Blockchain.transaction.to,
+                value: Blockchain.transaction.value,
+            }
+        });
     }
 };

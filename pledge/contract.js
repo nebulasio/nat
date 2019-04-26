@@ -82,7 +82,7 @@ function Pledge() {
             return JSON.stringify(obj);
         }
     });
-    this._managers = ["n1Y46QgEgdpK7hygMmtWtwikJ7kNaC6Dfuh"];
+    this._managers = ["n1Z6MhSZa321SnpiKfUWiybQSG3GCmRHunv"];
     this._keyAddresses = "addresses";
     this._keyCanPledge = "can_pledge";
     this._addressList = new PageList(this.storage, "addresses");
@@ -130,12 +130,13 @@ Pledge.prototype = {
         if (!this._canPledge()) {
             throw ("This contract no longer accepts new pledges, please use the official new contract.");
         }
-        if (NebUtils.toBigNumber(0).gte(Blockchain.transaction.value)) {
-            throw ("The amount must be greater than 0");
+        let min = new BigNumber(1).mul(new BigNumber(10).pow(18));
+        if (min.gt(Blockchain.transaction.value)) {
+            throw ("The amount must be greater than 1 NAS");
         }
         let a = Blockchain.transaction.from;
         let b = Blockchain.block.height;
-        let v = NebUtils.toBigNumber(Blockchain.transaction.value);
+        let v = new BigNumber(Blockchain.transaction.value).toString(10);
         let p = this._getPledge(a);
         if (p.length === 0) {
             this._addAddress(Blockchain.transaction.from);
@@ -174,5 +175,17 @@ Pledge.prototype = {
             r.push(this._getPledge(as[i]));
         }
         return r;
+    },
+
+    accept: function () {
+        Event.Trigger("transfer", {
+            Transfer: {
+                from: Blockchain.transaction.from,
+                to: Blockchain.transaction.to,
+                value: Blockchain.transaction.value,
+            }
+        });
     }
 };
+
+module.exports = Pledge;

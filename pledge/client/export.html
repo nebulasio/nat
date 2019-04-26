@@ -2,13 +2,13 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Pledge</title>
+    <title>Export</title>
     <script type="text/javascript" src="libs/nebulas.js"></script>
     <script type="text/javascript" src="libs/FileSaver.min.js"></script>
     <script type="text/javascript" src="libs/jquery-3.3.1.min.js"></script>
     <script type="text/javascript" src="libs/bootstrap-4.0.0-dist/js/bootstrap.js"></script>
     <script type="text/javascript" src="js/common.js"></script>
-    <script type="text/javascript" src="js/pledge.js"></script>
+    <script type="text/javascript" src="js/export.js"></script>
     <link rel="stylesheet" type="text/css" href="libs/bootstrap-4.0.0-dist/css/bootstrap.css"/>
     <link rel="stylesheet" type="text/css" href="css/app.css"/>
 </head>
@@ -71,30 +71,15 @@
 
     <div class="row" style="margin-top: 5px">
         <div class="col-6">
-            <div class="input_title">Contract:</div>
+            <div class="input_title">Pledge contract:</div>
             <div class="edt_container">
                 <input id="contract" type="text" readonly="readonly"/>
             </div>
         </div>
         <div class="col-6">
-            <div class="input_title">Pledge nas amount:</div>
+            <div class="input_title">NAT contract:</div>
             <div class="edt_container">
-                <input id="amount" type="text"/>
-            </div>
-        </div>
-    </div>
-
-    <div class="row" style="margin-top: 5px">
-        <div class="col-6">
-            <div class="input_title">Number of pledge cycles:</div>
-            <div class="edt_container">
-                <input id="num" type="text"/>
-            </div>
-        </div>
-        <div class="col-6">
-            <div class="input_title">Nonce:</div>
-            <div class="edt_container">
-                <input id="nonce2" type="text"/>
+                <input id="nat_contract" type="text"/>
             </div>
         </div>
     </div>
@@ -110,6 +95,15 @@
             <div class="input_title">Gas limit:</div>
             <div class="edt_container">
                 <input id="gas_limit" type="text" value="200000"/>
+            </div>
+        </div>
+    </div>
+
+    <div class="row" style="margin-top: 5px">
+        <div class="col-12">
+            <div class="input_title">Nonce:</div>
+            <div class="edt_container">
+                <input id="nonce2" type="text"/>
             </div>
         </div>
     </div>

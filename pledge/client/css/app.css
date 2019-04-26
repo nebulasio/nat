@@ -1,0 +1,76 @@
+.file {
+    opacity: 0;
+}
+
+input {
+    padding: 0 10px;
+    border-radius: 3px;
+    border-width: 1px;
+    border-color: #cccccc;
+    border-style: solid;
+    background-color: transparent;
+    color: #333333;
+    font-size: 14px;
+}
+
+textarea {
+    height: 100px;
+    padding: 5px 10px;
+    border-radius: 3px;
+    border-width: 1px;
+    border-color: #cccccc;
+    border-style: solid;
+    background-color: transparent;
+    color: #333333;
+    font-size: 14px;
+}
+
+button {
+    width: 100%;
+    height: 40px;
+    border-radius: 3px;
+    border-width: 0;
+    background-color: #333333;
+    color: white;
+    cursor: pointer;
+}
+
+.edt_container {
+    height: 40px;
+    width: 100%;
+}
+
+.edt_container button {
+    height: 100%;
+    width: 100%;
+}
+
+.edt_container input {
+    height: 100%;
+    width: 100%;
+}
+
+.edt_container textarea {
+    width: 100%;
+    height: 100%;
+}
+
+.edt_container .mask {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 40px;
+    line-height: 40px;
+}
+
+.input_title {
+    padding: 5px 0;
+}
+
+.step {
+    font-size: 24px;
+    font-weight: bold;
+    color: #333333;
+    margin-top: 20px;
+}
