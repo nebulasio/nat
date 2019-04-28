@@ -17,7 +17,7 @@ var chainId = 1001;
 var explorerLink = "https://explorer.nebulas.io/#/testnet/tx/";
 neb.setRequest(new nebulas.HttpRequest("https://testnet.nebulas.io"));
 
-var pledgeContract = "n1mBSJqcvPoiMeLFN9CFxmXsjDNB9bJhm1W";
+var pledgeContract = "n1paHD9dSA73XivhrgXbyAe4uBdpiznZ5ZJ";
 
 var fileName = null;
 var keystore = null;

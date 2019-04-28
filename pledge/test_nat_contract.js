@@ -123,10 +123,12 @@ TestNat.prototype = {
     },
 
     receiveAddress: function (addresses) {
+        // TODO: Add permission verification
         this._pledgeAddressList.addPage(addresses);
     },
 
     receivePledge: function (address, pledges) {
+        // TODO: Add permission verification
         this._setPledge(address, pledges);
     },
 
