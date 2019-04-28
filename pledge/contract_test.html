@@ -17,7 +17,9 @@
         let managerAddress = "n1Z6MhSZa321SnpiKfUWiybQSG3GCmRHunv";
         let customerAddress = "n1YPMjEDMrZhroKmB1xDBhadygwWHC4zTwm";
 
-        BlockchainTool.transfer(null, customerAddress, new BigNumber(1000).mul(new BigNumber(10).pow(18)));
+        let unit = new BigNumber(10).pow(18);
+
+        BlockchainTool.transfer(null, customerAddress, new BigNumber(1000).mul(unit));
 
         BlockchainTool.registerContract(pledgeContractAddress, Pledge);
         BlockchainTool.registerContract(natContractAddress, TestNat);
@@ -26,41 +28,54 @@
             BlockchainTool.callContract(customerAddress, pledgeContractAddress, value, "pledge", [num]);
         }
 
-        function stopTest() {
-            BlockchainTool.callContract(managerAddress, pledgeContractAddress, 0, "stop", []);
+        function stopAndExportTest() {
+            BlockchainTool.callContract(managerAddress, pledgeContractAddress, 0, "stopAndExportDataToNat", [natContractAddress]);
         }
 
-        function exportTest() {
-            BlockchainTool.callContract(managerAddress, pledgeContractAddress, 0, "exportDataToNat", [natContractAddress]);
+        function getPledgeAddressIndexesTest() {
+            let r = BlockchainTool.callContract(customerAddress, pledgeContractAddress, 0, "getAddressIndexes", []);
+            alert("PledgeAddressIndexes:\n" + JSON.stringify(r));
+        }
+
+        function getPledgeAddressesTest() {
+            let r = BlockchainTool.callContract(customerAddress, pledgeContractAddress, 0, "getAddresses", [0]);
+            alert("PledgeAddresses:\n" + JSON.stringify(r));
         }
 
         function getPledgesTest() {
             let r = BlockchainTool.callContract(customerAddress, pledgeContractAddress, 0, "getPledgeWithAddress", [customerAddress]);
-            alert(JSON.stringify(r));
+            alert("Pledges:\n" + JSON.stringify(r));
+        }
+
+        function getReceiveAddressIndexesTest() {
+            let r = BlockchainTool.callContract(customerAddress, natContractAddress, 0, "getAddressIndexes", []);
+            alert("ReceiveAddressIndexes:\n" + JSON.stringify(r));
         }
 
         function getReceiveAddressesTest() {
             let r = BlockchainTool.callContract(customerAddress, natContractAddress, 0, "getAddresses", [0]);
-            alert(JSON.stringify(r));
+            alert("ReceiveAddresses:\n" + JSON.stringify(r));
         }
 
         function getReceivePledgeTest() {
             let r = BlockchainTool.callContract(customerAddress, natContractAddress, 0, "getPledgeWithAddress", [customerAddress]);
-            alert(JSON.stringify(r));
+            alert("ReceivePledge:\n" + JSON.stringify(r));
         }
 
         function recyclingTest() {
             BlockchainTool.callContract(customerAddress, natContractAddress, 0, "recycling", []);
-            alert(BlockchainTool.getBalance(managerAddress).div(new BigNumber(10).pow(18)).toString(10));
+            alert(BlockchainTool.getBalance(managerAddress).div(unit).toString(10));
         }
 
         function main() {
             try {
-                saveTest(new BigNumber(2).mul(new BigNumber(10).pow(18)), 1);
-                saveTest(new BigNumber(1.52).mul(new BigNumber(10).pow(18)), 1);
-                stopTest();
-                exportTest();
+                saveTest(new BigNumber(2).mul(unit), 1);
+                saveTest(new BigNumber(1.52).mul(unit), 2);
+                stopAndExportTest();
+                getPledgeAddressIndexesTest();
+                getPledgeAddressesTest();
                 getPledgesTest();
+                getReceiveAddressIndexesTest();
                 getReceiveAddressesTest();
                 getReceivePledgeTest();
                 recyclingTest();

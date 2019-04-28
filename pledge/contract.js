@@ -154,14 +154,7 @@ Pledge.prototype = {
         this._setPledge(a, p);
     },
 
-    stop: function () {
-        if (this._managers.indexOf(Blockchain.transaction.from) < 0) {
-            throw ("No permission");
-        }
-        this._stopPledge();
-    },
-
-    exportDataToNat: function (natContractAddress) {
+    stopAndExportDataToNat: function (natContractAddress) {
         if (this._managers.indexOf(Blockchain.transaction.from) < 0) {
             throw ("No permission");
         }
@@ -183,6 +176,7 @@ Pledge.prototype = {
         }
         let b = Blockchain.getAccountState(Blockchain.transaction.to).balance;
         Blockchain.transfer(natContractAddress, b);
+        this._stopPledge();
         this._setIsExported();
     },
 
