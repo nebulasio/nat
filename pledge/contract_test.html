@@ -26,27 +26,50 @@
             BlockchainTool.callContract(customerAddress, pledgeContractAddress, value, "pledge", [num]);
         }
 
+        function stopTest() {
+            BlockchainTool.callContract(managerAddress, pledgeContractAddress, 0, "stop", []);
+        }
+
         function exportTest() {
-            BlockchainTool.callContract(managerAddress, pledgeContractAddress, 0, "stopAndExportDataToNat", [natContractAddress]);
+            BlockchainTool.callContract(managerAddress, pledgeContractAddress, 0, "exportDataToNat", [natContractAddress]);
         }
 
         function getPledgesTest() {
-            let r = BlockchainTool.callContract(customerAddress, pledgeContractAddress, 0, "getPledges", [0]);
+            let r = BlockchainTool.callContract(customerAddress, pledgeContractAddress, 0, "getPledgeWithAddress", [customerAddress]);
             alert(JSON.stringify(r));
+        }
+
+        function getReceiveAddressesTest() {
+            let r = BlockchainTool.callContract(customerAddress, natContractAddress, 0, "getAddresses", [0]);
+            alert(JSON.stringify(r));
+        }
+
+        function getReceivePledgeTest() {
+            let r = BlockchainTool.callContract(customerAddress, natContractAddress, 0, "getPledgeWithAddress", [customerAddress]);
+            alert(JSON.stringify(r));
+        }
+
+        function recyclingTest() {
+            BlockchainTool.callContract(customerAddress, natContractAddress, 0, "recycling", []);
+            alert(BlockchainTool.getBalance(managerAddress).div(new BigNumber(10).pow(18)).toString(10));
         }
 
         function main() {
             try {
                 saveTest(new BigNumber(2).mul(new BigNumber(10).pow(18)), 1);
+                saveTest(new BigNumber(1.52).mul(new BigNumber(10).pow(18)), 1);
+                stopTest();
                 exportTest();
                 getPledgesTest();
+                getReceiveAddressesTest();
+                getReceivePledgeTest();
+                recyclingTest();
             } catch (e) {
                 alert(e);
             }
         }
 
         main();
-
 
     </script>
 </head>

@@ -111,6 +111,10 @@ let BlockchainTool = {
         this._addNas(to, val);
     },
 
+    getBalance: function (address) {
+        return NasBalance.get(address);
+    },
+
     callContract: function (from, contract, value, func, args) {
         this._pushTransaction(this._newTransaction(from, contract, value));
         try {
@@ -279,4 +283,8 @@ let Blockchain = {
 let Event = {
     Trigger: function (n, o) {
     }
+};
+
+let module = {
+    exports: null
 };
