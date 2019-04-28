@@ -7,7 +7,7 @@ function _generateCheck() {
 
     var a = amount.split(".");
     var amountValid = a.length === 1 || a[1].length <= 18;
-    amountValid = amountValid && /^\d+(.\d+)?$/.test(amount);
+    amountValid = amountValid && /^\d+(\.\d+)?$/.test(amount);
     if (!amountValid) {
         setError($("#amount"), "Invalid value! The minimum unit is wei (1^-18atp) ");
         r = false;

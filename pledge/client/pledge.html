@@ -25,7 +25,7 @@
         <div class="col-6">
             <div class="input_title">From Address:</div>
             <div class="edt_container">
-                <input id="from_address" type="text"/>
+                <input id="from_address" type="text" valid="address|Please enter the correct neb address"/>
             </div>
         </div>
         <div class="col-6" id="balance_container">
@@ -68,7 +68,7 @@
     <div id="pwd_container">
         <div class="input_title">Password:</div>
         <div class="edt_container">
-            <input id="pwd" type="password"/>
+            <input id="pwd" type="password" valid="required|Please input password."/>
         </div>
     </div>
 
@@ -82,7 +82,7 @@
         <div class="col-6">
             <div class="input_title">Pledge nas amount:</div>
             <div class="edt_container">
-                <input id="amount" type="text"/>
+                <input id="amount" type="text" valid="amount,pledgeAmount"/>
                 <div class="tips">NAS</div>
             </div>
         </div>
@@ -92,14 +92,14 @@
         <div class="col-6">
             <div class="input_title">Number of pledge cycles:</div>
             <div class="edt_container">
-                <input id="num" type="text"/>
+                <input id="num" type="text" valid="int|Please enter the correct pledge cycle."/>
                 <div class="tips">周(7天)</div>
             </div>
         </div>
         <div class="col-6">
             <div class="input_title">Nonce:</div>
             <div class="edt_container">
-                <input id="nonce2" type="text"/>
+                <input id="nonce2" type="text" valid="int|Please enter the correct nonce."/>
             </div>
         </div>
     </div>
@@ -108,13 +108,13 @@
         <div class="col-6">
             <div class="input_title">Gas price:</div>
             <div class="edt_container">
-                <input id="gas_price2" type="text" value="1000000"/>
+                <input id="gas_price2" type="text" value="1000000" valid="int|Please enter the correct gas price."/>
             </div>
         </div>
         <div class="col-6">
             <div class="input_title">Gas limit:</div>
             <div class="edt_container">
-                <input id="gas_limit" type="text" value="200000"/>
+                <input id="gas_limit" type="text" value="200000" valid="int|Please enter the correct gas limit."/>
             </div>
         </div>
     </div>
@@ -129,7 +129,7 @@
     <div class="step row">
         <div class="col-12">
             <div class="edt_container" style="height: 100px;">
-                <textarea id="output"></textarea>
+                <textarea id="output" valid="required|Please enter the raw transaction."></textarea>
             </div>
         </div>
     </div>

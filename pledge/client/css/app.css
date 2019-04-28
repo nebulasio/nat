@@ -1,7 +1,5 @@
 html {
     height: 100%;
-    padding: 0;
-    margin: 0;
 }
 
 body {
@@ -49,6 +47,10 @@ button {
     cursor: pointer;
 }
 
+.neb_boot_box{
+    color: #333333;
+}
+
 .edt_container {
     height: 40px;
     width: 100%;
@@ -68,6 +70,7 @@ button {
 .edt_container .tips {
     height: 40px;
     line-height: 40px;
+    font-size: 12px;
     text-align: right;
     padding-right: 10px;
     position: absolute;

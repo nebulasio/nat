@@ -1,15 +1,8 @@
 function _generateCheck() {
-    var r = unlock(),
-        r1 = checkNonceAndGas();
-    r = r && r1;
-    var natContract = $("#nat_contract").val();
-    if (!NebAccount.isValidAddress(natContract)) {
-        setError($("#nat_contract"), "Please enter the correct neb address");
-        r = false;
-    } else {
-        cancelError($("#nat_contract"));
-    }
-    return r;
+    var r1 = unlock(),
+        r2 = checkNonceAndGas(),
+        r3 = _validInput($("#nat_contract"));
+    return r1 && r2 && r3;
 }
 
 function generate() {

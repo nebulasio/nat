@@ -63,10 +63,113 @@ $(function () {
     $("#balance_container").hide();
     $("#save_container").hide();
     $("#contract").val(pledgeContract);
+
+    bootbox.setDefaults({
+        className: "neb_boot_box"
+    });
+
+    $("textarea,input[type='text'],input[type='password']").on("input propertychange focus", function () {
+        _validInput($(this));
+    });
 });
+
+function _validInput(input) {
+    var valid = input.attr("valid");
+    if (!valid) {
+        return true;
+    }
+    var vs = valid.split(",");
+    for (var i = 0; i < vs.length; ++i) {
+        var v = vs[i];
+        var array = v.split("|");
+        var r = false;
+        if (array.length > 1) {
+            r = _valid(input, array[0], array[1]);
+        } else {
+            r = _valid(input, array[0], null);
+        }
+        if (!r) {
+            return false;
+        }
+    }
+    return true;
+}
+
+function _valid(input, method, msg) {
+    if (method === "required") {
+        if (input.val().length === 0) {
+            setError(input, msg);
+            return false;
+        } else {
+            cancelError(input);
+        }
+    } else if (method === "int") {
+        if (!_isInt(input.val())) {
+            setError(input, msg);
+            return false;
+        } else {
+            cancelError(input);
+        }
+    } else if (method === "amount") {
+        var amount = input.val();
+        var a = amount.split(".");
+        var amountValid = a.length === 1 || a[1].length <= 18;
+        amountValid = amountValid && _isFloat(amount);
+        if (!amountValid) {
+            if (!msg) {
+                msg = "Please enter the correct amount of NAS.";
+            }
+            setError(input, msg);
+            return false;
+        } else {
+            cancelError(input);
+        }
+    } else if (method === "pledgeAmount") {
+        var amount = input.val();
+        var valid = parseFloat(amount) >= 1;
+        if (!valid) {
+            if (!msg) {
+                msg = "The amount cannot be less than 1NAS";
+            }
+            setError(input, msg);
+            return false;
+        } else {
+            cancelError(input);
+        }
+    } else if (method === "amount") {
+        var amount = input.val();
+        var a = amount.split(".");
+        var amountValid = a.length === 1 || a[1].length <= 18;
+        amountValid = amountValid && _isFloat(amount);
+        if (!amountValid) {
+            if (!msg) {
+                msg = "Please enter the correct amount of NAS.";
+            }
+            setError(input, msg);
+            return false;
+        } else {
+            cancelError(input);
+        }
+    } else if (method === "address") {
+        if (!NebAccount.isValidAddress(input.val())) {
+            if (!msg) {
+                msg = "Please enter the correct neb address";
+            }
+            setError(input, msg);
+            return false;
+        } else {
+            cancelError(input);
+        }
+    }
+    return true;
+}
 
 function _isInt(val) {
     return /^\d+$/.test(val);
+}
+
+function _isFloat(val) {
+    return /^\d+(\.\d+)?$/.test(val);
 }
 
 function _unlockCheck() {
@@ -75,15 +178,7 @@ function _unlockCheck() {
         return false;
     }
     cancelError($("#btn_keystore"));
-    var r = true;
-    var pwd = $("#pwd").val();
-    if (!pwd || pwd.length === 0) {
-        setError($("#pwd"), "Please input password.");
-        r = false;
-    } else {
-        cancelError($("#pwd"));
-    }
-    return r;
+    return _validInput($("#pwd"));
 }
 
 function _updateKeystoreText() {
@@ -98,46 +193,18 @@ function _updateKeystoreText() {
 }
 
 function _checkGetInfo() {
-    if (!NebAccount.isValidAddress($("#from_address").val())) {
-        setError($("#from_address"), "Please enter the correct neb address");
-        return false;
-    }
-    cancelError($("#from_address"));
-    return true;
+    return _validInput($("#from_address"));
 }
 
 function _checkSend() {
-    if ($("#output").val().length === 0) {
-        setError($("#output"), "Please enter the raw transaction");
-        return false;
-    }
-    cancelError($("#output"));
-    return true;
+    return _validInput($("#output"));
 }
 
 function checkNonceAndGas() {
-    var r = true;
-    if (!_isInt($("#nonce2").val())) {
-        r = false;
-        setError($("#nonce2"), "Please enter the correct nonce");
-    } else {
-        cancelError($("#nonce2"));
-    }
-
-    if (!_isInt($("#gas_price2").val())) {
-        r = false;
-        setError($("#gas_price2"), "Please enter the correct gas price");
-    } else {
-        cancelError($("#gas_price2"));
-    }
-
-    if (!_isInt($("#gas_limit").val())) {
-        r = false;
-        setError($("#gas_limit"), "Please enter the correct gas limit");
-    } else {
-        cancelError($("#gas_limit"));
-    }
-    return r;
+    var r1 = _validInput($("#nonce2")),
+        r2 = _validInput($("#gas_price2")),
+        r3 = _validInput($("#gas_limit"));
+    return r1 && r2 && r3;
 }
 
 function getInfo() {
@@ -164,6 +231,7 @@ function getInfo() {
                 $("#balance").val(b.toString(10));
                 $("#information").show();
                 $("#balance_container").show();
+                hideAllError();
             })
             .catch(function (e) {
                 hideWaiting();
