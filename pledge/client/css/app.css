@@ -71,6 +71,7 @@ button {
     height: 40px;
     line-height: 40px;
     font-size: 12px;
+    opacity: 0.6;
     text-align: right;
     padding-right: 10px;
     position: absolute;
@@ -97,7 +98,7 @@ button {
 }
 
 .input_title {
-    opacity: 0.8;
+    opacity: 0.6;
     padding: 5px 0;
 }
 

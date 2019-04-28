@@ -136,20 +136,6 @@ function _valid(input, method, msg) {
         } else {
             cancelError(input);
         }
-    } else if (method === "amount") {
-        var amount = input.val();
-        var a = amount.split(".");
-        var amountValid = a.length === 1 || a[1].length <= 18;
-        amountValid = amountValid && _isFloat(amount);
-        if (!amountValid) {
-            if (!msg) {
-                msg = "Please enter the correct amount of NAS.";
-            }
-            setError(input, msg);
-            return false;
-        } else {
-            cancelError(input);
-        }
     } else if (method === "address") {
         if (!NebAccount.isValidAddress(input.val())) {
             if (!msg) {

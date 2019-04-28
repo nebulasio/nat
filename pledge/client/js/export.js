@@ -9,23 +9,21 @@ function generate() {
     if (!_generateCheck()) {
         return;
     }
-    var nonce, gasLimit, gasPrice, natContract, tx;
-    natContract = $("#nat_contract").val();
-    nonce = $("#nonce2").val();
-    gasLimit = $("#gas_limit").val();
-    gasPrice = $("#gas_price2").val();
-
-    var contract = {
-        "source": "",
-        "sourceType": "js",
-        "function": "stopAndExportDataToNat",
-        "args": "[\"" + natContract + "\"]",
-        "binary": "",
-        "type": "call"
-    };
+    var natContract = $("#nat_contract").val(),
+        nonce = $("#nonce2").val(),
+        gasLimit = $("#gas_limit").val(),
+        gasPrice = $("#gas_price2").val(),
+        contract = {
+            "source": "",
+            "sourceType": "js",
+            "function": "stopAndExportDataToNat",
+            "args": "[\"" + natContract + "\"]",
+            "binary": "",
+            "type": "call"
+        };
 
     try {
-        tx = new NebTransaction(parseInt(chainId), account, pledgeContract, "0", parseInt(nonce), gasPrice, gasLimit, contract);
+        var tx = new NebTransaction(parseInt(chainId), account, pledgeContract, "0", parseInt(nonce), gasPrice, gasLimit, contract);
         tx.signTransaction();
         $("#output").val(tx.toProtoString());
         didGenerate();
