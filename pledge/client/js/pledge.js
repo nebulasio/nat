@@ -1,25 +1,33 @@
 function _generateCheck() {
-    if (!unlock()) {
-        return false;
-    }
+    var r = unlock(),
+        r1 = checkNonceAndGas();
+    r = r && r1;
     var amount = $("#amount").val();
     var num = $("#num").val();
+
     var a = amount.split(".");
     var amountValid = a.length === 1 || a[1].length <= 18;
     amountValid = amountValid && /^\d+(.\d+)?$/.test(amount);
     if (!amountValid) {
-        alert("Invalid value! The minimum unit is wei (1^-18atp) ");
-        return false;
+        setError($("#amount"), "Invalid value! The minimum unit is wei (1^-18atp) ");
+        r = false;
+    } else {
+        cancelError($("#amount"));
     }
     if (NebUtils.toBigNumber(amount).lt(NebUtils.toBigNumber(1))) {
-        alert("The amount must be greater than 1 NAS");
-        return false;
+        setError($("#amount"), "The amount must be greater than 1 NAS");
+        r = false;
+    } else {
+        cancelError($("#amount"));
     }
+
     if (!/^\d+$/.test(num) || parseInt(num) < 1) {
-        alert("Please enter the correct pledge cycle");
-        return false;
+        setError($("#num"), "Please enter the correct pledge cycle");
+        r = false;
+    } else {
+        cancelError($("#num"));
     }
-    return true;
+    return r;
 }
 
 function generate() {
@@ -47,24 +55,8 @@ function generate() {
         tx = new NebTransaction(parseInt(chainId), account, pledgeContract, NebUnit.nasToBasic(amount), parseInt(nonce), gasprice, gaslimit, contract);
         tx.signTransaction();
         $("#output").val(tx.toProtoString());
+        didGenerate();
     } catch (e) {
         alert(e);
     }
-}
-
-function send() {
-    neb.api.sendRawTransaction($("#output").val()).then(function (resp) {
-        if (resp.error) {
-            $("#result").text(resp.error);
-        } else {
-            $("#result").text("Explorer link:");
-        }
-        var link = explorerLink + resp.txhash;
-        $("#hash").attr("href", link);
-        $("#hash").text(link);
-        $("#hash").show();
-        // return neb.api.getTransactionReceipt(resp.txhash);
-    }).catch(function (o) {
-        alert(o);
-    });
 }

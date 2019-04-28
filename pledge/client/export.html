@@ -7,6 +7,9 @@
     <script type="text/javascript" src="libs/FileSaver.min.js"></script>
     <script type="text/javascript" src="libs/jquery-3.3.1.min.js"></script>
     <script type="text/javascript" src="libs/bootstrap-4.0.0-dist/js/bootstrap.js"></script>
+    <script type="text/javascript" src="libs/bootstrap-4.0.0-dist/js/bootstrap.bundle.js"></script>
+    <script type="text/javascript" src="libs/bootbox.min.js"></script>
+    <script type="text/javascript" src="libs/Blob.js"></script>
     <script type="text/javascript" src="js/common.js"></script>
     <script type="text/javascript" src="js/export.js"></script>
     <link rel="stylesheet" type="text/css" href="libs/bootstrap-4.0.0-dist/css/bootstrap.css"/>
@@ -118,13 +121,22 @@
     <div class="step row">
         <div class="col-12">
             <div class="edt_container" style="height: 100px;">
-                <textarea id="output" readonly="readonly"></textarea>
+                <textarea id="output"></textarea>
             </div>
         </div>
     </div>
 
-    <div class="edt_container" style="margin-top: 10px">
-        <button id="btn_send">Send</button>
+    <div class="row" style="margin-top: 10px">
+        <div id="send_container" class="col-12">
+            <div class="edt_container">
+                <button id="btn_send">Send</button>
+            </div>
+        </div>
+        <div id="save_container" class="col-6">
+            <div class="edt_container">
+                <button id="btn_save">Save to file</button>
+            </div>
+        </div>
     </div>
 
     <div class="row" style="margin-top: 10px">

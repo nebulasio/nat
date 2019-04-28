@@ -50,6 +50,10 @@ button {
     width: 100%;
 }
 
+.input_error {
+    border-color: red;
+}
+
 .edt_container textarea {
     width: 100%;
     height: 100%;

@@ -1,13 +1,16 @@
 function _generateCheck() {
-    if (!unlock()) {
-        return false;
-    }
+    var r = unlock(),
+        r1 = checkNonceAndGas();
+    r = r && r1;
     var natContract = $("#nat_contract").val();
     if (!NebAccount.isValidAddress(natContract)) {
+        setError($("#nat_contract"), "please input password.");
         alert("Please enter the correct contract address");
-        return false;
+        r = false;
+    } else {
+        cancelError($("#nat_contract"));
     }
-    return true;
+    return r;
 }
 
 function generate() {
@@ -33,24 +36,8 @@ function generate() {
         tx = new NebTransaction(parseInt(chainId), account, pledgeContract, "0", parseInt(nonce), gasPrice, gasLimit, contract);
         tx.signTransaction();
         $("#output").val(tx.toProtoString());
+        didGenerate();
     } catch (e) {
         alert(e);
     }
-}
-
-function send() {
-    neb.api.sendRawTransaction($("#output").val()).then(function (resp) {
-        if (resp.error) {
-            $("#result").text(resp.error);
-        } else {
-            $("#result").text("Explorer link:");
-        }
-        var link = explorerLink + resp.txhash;
-        $("#hash").attr("href", link);
-        $("#hash").text(link);
-        $("#hash").show();
-        // return neb.api.getTransactionReceipt(resp.txhash);
-    }).catch(function (o) {
-        alert(o);
-    });
 }
