@@ -17,7 +17,7 @@ var chainId = 1001;
 var explorerLink = "https://explorer.nebulas.io/#/testnet/tx/";
 neb.setRequest(new nebulas.HttpRequest("https://testnet.nebulas.io"));
 
-var pledgeContract = "n1paHD9dSA73XivhrgXbyAe4uBdpiznZ5ZJ";
+var pledgeContract = "n1efsqa8xgZFVv9Bby758DdnRBKu18dg53C";
 
 var fileName = null;
 var keystore = null;
@@ -37,6 +37,10 @@ function cancelError(input) {
 
 function showAllError() {
     $(".input_error").popover("show");
+}
+
+function hideAllError() {
+    $(".input_error").popover("hide");
 }
 
 function showWaiting() {
@@ -182,6 +186,8 @@ function onChangeFile(e) {
             keystore = JSON.parse(e.target.result);
             fileName = file.name;
             _updateKeystoreText();
+            cancelError($("#btn_keystore"));
+            hideAllError();
             $("#pwd_container").show();
         } catch (ex) {
             alert(ex.message);
