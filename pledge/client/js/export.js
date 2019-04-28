@@ -4,8 +4,7 @@ function _generateCheck() {
     r = r && r1;
     var natContract = $("#nat_contract").val();
     if (!NebAccount.isValidAddress(natContract)) {
-        setError($("#nat_contract"), "please input password.");
-        alert("Please enter the correct contract address");
+        setError($("#nat_contract"), "Please enter the correct neb address");
         r = false;
     } else {
         cancelError($("#nat_contract"));

@@ -67,16 +67,19 @@ function _isInt(val) {
 
 function _unlockCheck() {
     if (!keystore) {
-        alert("please select your wallet");
+        setError($("#btn_keystore"), "Please select your wallet");
         return false;
     }
+    cancelError($("#btn_keystore"));
+    var r = true;
     var pwd = $("#pwd").val();
     if (!pwd || pwd.length === 0) {
-        setError($("#pwd"), "please input password.");
-        return false;
+        setError($("#pwd"), "Please input password.");
+        r = false;
+    } else {
+        cancelError($("#pwd"));
     }
-    cancelError($("#pwd"));
-    return true;
+    return r;
 }
 
 function _updateKeystoreText() {
