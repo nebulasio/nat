@@ -1,12 +1,12 @@
 ### NAT.js
 - Milestone:
-  * simple contract debug tool -- by April 25th -- ping
-  * temporary pledge contract -- by April 26th -- ping
-  * client tool design ready   -- by April 26th, Meng 
-  * contract migrate test      -- by April 26th - Zhuoer 
-  * pledge contract test start  -- April 26th - Liang
-  * code review                   -- April 27th -- Qiyuan
-  * NR data import contract(import, get NR list from contract) -- by April 27th 
+  * ~~simple contract debug tool -- by April 25th -- ping~~
+  * ~~temporary pledge contract -- by April 26th -- ping~~
+  * ~~client tool design ready   -- by April 26th, Meng~~
+  * ~~contract migrate test      -- by April 26th - Zhuoer~~ 
+  * ~~pledge contract test start  -- April 26th - Liang~~
+  * ~~code review                   -- April 27th -- Qiyuan~~
+  * ~~NR data import contract(import, get NR list from contract) -- by April 27th~~ 
     - research team give us the address list file
   * multisig update the config -- by April 27th
   * vote (gonetbulas, campaign) data contract -- by April 29th 
