@@ -1,13 +1,15 @@
 html {
     height: 100%;
+    background: linear-gradient(45deg, #4F4F84, #21213C);
 }
 
 body {
     height: 100%;
-    background: linear-gradient(45deg, #4F4F84, #21213C);
     color: white;
     padding: 0;
     margin: 0;
+    background: transparent;
+    overflow: scroll;
 }
 
 .file {
@@ -45,9 +47,10 @@ button {
     background-color: #4560E6;
     color: white;
     cursor: pointer;
+    font-size: 15px;
 }
 
-.neb_boot_box{
+.neb_boot_box {
     color: #333333;
 }
 
@@ -106,4 +109,41 @@ button {
     font-size: 24px;
     font-weight: bold;
     margin-top: 20px;
+}
+
+.menu_handler {
+    width: 100%;
+    height: 100%;
+    line-height: 40px;
+    padding-left: 10px;
+    border-radius: 6px;
+    border-width: 0;
+    background-color: #4560E6;
+    color: white;
+    cursor: pointer;
+    font-size: 15px;
+}
+
+.menu:hover {
+    background: #ffffffaa;
+}
+
+.menu_item {
+    line-height: 35px;
+    padding: 0 10px;
+    color: #333333;
+    font-size: 14px;
+}
+
+.menu_item:hover {
+    background: #eeeeee;
+}
+
+.menu_item a {
+    color: #333333;
+}
+
+.menu_item a:hover {
+    color: #333333;
+    text-decoration: none;
 }

@@ -17,12 +17,14 @@ var chainId = 1001;
 var explorerLink = "https://explorer.nebulas.io/#/testnet/tx/";
 neb.setRequest(new nebulas.HttpRequest("https://testnet.nebulas.io"));
 
-var pledgeContract = "n1efsqa8xgZFVv9Bby758DdnRBKu18dg53C";
+var pledgeContract = "n1kn4VwKKe8duFxyYAwYVb37ZoJo6ow2fRQ";
 
 var fileName = null;
 var keystore = null;
 var account = null;
 var accountState = {};
+
+var showWaitingTime = 0;
 
 function setError(input, msg) {
     input.popover({trigger: 'focus', content: msg});
@@ -44,11 +46,17 @@ function hideAllError() {
 }
 
 function showWaiting() {
+    showWaitingTime = new Date().getTime();
     bootbox.dialog({message: "Waiting...", size: 'large', closeButton: false, buttons: {}});
 }
 
 function hideWaiting() {
-    bootbox.hideAll();
+    var now = new Date().getTime();
+    var offset = Math.ceil((now - showWaitingTime));
+    if (offset < 1000) {
+        offset = 1000;
+    }
+    window.setTimeout(bootbox.hideAll, offset);
 }
 
 $(function () {
@@ -70,6 +78,10 @@ $(function () {
 
     $("textarea,input[type='text'],input[type='password']").on("input propertychange focus", function () {
         _validInput($(this));
+    });
+
+    $(function () {
+        $('.dropdown-toggle').dropdown();
     });
 });
 
@@ -287,7 +299,10 @@ function send() {
         $("#hash").attr("href", link);
         $("#hash").text(link);
         $("#hash").show();
-        // return neb.api.getTransactionReceipt(resp.txhash);
+
+        $([document.documentElement, document.body]).animate({
+            scrollTop: document.body.scrollHeight
+        }, 1000);
     }).catch(function (o) {
         hideWaiting();
         alert(o);

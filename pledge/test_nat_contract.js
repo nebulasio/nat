@@ -122,14 +122,20 @@ TestNat.prototype = {
         this.storage.put(this._pledgeDataKey(address), pledge);
     },
 
-    receiveAddress: function (addresses) {
+    receiveData: function (data) {
         // TODO: Add permission verification
-        this._pledgeAddressList.addPage(addresses);
-    },
-
-    receivePledge: function (address, pledges) {
-        // TODO: Add permission verification
-        this._setPledge(address, pledges);
+        for (let i = 0; i < data.length; ++i) {
+            let a = data[i].a;
+            let d = data[i].d;
+            let p = this._getPledge(a);
+            if (p.length === 0) {
+                this._pledgeAddressList.add(a);
+            }
+            for (let j = 0; j < d.length; ++j) {
+                p.push(d[j]);
+            }
+            this._setPledge(a, p);
+        }
     },
 
     getAddressIndexes: function () {

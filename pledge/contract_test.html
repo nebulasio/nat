@@ -11,8 +11,8 @@
     <script type="text/javascript">
         localStorage.clear();
 
-        let pledgeContractAddress = "n1mBSJqcvPoiMeLFN9CFxmXsjDNB9bJhm1W";
-        let natContractAddress = "n1EvmW3zzu7zmgoez9uvMMGhPzZ5LCdcFRm";
+        let pledgeContractAddress = "n1kn4VwKKe8duFxyYAwYVb37ZoJo6ow2fRQ";
+        let natContractAddress = "n1uo3Ey86SKsQcTXWR6ZPetWgmTYnF3C2ap";
 
         let managerAddress = "n1Z6MhSZa321SnpiKfUWiybQSG3GCmRHunv";
         let customerAddress = "n1YPMjEDMrZhroKmB1xDBhadygwWHC4zTwm";
@@ -23,13 +23,23 @@
 
         BlockchainTool.registerContract(pledgeContractAddress, Pledge);
         BlockchainTool.registerContract(natContractAddress, TestNat);
+        // init pledge
+        BlockchainTool.callContract(customerAddress, pledgeContractAddress, 0, "init", [[managerAddress]]);
 
-        function saveTest(value, num) {
+        function pledgeTest(value, num) {
             BlockchainTool.callContract(customerAddress, pledgeContractAddress, value, "pledge", [num]);
         }
 
-        function stopAndExportTest() {
-            BlockchainTool.callContract(managerAddress, pledgeContractAddress, 0, "stopAndExportDataToNat", [natContractAddress]);
+        function stopPledgeTest() {
+            BlockchainTool.callContract(managerAddress, pledgeContractAddress, 0, "stopPledge", []);
+        }
+
+        function exportTest() {
+            BlockchainTool.callContract(managerAddress, pledgeContractAddress, 0, "exportDataToNat", [natContractAddress]);
+        }
+
+        function transferAmountTest() {
+            BlockchainTool.callContract(managerAddress, pledgeContractAddress, 0, "transferAmount", [natContractAddress]);
         }
 
         function getPledgeAddressIndexesTest() {
@@ -69,9 +79,11 @@
 
         function main() {
             try {
-                saveTest(new BigNumber(2).mul(unit), 1);
-                saveTest(new BigNumber(1.52).mul(unit), 2);
-                stopAndExportTest();
+                pledgeTest(new BigNumber(2).mul(unit), 1);
+                pledgeTest(new BigNumber(1.52).mul(unit), 2);
+                stopPledgeTest();
+                exportTest();
+                transferAmountTest();
                 getPledgeAddressIndexesTest();
                 getPledgeAddressesTest();
                 getPledgesTest();

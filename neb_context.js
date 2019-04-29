@@ -156,6 +156,14 @@ BlockContract.prototype = {
     }
 };
 
+function _defaultParse(text) {
+    return JSON.parse(text);
+}
+
+function _defaultStringify(o) {
+    return JSON.stringify(o);
+}
+
 
 /******************************************************************************
  *
@@ -213,14 +221,18 @@ let LocalContractStorage = {
             Object.defineProperty(obj, n, {
                 get: function () {
                     let r = localStorage.getItem(key);
-                    if (v.parse) {
+                    if (v && v.parse) {
                         r = v.parse(localStorage.getItem(key));
+                    } else {
+                        r = _defaultParse(localStorage.getItem(key));
                     }
                     return r;
                 },
                 set: function (val) {
-                    if (v.stringify) {
+                    if (v && v.stringify) {
                         val = v.stringify(val);
+                    } else {
+                        val = _defaultStringify(val);
                     }
                     localStorage.setItem(key, val);
                 },
@@ -230,7 +242,11 @@ let LocalContractStorage = {
     },
 
     defineMapProperty: function (obj, n, p) {
-        obj[n] = new MapStorage(obj._contractName, p.stringify, p.parse);
+        if (p) {
+            obj[n] = new MapStorage(obj._contractName, p.stringify, p.parse);
+        } else {
+            obj[n] = new MapStorage(obj._contractName, _defaultStringify, _defaultParse);
+        }
     },
 
     defineMapProperties: function (obj, mapProperties) {
@@ -268,7 +284,13 @@ let Blockchain = {
     },
 
     verifyAddress: function (address) {
-        return NebAccount.isValidAddress(address, null);
+        if (NebAccount.isValidAddress(address, 87)) {
+            return 87;
+        }
+        if (NebAccount.isValidAddress(address, 88)) {
+            return 88;
+        }
+        return 0;
     },
 
     getAccountState: function (address) {

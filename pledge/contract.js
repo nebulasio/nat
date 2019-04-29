@@ -74,6 +74,11 @@ PageList.prototype = {
 
 function Pledge() {
     this._contractName = "Pledge";
+    LocalContractStorage.defineProperties(this, {
+        _canPledge: null,
+        _canExport: null,
+        _managers: null
+    });
     LocalContractStorage.defineMapProperty(this, "storage", {
         parse: function (text) {
             return JSON.parse(text);
@@ -82,45 +87,31 @@ function Pledge() {
             return JSON.stringify(obj);
         }
     });
-    this._managers = ["n1Z6MhSZa321SnpiKfUWiybQSG3GCmRHunv"];
-    this._keyAddresses = "addresses";
-    this._keyCanPledge = "can_pledge";
-    this._keyCanExport = "can_export";
     this._addressList = new PageList(this.storage, "addresses");
 }
 
 Pledge.prototype = {
 
-    init: function () {
+    init: function (managers) {
+        if (!managers || managers.length === 0) {
+            throw ("Need at least one administrator");
+        }
+        for (let i = 0; i < managers.length; ++i) {
+            this._verifyAddress(managers[i]);
+        }
+        this._canPledge = true;
+        this._canExport = true;
+        this._managers = managers;
+    },
 
+    _verifyAddress: function (address) {
+        if (Blockchain.verifyAddress(address) === 0) {
+            throw ("Address error");
+        }
     },
 
     _addAddress: function (address) {
         this._addressList.add(address);
-    },
-
-    _canPledge: function () {
-        let r = this.storage.get(this._keyCanPledge);
-        if (r == null) {
-            return true;
-        }
-        return r;
-    },
-
-    _stopPledge: function () {
-        this.storage.put(this._keyCanPledge, false);
-    },
-
-    _canExport: function () {
-        let r = this.storage.get(this._keyCanExport);
-        if (r == null) {
-            return true;
-        }
-        return r;
-    },
-
-    _setIsExported: function () {
-        this.storage.put(this._keyCanExport, false);
     },
 
     _getPledge: function (address) {
@@ -135,17 +126,24 @@ Pledge.prototype = {
         this.storage.put(address, pledge);
     },
 
+    _verifyManager: function () {
+        if (this._managers.indexOf(Blockchain.transaction.from) < 0) {
+            throw ("No permission");
+        }
+    },
+
     pledge: function (n) {
-        if (!this._canPledge()) {
+        if (!this._canPledge) {
             throw ("This contract no longer accepts new pledges, please use the official new contract.");
         }
-        let min = new BigNumber(1).mul(new BigNumber(10).pow(18));
+        let unit = new BigNumber(10).pow(18);
+        let min = unit;
         if (min.gt(Blockchain.transaction.value)) {
-            throw ("The amount must be greater than 1 NAS");
+            throw ("The amount cannot be less than 1 NAS");
         }
         let a = Blockchain.transaction.from;
         let b = Blockchain.block.height;
-        let v = new BigNumber(Blockchain.transaction.value).toString(10);
+        let v = new BigNumber(Blockchain.transaction.value).div(unit).toString(10);
         let p = this._getPledge(a);
         if (p.length === 0) {
             this._addAddress(Blockchain.transaction.from);
@@ -154,30 +152,46 @@ Pledge.prototype = {
         this._setPledge(a, p);
     },
 
-    stopAndExportDataToNat: function (natContractAddress) {
-        if (this._managers.indexOf(Blockchain.transaction.from) < 0) {
-            throw ("No permission");
-        }
+    stopPledge: function () {
+        this._verifyManager();
+        this._canPledge = false;
+    },
 
-        if (!this._canExport()) {
+    transferAmount: function (natContractAddress) {
+        this._verifyManager();
+        let b = Blockchain.getAccountState(Blockchain.transaction.to).balance;
+        let r = Blockchain.transfer(natContractAddress, new BigNumber(b));
+        if (r) {
+            Event.Trigger("transfer", {
+                Transfer: {
+                    from: Blockchain.transaction.to,
+                    to: natContractAddress,
+                    value: b,
+                }
+            });
+        }
+        return r;
+    },
+
+    exportDataToNat: function (natContractAddress) {
+        this._verifyManager();
+        if (!this._canExport) {
             throw ("Data has been exported.");
         }
 
         let nat = new Blockchain.Contract(natContractAddress);
 
+        let data = [];
         let indexes = this.getAddressIndexes();
         for (let i = 0; i < indexes.length; ++i) {
             let index = indexes[i];
             let as = this.getAddresses(index.i);
-            nat.call("receiveAddress", as);
             for (let j = 0; j < as.length; ++j) {
-                nat.call("receivePledge", as[j], this._getPledge(as[j]));
+                data.push({a: as[j], d: this._getPledge(as[j])});
             }
         }
-        let b = Blockchain.getAccountState(Blockchain.transaction.to).balance;
-        Blockchain.transfer(natContractAddress, b);
-        this._stopPledge();
-        this._setIsExported();
+        nat.call("receiveData", data);
+        this._canExport = false;
     },
 
     getAddressIndexes: function () {
