@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>NRDataSourceTest</title>
+    <script type="text/javascript" src="../../libs/nebulas.js"></script>
+    <script type="text/javascript" src="../../neb_context.js"></script>
+
+    <script type="text/javascript" src="../contracts/nr-data-source.js"></script>
+    <script type="text/javascript">
+        localStorage.clear();
+
+        let nrContractAddress = "n1F5VUpUfUbnVksQWcQcAvbY9K9dbakAvpN";
+        let customerAddress = "n1YPMjEDMrZhroKmB1xDBhadygwWHC4zTwm";
+        let managerAddress = "n1Z6MhSZa321SnpiKfUWiybQSG3GCmRHunv";
+
+        let unit = new BigNumber(10).pow(18);
+        BlockchainTool.transfer(null, managerAddress, new BigNumber(1000).mul(unit));
+
+        BlockchainTool.registerContract(nrContractAddress, NrDataSource);
+        BlockchainTool.callContract(customerAddress, nrContractAddress, 0, "init", [[managerAddress]]);
+
+        function uploadTest(startBlock, endBlock, addresses) {
+            let data = {startBlock: startBlock, endBlock: endBlock, addresses: addresses};
+            BlockchainTool.callContract(managerAddress, nrContractAddress, 0, "upload", [data]);
+        }
+
+        function uploadErrorTest(startBlock, endBlock, addresses) {
+            let data = {startBlock: startBlock, endBlock: endBlock, addresses: addresses};
+            BlockchainTool.callContract(customerAddress, nrContractAddress, 0, "upload", [data]);
+        }
+
+        function getAddressesTest(startBlock, endBlock) {
+            let r = BlockchainTool.callContract(managerAddress, nrContractAddress, 0, "getAddresses", [startBlock, endBlock]);
+            alert("getAddresses:\n" + JSON.stringify(r));
+        }
+
+        function main() {
+            try {
+                uploadTest(1, 500, [customerAddress]);
+                // uploadErrorTest(1, 500, [customerAddress]);
+                getAddressesTest(1, 500);
+            } catch (e) {
+                alert(e)
+            }
+        }
+
+        main();
+    </script>
+</head>
+<body>
+
+</body>
+</html>
