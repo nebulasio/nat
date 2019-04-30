@@ -20,11 +20,16 @@ input {
     padding: 0 10px;
     border-radius: 6px;
     border-width: 1px;
-    border-color: #4D6AFF;
+    border-color: #E6E7EB33;
     border-style: solid;
+    outline:none;
     background-color: transparent;
     font-size: 14px;
     color: white;
+}
+
+input:focus {
+    border-color: #4D6AFF;
 }
 
 textarea {
@@ -32,11 +37,16 @@ textarea {
     padding: 5px 10px;
     border-radius: 6px;
     border-width: 1px;
-    border-color: #4D6AFF;
+    border-color: #E6E7EB33;
     border-style: solid;
+    outline:none;
     background-color: transparent;
     font-size: 14px;
     color: white;
+}
+
+textarea:focus {
+    border-color: #4D6AFF;
 }
 
 button {
@@ -45,6 +55,7 @@ button {
     border-radius: 6px;
     border-width: 0;
     background-color: #4560E6;
+    outline:none;
     color: white;
     cursor: pointer;
     font-size: 15px;
