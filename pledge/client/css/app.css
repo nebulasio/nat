@@ -22,7 +22,7 @@ input {
     border-width: 1px;
     border-color: #E6E7EB33;
     border-style: solid;
-    outline:none;
+    outline: none;
     background-color: transparent;
     font-size: 14px;
     color: white;
@@ -39,7 +39,7 @@ textarea {
     border-width: 1px;
     border-color: #E6E7EB33;
     border-style: solid;
-    outline:none;
+    outline: none;
     background-color: transparent;
     font-size: 14px;
     color: white;
@@ -55,10 +55,18 @@ button {
     border-radius: 6px;
     border-width: 0;
     background-color: #4560E6;
-    outline:none;
+    outline: none;
     color: white;
     cursor: pointer;
     font-size: 15px;
+}
+
+button:hover {
+    background-color: #5671F7;
+}
+
+button:focus {
+    outline: none;
 }
 
 .neb_boot_box {
