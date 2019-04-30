@@ -4,6 +4,11 @@ $(function () {
 
     var li = $(".nav li a").get(0);
     li.click();
+
+    $("#myTab a").click(function (e) {
+        e.preventDefault();
+        hideAllError();
+    });
 });
 
 function _generateCheck() {
@@ -41,6 +46,7 @@ function genCode() {
         "category": "jump"
     };
     var str = JSON.stringify(params);
+    $("#code").empty();
     $("#code").qrcode({
         background: "#ffffff00",//背景颜色
         foreground: "#000000", //前景颜色
