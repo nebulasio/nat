@@ -79,7 +79,7 @@ function Pledge() {
         _canExport: null,
         _managers: null
     });
-    LocalContractStorage.defineMapProperty(this, "storage", {
+    LocalContractStorage.defineMapProperty(this, "_storage", {
         parse: function (text) {
             return JSON.parse(text);
         },
@@ -87,7 +87,7 @@ function Pledge() {
             return JSON.stringify(obj);
         }
     });
-    this._addressList = new PageList(this.storage, "addresses");
+    this._addressList = new PageList(this._storage, "addresses");
 }
 
 Pledge.prototype = {
@@ -122,7 +122,7 @@ Pledge.prototype = {
     },
 
     _getPledge: function (address) {
-        let p = this.storage.get(address);
+        let p = this._storage.get(address);
         if (!p) {
             p = []
         }
@@ -130,7 +130,7 @@ Pledge.prototype = {
     },
 
     _setPledge: function (address, pledge) {
-        this.storage.put(address, pledge);
+        this._storage.put(address, pledge);
     },
 
     _verifyManager: function () {
@@ -148,8 +148,7 @@ Pledge.prototype = {
             throw ("The pledge period cannot be less than 1");
         }
         let unit = new BigNumber(10).pow(18);
-        let min = unit;
-        if (min.gt(Blockchain.transaction.value)) {
+        if (unit.gt(Blockchain.transaction.value)) {
             throw ("The amount cannot be less than 1 NAS");
         }
         let a = Blockchain.transaction.from;

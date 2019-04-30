@@ -27,11 +27,13 @@ function NAT() {
             }
         },
         "tokenData": null,
-        "configData": null
+        "configData": null,
+        "pledgeData": null
     });
 
-    this._token = new Token(this.tokenData, this.balance, this.allowed);
-    this._config = new Config(this.configData);
+    this._config = Config.instance = new Config(this.configData);
+    this._token = Token.instance = new Token(this.tokenData, this.balance, this.allowed);
+    this._pledge = Pledge.instance = new Pledge(this.pledgeData);
 }
 
 NAT.prototype = {
@@ -40,7 +42,8 @@ NAT.prototype = {
         this._config.initialize(
             cfg.multiSignAddress,
             cfg.nrDataAddress,
-            cfg.voteDataAddresses
+            cfg.voteDataAddresses,
+            cfg.pledgeDataAddress
         );
         let token = data.token;
         this._token.initialize(
@@ -98,13 +101,57 @@ NAT.prototype = {
 
     allowance: function (owner, spender) {
         return this._token.allowance(owner, spender);
-    }
+    },
 
 
     // CONFIG ----------------------------------------------------------------------------------------------------------
 
+    _verifyFromMultisign: function () {
+        if (!this._config.isFromMultiSign) {
+            throw ("No permission.");
+        }
+    },
+
+    updateMultiSignAddress: function (address) {
+        this._verifyFromMultisign();
+        this._config.multiSignAddress = address;
+    },
+
+    updateNrDataAddress: function (address) {
+        this._verifyFromMultisign();
+        this._config.nrDataAddress = address;
+    },
+
+    updateVoteDataAddresses: function (addresses) {
+        this._verifyFromMultisign();
+        this._config.nrDataAddress = address;
+    },
+
 
     // PLEDGE ----------------------------------------------------------------------------------------------------------
+
+    receiveData: function (data) {
+        if (!Config.instance.isFromPledgeDataAddress) {
+            throw ("No permission.");
+        }
+        this._pledge.receiveData(data);
+    },
+
+    pledge: function (n) {
+        this._pledge.pledge(n);
+    },
+
+    getPledgeAddressIndexes: function () {
+        return this._pledge.getAddressIndexes();
+    },
+
+    getPledgeAddresses: function (index) {
+        return this._pledge.getPledgeWithAddress(index);
+    },
+
+    getPledgeWithAddress: function (address) {
+        return this._pledge.getPledgeWithAddress(address);
+    }
 
 
     // AIRDROP ---------------------------------------------------------------------------------------------------------

@@ -30,16 +30,16 @@
             BlockchainTool.callContract(customerAddress, nrContractAddress, 0, "upload", [data]);
         }
 
-        function getAddressesTest(startBlock, endBlock) {
-            let r = BlockchainTool.callContract(managerAddress, nrContractAddress, 0, "getAddresses", [startBlock, endBlock]);
-            alert("getAddresses:\n" + JSON.stringify(r));
+        function getDataTest() {
+            let r = BlockchainTool.callContract(managerAddress, nrContractAddress, 0, "getData", [true, {index: 0}, {returnLast: true}]);
+            alert("getData:\n" + JSON.stringify(r));
         }
 
         function main() {
             try {
                 uploadTest(1, 500, [customerAddress]);
                 // uploadErrorTest(1, 500, [customerAddress]);
-                getAddressesTest(1, 500);
+                getDataTest();
             } catch (e) {
                 alert(e)
             }

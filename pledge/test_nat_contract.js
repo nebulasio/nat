@@ -87,7 +87,7 @@ PageList.prototype = {
 function TestNat() {
     this._contractName = "TestNat";
 
-    LocalContractStorage.defineMapProperty(this, "storage", {
+    LocalContractStorage.defineMapProperty(this, "_storage", {
         parse: function (text) {
             return JSON.parse(text);
         },
@@ -98,7 +98,7 @@ function TestNat() {
 
     this._pledgeDataPrefix = "pledge_";
 
-    this._pledgeAddressList = new PageList(this.storage, "pledge_address_list");
+    this._pledgeAddressList = new PageList(this._storage, "pledge_address_list");
 }
 
 TestNat.prototype = {
@@ -111,7 +111,7 @@ TestNat.prototype = {
     },
 
     _getPledge: function (address) {
-        let p = this.storage.get(this._pledgeDataKey(address));
+        let p = this._storage.get(this._pledgeDataKey(address));
         if (!p) {
             p = []
         }
@@ -119,7 +119,7 @@ TestNat.prototype = {
     },
 
     _setPledge: function (address, pledge) {
-        this.storage.put(this._pledgeDataKey(address), pledge);
+        this._storage.put(this._pledgeDataKey(address), pledge);
     },
 
     receiveData: function (data) {

@@ -199,3 +199,5 @@ Token.prototype = {
         return "0";
     }
 };
+
+Token.instance = null;
