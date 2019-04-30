@@ -147,3 +147,15 @@ button {
     color: #333333;
     text-decoration: none;
 }
+
+.nav-tabs a {
+    width: 150px;
+    height: 45px;
+    line-height: 45px;
+    font-size: 20px;
+    color: #ffffff66;
+}
+
+.nav-tabs .active {
+    color: white;
+}

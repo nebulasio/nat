@@ -104,6 +104,13 @@ Pledge.prototype = {
         this._managers = managers;
     },
 
+    _getInt: function (num) {
+        if (!/^\d+$/.test(num + "")) {
+            throw (num + " is not an integer.");
+        }
+        return parseInt(num);
+    },
+
     _verifyAddress: function (address) {
         if (Blockchain.verifyAddress(address) === 0) {
             throw ("Address error");
@@ -135,6 +142,10 @@ Pledge.prototype = {
     pledge: function (n) {
         if (!this._canPledge) {
             throw ("This contract no longer accepts new pledges, please use the official new contract.");
+        }
+        n = this._getInt(n);
+        if (n < 1) {
+            throw ("The pledge period cannot be less than 1");
         }
         let unit = new BigNumber(10).pow(18);
         let min = unit;

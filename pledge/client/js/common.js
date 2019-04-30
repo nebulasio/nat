@@ -122,6 +122,13 @@ function _valid(input, method, msg) {
         } else {
             cancelError(input);
         }
+    } else if (method === "cycle") {
+        if (!_isInt(input.val()) || parseInt(input.val()) < 1) {
+            setError(input, msg);
+            return false;
+        } else {
+            cancelError(input);
+        }
     } else if (method === "amount") {
         var amount = input.val();
         var a = amount.split(".");
