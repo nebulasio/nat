@@ -17,7 +17,7 @@ var chainId = 1001;
 var explorerLink = "https://explorer.nebulas.io/#/testnet/tx/";
 neb.setRequest(new nebulas.HttpRequest("https://testnet.nebulas.io"));
 
-var pledgeContract = "n1kn4VwKKe8duFxyYAwYVb37ZoJo6ow2fRQ";
+var pledgeContract = "n1he2V7zqELAScrK9KhDkkxPhSf9g8vQ8aZ";
 
 var fileName = null;
 var keystore = null;
@@ -234,9 +234,29 @@ function getInfo() {
                 $("#nonce2").val(parseInt(resp.nonce) + 1);
                 var b = NebUtils.toBigNumber(resp.balance).mul(NebUtils.toBigNumber(10).pow(-18));
                 $("#balance").val(b.toString(10));
-                $("#information").show();
-                $("#balance_container").show();
-                hideAllError();
+
+                let f = function () {
+                    $("#information").show();
+                    $("#balance_container").show();
+                };
+
+                let stateView = $("#pledge_state");
+                if (stateView.length > 0) {
+                    getPledgeAmount(address, function (amount) {
+                        hideAllError();
+                        if (amount == null) {
+                            return;
+                        }
+                        f();
+                        stateView.val(amount === 0 ?
+                            address + " have not pledge." :
+                            address + " pledge " + amount + " NAS."
+                        );
+                    });
+                } else {
+                    f();
+                    hideAllError();
+                }
             })
             .catch(function (e) {
                 hideWaiting();

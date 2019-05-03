@@ -88,6 +88,12 @@ function Pledge() {
         }
     });
     this._addressList = new PageList(this._storage, "addresses");
+
+    this.STATE_NONE = 0;
+    this.STATE_PLEDGED = 1;
+    this.STATE_CANCELED = 2;
+
+    this._unit = new BigNumber(10).pow(18);
 }
 
 Pledge.prototype = {
@@ -122,11 +128,7 @@ Pledge.prototype = {
     },
 
     _getPledge: function (address) {
-        let p = this._storage.get(address);
-        if (!p) {
-            p = []
-        }
-        return p;
+        return this._storage.get(address);
     },
 
     _setPledge: function (address, pledge) {
@@ -139,27 +141,56 @@ Pledge.prototype = {
         }
     },
 
-    pledge: function (n) {
+    _getPledgeState: function () {
+        let a = Blockchain.transaction.from;
+        let p = this._getPledge(a);
+        if (!p) {
+            return this.STATE_NONE;
+        }
+        return !p.c ? this.STATE_PLEDGED : this.STATE_CANCELED;
+    },
+
+    pledge: function () {
         if (!this._canPledge) {
             throw ("This contract no longer accepts new pledges, please use the official new contract.");
         }
-        n = this._getInt(n);
-        if (n < 1) {
-            throw ("The pledge period cannot be less than 1");
+
+        let s = this._getPledgeState();
+        if (s === this.STATE_PLEDGED) {
+            throw ("You already have a pledge.");
         }
-        let unit = new BigNumber(10).pow(18);
-        if (unit.gt(Blockchain.transaction.value)) {
+        if (this._unit.gt(Blockchain.transaction.value)) {
             throw ("The amount cannot be less than 1 NAS");
         }
         let a = Blockchain.transaction.from;
         let b = Blockchain.block.height;
-        let v = new BigNumber(Blockchain.transaction.value).div(unit).toString(10);
+        let v = new BigNumber(Blockchain.transaction.value).div(this._unit).toString(10);
         let p = this._getPledge(a);
-        if (p.length === 0) {
+        if (!p) {
             this._addAddress(Blockchain.transaction.from);
         }
-        p.push({b: b, v: v, n: n});
+        p = {b: b, v: v, c: false};
         this._setPledge(a, p);
+    },
+
+    cancelPledge: function () {
+        let s = this._getPledgeState();
+        if (s !== this.STATE_PLEDGED) {
+            throw ("No pledges that can be cancelled.");
+        }
+        let a = Blockchain.transaction.from;
+        let p = this._getPledge(a);
+        let v = new BigNumber(p.v).mul(this._unit);
+        Blockchain.transfer(a, v);
+        p.c = true;
+        this._setPledge(a, p);
+        Event.Trigger("transfer", {
+            Transfer: {
+                from: Blockchain.transaction.to,
+                to: a,
+                value: v,
+            }
+        });
     },
 
     stopPledge: function () {
@@ -197,10 +228,10 @@ Pledge.prototype = {
             let index = indexes[i];
             let as = this.getAddresses(index.i);
             for (let j = 0; j < as.length; ++j) {
-                data.push({a: as[j], d: this._getPledge(as[j])});
+                data.push({a: as[j], p: this._getPledge(as[j])});
             }
         }
-        nat.call("receiveData", data);
+        nat.call("receivePledgeData", data);
         this._canExport = false;
     },
 

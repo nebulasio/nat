@@ -5,11 +5,11 @@ $(function () {
         _checkAction();
         _updateViewWithAction();
         hideAllError();
-    })
+    });
 });
 
-actions = ["stopPledge", "exportDataToNat", "transferAmount"];
-action = null;
+var actions = ["stopPledge", "exportDataToNat", "transferAmount"];
+var action = null;
 
 function _generateCheck() {
     var r1 = unlock(),

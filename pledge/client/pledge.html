@@ -56,17 +56,28 @@
                 </div>
             </div>
 
-            <div id="information" class="row" style="margin-top: 10px">
-                <div class="col-6">
-                    <div class="input_title">Gas price:</div>
-                    <div class="edt_container">
-                        <input id="gas_price1" type="text" readonly="readonly"/>
+            <div id="information">
+                <div class="row" style="margin-top: 10px">
+                    <div class="col-6">
+                        <div class="input_title">Gas price:</div>
+                        <div class="edt_container">
+                            <input id="gas_price1" type="text" readonly="readonly"/>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="input_title">Nonce:</div>
+                        <div class="edt_container">
+                            <input id="nonce1" type="text" readonly="readonly"/>
+                        </div>
                     </div>
                 </div>
-                <div class="col-6">
-                    <div class="input_title">Nonce:</div>
-                    <div class="edt_container">
-                        <input id="nonce1" type="text" readonly="readonly"/>
+
+                <div class="row" style="margin-top: 10px">
+                    <div class="col-12">
+                        <div class="input_title">Pledge state:</div>
+                        <div class="edt_container">
+                            <input id="pledge_state" type="text" readonly="readonly"/>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -100,26 +111,16 @@
                     </div>
                 </div>
                 <div class="col-6">
-                    <div class="input_title">Pledge nas amount:</div>
-                    <div class="edt_container">
-                        <input id="amount" type="text" valid="amount,pledgeAmount"/>
-                        <div class="tips">NAS</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="row" style="margin-top: 5px">
-                <div class="col-6">
-                    <div class="input_title">Number of pledge cycles:</div>
-                    <div class="edt_container">
-                        <input id="num" type="text" valid="cycle|Please enter the correct pledge cycle."/>
-                        <div class="tips">Week (7 days)</div>
-                    </div>
-                </div>
-                <div class="col-6">
-                    <div class="input_title">Nonce:</div>
-                    <div class="edt_container">
-                        <input id="nonce2" type="text" valid="int|Please enter the correct nonce."/>
+                    <div class="input_title">Action:</div>
+                    <div id="action_container" class="dropdown edt_container">
+                        <div href="#" class="dropdown-toggle menu_handler" data-toggle="dropdown">
+                            <span id="action_text">Pledge</span>
+                            <b class="caret" style="position: absolute; right: 10px"></b>
+                        </div>
+                        <ul class="dropdown-menu">
+                            <li class="menu_item" target="action_text" tag="0"><a href="#">Pledge</a></li>
+                            <li class="menu_item" target="action_text" tag="1"><a href="#">Cancel pledge</a></li>
+                        </ul>
                     </div>
                 </div>
             </div>
@@ -137,6 +138,22 @@
                     <div class="edt_container">
                         <input id="gas_limit" type="text" value="200000"
                                valid="int|Please enter the correct gas limit."/>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row" style="margin-top: 5px">
+                <div class="col-6">
+                    <div class="input_title">Nonce:</div>
+                    <div class="edt_container">
+                        <input id="nonce2" type="text" valid="int|Please enter the correct nonce."/>
+                    </div>
+                </div>
+                <div id="amount_container" class="col-6">
+                    <div class="input_title">Pledge nas amount:</div>
+                    <div class="edt_container">
+                        <input id="amount" type="text" valid="amount,pledgeAmount"/>
+                        <div class="tips">NAS</div>
                     </div>
                 </div>
             </div>
@@ -179,28 +196,61 @@
     </div>
     <div class="tab-pane fade" id="nasnano">
         <div class="container">
+            <div class="step row">
+                <div class="col-12">Inquire Pledge State</div>
+            </div>
+
+            <div class="row" style="margin-top: 10px">
+                <div class="col-6">
+                    <div class="input_title">From Address:</div>
+                    <div class="edt_container">
+                        <input id="nano_from_address" type="text" valid="address|Please enter the correct neb address"/>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="input_title">Pledge state:</div>
+                    <div class="edt_container">
+                        <input id="nano_pledge_state" type="text" readonly="readonly"/>
+                    </div>
+                </div>
+            </div>
+
+            <div class="edt_container" style="margin-top: 10px">
+                <button id="btn_nano_get_info">Inquire</button>
+            </div>
+
+            <div class="step row">
+                <div class="col-12">Create a QR code</div>
+            </div>
+
             <div class="row" style="margin-top: 5px">
-                <div class="col-12">
+                <div class="col-6">
                     <div class="input_title">Contract:</div>
                     <div class="edt_container">
                         <input id="nano_contract" type="text" readonly="readonly"/>
                     </div>
                 </div>
+                <div class="col-6">
+                    <div class="input_title">Action:</div>
+                    <div id="nano_action_container" class="dropdown edt_container">
+                        <div href="#" class="dropdown-toggle menu_handler" data-toggle="dropdown">
+                            <span id="nano_action_text">Pledge</span>
+                            <b class="caret" style="position: absolute; right: 10px"></b>
+                        </div>
+                        <ul class="dropdown-menu">
+                            <li class="menu_item" target="nano_action_text" tag="0"><a href="#">Pledge</a></li>
+                            <li class="menu_item" target="nano_action_text" tag="1"><a href="#">Cancel pledge</a></li>
+                        </ul>
+                    </div>
+                </div>
             </div>
 
-            <div class="row" style="margin-top: 5px">
-                <div class="col-6">
+            <div id="nano_amount_container" class="row" style="margin-top: 5px">
+                <div class="col-12">
                     <div class="input_title">Pledge nas amount:</div>
                     <div class="edt_container">
                         <input id="nano_amount" type="text" valid="amount,pledgeAmount"/>
                         <div class="tips">NAS</div>
-                    </div>
-                </div>
-                <div class="col-6">
-                    <div class="input_title">Number of pledge cycles:</div>
-                    <div class="edt_container">
-                        <input id="nano_num" type="text" valid="cycle|Please enter the correct pledge cycle."/>
-                        <div class="tips">Week (7 days)</div>
                     </div>
                 </div>
             </div>

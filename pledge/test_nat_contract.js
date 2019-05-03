@@ -111,29 +111,19 @@ TestNat.prototype = {
     },
 
     _getPledge: function (address) {
-        let p = this._storage.get(this._pledgeDataKey(address));
-        if (!p) {
-            p = []
-        }
-        return p;
+        return this._storage.get(this._pledgeDataKey(address));
     },
 
     _setPledge: function (address, pledge) {
         this._storage.put(this._pledgeDataKey(address), pledge);
     },
 
-    receiveData: function (data) {
+    receivePledgeData: function (data) {
         // TODO: Add permission verification
         for (let i = 0; i < data.length; ++i) {
             let a = data[i].a;
-            let d = data[i].d;
-            let p = this._getPledge(a);
-            if (p.length === 0) {
-                this._pledgeAddressList.add(a);
-            }
-            for (let j = 0; j < d.length; ++j) {
-                p.push(d[j]);
-            }
+            let p = data[i].p;
+            this._pledgeAddressList.add(a);
             this._setPledge(a, p);
         }
     },

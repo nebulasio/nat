@@ -26,8 +26,12 @@
         // init pledge
         BlockchainTool.callContract(customerAddress, pledgeContractAddress, 0, "init", [[managerAddress]]);
 
-        function pledgeTest(value, num) {
-            BlockchainTool.callContract(customerAddress, pledgeContractAddress, value, "pledge", [num]);
+        function pledgeTest(value) {
+            BlockchainTool.callContract(customerAddress, pledgeContractAddress, value, "pledge", []);
+        }
+
+        function cancelPledgeTest() {
+            BlockchainTool.callContract(customerAddress, pledgeContractAddress, 0, "cancelPledge", []);
         }
 
         function stopPledgeTest() {
@@ -79,8 +83,9 @@
 
         function main() {
             try {
-                pledgeTest(new BigNumber(2).mul(unit), 1);
-                pledgeTest(new BigNumber(1.52).mul(unit), 2);
+                pledgeTest(new BigNumber(2).mul(unit));
+                // pledgeTest(new BigNumber(1.52).mul(unit));
+                cancelPledgeTest();
                 stopPledgeTest();
                 exportTest();
                 transferAmountTest();
