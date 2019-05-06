@@ -9,6 +9,10 @@ ExchangeAddressManager.prototype = Object.assign({
         return this._keyPrefix + address;
     },
 
+    existsAddress: function (address) {
+        return this._storage.get(this._key(address)) != null;
+    },
+
     addAddresses: function (addresses) {
         let n = 0;
         for (let i = 0; i < addresses.length; ++i) {
@@ -37,3 +41,5 @@ ExchangeAddressManager.prototype = Object.assign({
         return n;
     }
 }, Base);
+
+ExchangeAddressManager.instance = null;

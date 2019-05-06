@@ -11,11 +11,7 @@ Pledge.prototype = {
     },
 
     _getPledge: function (address) {
-        let p = this._storage.get(this._pledgeDataKey(address));
-        if (!p) {
-            p = []
-        }
-        return p;
+        return this._storage.get(this._pledgeDataKey(address));
     },
 
     _setPledge: function (address, pledge) {
@@ -26,32 +22,33 @@ Pledge.prototype = {
         for (let i = 0; i < data.length; ++i) {
             let a = data[i].a;
             let p = data[i].p;
+            p.r = false;
+            if (p.c) {
+                continue;
+            }
             this._pledgeAddressList.add(a);
-            this._setPledge(a, p);
+            this._setPledge(a, {b: null, h: p.b, v: p.v, r: false, n: null});
         }
     },
 
-    pledge: function (n) {
-        n = this._getInt(n);
-        if (n < 1) {
-            throw ("The pledge period cannot be less than 1");
-        }
+    pledge: function () {
         let unit = new BigNumber(10).pow(18);
         if (unit.gt(Blockchain.transaction.value)) {
             throw ("The amount cannot be less than 1 NAS");
         }
+        let b = new BigNumber(Blockchain.getAccountState(a).balance).div(unit).toString(10);
         let a = Blockchain.transaction.from;
-        let b = Blockchain.block.height;
+        let h = Blockchain.block.height;
         let v = new BigNumber(Blockchain.transaction.value).div(unit).toString(10);
         let p = this._getPledge(a);
-        if (p.length === 0) {
+        if (!p) {
             this._addAddress(Blockchain.transaction.from);
         }
-        p.push({b: b, v: v, n: n, r: false});
+        p = {b: b, h: h, v: v, r: false, n: null};
         this._setPledge(a, p);
     },
 
-    checkAndReturn: function () {
+    checkAndReturn: function (v) {
         // TODO:
     },
 
@@ -63,8 +60,12 @@ Pledge.prototype = {
         return this._pledgeAddressList.getPageData(index);
     },
 
-    getPledgeWithAddress: function (address) {
+    getCurrentPledge: function (address) {
         return this._getPledge(address);
+    },
+
+    getAllPledges: function (address) {
+        // TODO
     }
 };
 

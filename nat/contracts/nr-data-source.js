@@ -71,6 +71,26 @@ PageList.prototype = {
         this._storage.put(this._dataKey(index.i), d);
     },
 
+    del: function (fn) {
+        let indexes = this.getPageIndexes();
+        if (indexes) {
+            for (let i = 0; i < indexes.length; ++i) {
+                let ds = this.getPageData(indexes[i].i);
+                if (ds) {
+                    let r = [];
+                    for (let j = 0; j < ds.length; ++j) {
+                        if (!fn(ds[j])) {
+                            r.push(ds[j]);
+                        }
+                    }
+                    if (r.length !== ds.length) {
+                        this._storage.put(this._dataKey(indexes[i].i), r);
+                    }
+                }
+            }
+        }
+    },
+
     addPage: function (page) {
         let i = 0;
         let index = this._lastIndex();
@@ -130,13 +150,16 @@ NrDataSource.prototype = {
         this._verifyManager();
         let key = this._key(data.startBlock, data.endBlock);
         if (!this._storage.get(key)) {
-            this._cycleList.add({s: data.startBlock, e: data.endBlock});
+            this._cycleList.add({sb: data.startBlock, eb: data.endBlock});
         }
         this._storage.put(this._key(data.startBlock, data.endBlock), data.addresses);
     },
 
     remove: function (startBlock, endBlock) {
         this._verifyManager();
+        this._cycleList.del(function (c) {
+            return c.sb === startBlock && c.eb === endBlock;
+        });
         this._storage.del(this._key(startBlock, endBlock));
     },
 

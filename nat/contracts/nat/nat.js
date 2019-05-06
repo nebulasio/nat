@@ -28,12 +28,19 @@ function NAT() {
         },
         "tokenData": null,
         "configData": null,
-        "pledgeData": null
+        "nrData": null,
+        "exchangeAddressData": null,
+        "pledgeData": null,
+        "voteData": null
     });
 
+    this._exchangeAddressManager = ExchangeAddressManager.instance = new ExchangeAddressManager(this.exchangeAddressData);
     this._config = Config.instance = new Config(this.configData);
+    this._nrDataManager = NrDataManager.instance = new NrDataManager(this.nrData);
     this._token = Token.instance = new Token(this.tokenData, this.balance, this.allowed);
     this._pledge = Pledge.instance = new Pledge(this.pledgeData);
+    this._airdrop = Airdrop.instance = new Airdrop();
+    this._vote = Vote.instance = new Vote(this.voteData);
 }
 
 NAT.prototype = {
@@ -128,17 +135,36 @@ NAT.prototype = {
     },
 
 
+    // DATA ------------------------------------------------------------------------------------------------------------
+
+    syncNrData: function () {
+        this._nrDataManager.sync();
+    },
+
+    addExchangeAddresses: function (addresses) {
+        this._exchangeAddressManager.addAddresses(addresses);
+    },
+
+    removeExchangeAddresses: function (addresses) {
+        this._exchangeAddressManager.removeAddresses(addresses);
+    },
+
+    existsExchangeAddress: function (address) {
+        return this._exchangeAddressManager.existsAddress(address);
+    },
+
+
     // PLEDGE ----------------------------------------------------------------------------------------------------------
 
-    receiveData: function (data) {
+    receivePledgeData: function (data) {
         if (!Config.instance.isFromPledgeDataAddress) {
             throw ("No permission.");
         }
-        this._pledge.receiveData(data);
+        this._pledge.receivePledgeData(data);
     },
 
-    pledge: function (n) {
-        this._pledge.pledge(n);
+    pledge: function () {
+        this._pledge.pledge();
     },
 
     getPledgeAddressIndexes: function () {
@@ -146,19 +172,34 @@ NAT.prototype = {
     },
 
     getPledgeAddresses: function (index) {
-        return this._pledge.getPledgeWithAddress(index);
+        return this._pledge.getAddresses(index);
     },
 
-    getPledgeWithAddress: function (address) {
-        return this._pledge.getPledgeWithAddress(address);
-    }
+    getCurrentPledge: function (address) {
+        return this._pledge.getCurrentPledge(address);
+    },
+
+    getAllPledge: function (address) {
+        return this._pledge.getAllPledges(address);
+    },
 
 
     // AIRDROP ---------------------------------------------------------------------------------------------------------
 
+    aridrop: function () {
+        this._airdrop.airdrop();
+    },
+
 
     // VOTE ------------------------------------------------------------------------------------------------------------
 
+    vote: function (dataSource, hash, value, weight) {
+        this._vote.vote(dataSource, hash, value, weight);
+    },
+
+    getVoteResult: function (dataSource, hash) {
+        return this._vote.getVoteResult(dataSource, hash);
+    },
 };
 
 module.exports = NAT;

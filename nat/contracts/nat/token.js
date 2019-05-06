@@ -53,6 +53,7 @@ Token.prototype = {
         this.symbol = symbol;
         this.decimals = decimals || 0;
         this.totalSupply = new BigNumber(totalSupply).mul(new BigNumber(10).pow(decimals));
+        this.activeSupply = new BigNumber(0);
     },
 
     get name() {
@@ -85,6 +86,14 @@ Token.prototype = {
 
     set totalSupply(totalSupply) {
         this.tokenData.put("totalSupply", totalSupply.toString(10));
+    },
+
+    get activeSupply() {
+        return new BigNumber(this.tokenData.get("activeSupply"));
+    },
+
+    set activeSupply(activeSupply) {
+        this.tokenData.put("activeSupply", activeSupply.toString(10));
     },
 
     balanceOf: function (owner) {
@@ -155,24 +164,18 @@ Token.prototype = {
 
     approve: function (spender, currentValue, value) {
         let from = Blockchain.transaction.from;
-
         let oldValue = this.allowance(from, spender);
         if (oldValue !== currentValue.toString()) {
             throw new Error("current approve value mistake.");
         }
-
         let balance = new BigNumber(this.balanceOf(from));
         let value = new BigNumber(value);
-
         if (value.lt(0) || balance.lt(value)) {
             throw new Error("invalid value.");
         }
-
         let owned = this.allowed.get(from) || new Allowed();
         owned.set(spender, value);
-
         this.allowed.set(from, owned);
-
         this._approveEvent(true, from, spender, value);
     },
 
@@ -189,7 +192,6 @@ Token.prototype = {
 
     allowance: function (owner, spender) {
         let owned = this.allowed.get(owner);
-
         if (owned instanceof Allowed) {
             let spender = owned.get(spender);
             if (typeof spender != "undefined") {
@@ -197,7 +199,23 @@ Token.prototype = {
             }
         }
         return "0";
-    }
+    },
+
+    airdrop: function (to, value) {
+        let b = this.balances.get(to) || new BigNumber(0);
+        this.balances.set(to, b.add(value));
+        this.activeSupply = this.activeSupply.plus(value);
+    },
+
+    destroy: function (from, value) {
+        let b = this.balances.get(from) || new BigNumber(0);
+        if (b.lt(value)) {
+            throw new Error("destroy failed.");
+        }
+        this.balances.set(from, b.sub(value));
+        this.activeSupply = this.activeSupply.sub(value);
+    },
+
 };
 
 Token.instance = null;

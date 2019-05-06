@@ -32,6 +32,42 @@ PageList.prototype = {
         this._storage.put(this._indexesKey(), this.getPageIndexes());
     },
 
+    each: function (fn) {
+        let indexes = this.getPageIndexes();
+        if (indexes) {
+            for (let i = 0; i < indexes.length; ++i) {
+                let ds = this.getPageData(indexes[i].i);
+                if (ds) {
+                    for (let j = 0; j < ds.length; ++j) {
+                        if (!fn(ds[j])) {
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+    },
+
+    del: function (fn) {
+        let indexes = this.getPageIndexes();
+        if (indexes) {
+            for (let i = 0; i < indexes.length; ++i) {
+                let ds = this.getPageData(indexes[i].i);
+                if (ds) {
+                    let r = [];
+                    for (let j = 0; j < ds.length; ++j) {
+                        if (!fn(ds[j])) {
+                            r.push(ds[j]);
+                        }
+                    }
+                    if (r.length !== ds.length) {
+                        this._storage.put(this._dataKey(indexes[i].i), r);
+                    }
+                }
+            }
+        }
+    },
+
     getPageIndexes: function () {
         if (!this._pageIndexes) {
             this._pageIndexes = this._storage.get(this._indexesKey());
