@@ -32,7 +32,7 @@
 
         function getDataTest() {
             let r = BlockchainTool.callContract(managerAddress, nrContractAddress, 0, "getData", [true, {index: 0}, {returnLast: true}]);
-            alert("getData:\n" + JSON.stringify(r));
+            console.log("getData:\n" + JSON.stringify(r));
         }
 
         function main() {
@@ -41,7 +41,7 @@
                 // uploadErrorTest(1, 500, [customerAddress]);
                 getDataTest();
             } catch (e) {
-                alert(e)
+                console.log(e)
             }
         }
 
