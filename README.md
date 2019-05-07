@@ -5,7 +5,7 @@
    * multisig.js -- zhuoer & ping
 
 please see the overall structure here:
-![Drag Racing](NAT.js.png)
+![NAT Overview](./NAT.js.png)
 
 ### Temporary NAS/NAT Pledge Contract
 - Smart contract deployment
