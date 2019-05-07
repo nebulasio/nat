@@ -4,6 +4,9 @@
    * new pledge.js and pledge'.js -- zhuoer & ping
    * multisig.js -- zhuoer & ping
 
+please see the overall structure here:
+![Drag Racing](NAT.js.png)
+
 ### Temporary NAS/NAT Pledge Contract
 - Smart contract deployment
    * define a cold wallet address (account) as the entity allow to migrate the data and NAS from temporary pledge contract
