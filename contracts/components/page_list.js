@@ -91,7 +91,7 @@ PageList.prototype = {
         let i = 0;
         if (index) {
             i = index.i;
-            if (index.l >= this._pageSize) {
+            if (index.l > this._pageSize) {
                 i += 1;
                 index = null;
             }

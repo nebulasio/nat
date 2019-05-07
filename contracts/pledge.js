@@ -51,70 +51,343 @@ PageList.prototype = {
     },
 
     add: function (obj) {
-        let index = this._lastIndex();
-        let i = 0;
-        if (index) {
-            i = index.i;
-            if (index.l >= this._pageSize) {
-                i += 1;
-                index = null;
+        let indexes = this.getPageIndexes();
+        let p = null;
+        for (let i = 0; i < indexes.length; ++i) {
+            let index = indexes[i];
+            if (index.l < this._pageSize) {
+                p = index;
+                break;
             }
         }
-        if (!index) {
-            index = {i: i, l: 0};
-            this._addIndex(index);
+
+        if (p == null) {
+            let i = 0;
+            if (indexes.length > 0) {
+                i = indexes[indexes.length - 1].i + 1;
+            }
+            p = {i: i, l: 0};
+            this._addIndex(p);
         }
-        let d = this.getPageData(index.i);
+
+        let d = this.getPageData(p.i);
         d.push(obj);
-        index.l += 1;
+        p.l += 1;
         this._saveIndexes();
-        this._storage.put(this._dataKey(index.i), d);
+        this._storage.put(this._dataKey(p.i), d);
+    },
+
+    each: function (fn) {
+        let indexes = this.getPageIndexes();
+        if (indexes) {
+            for (let i = 0; i < indexes.length; ++i) {
+                let ds = this.getPageData(indexes[i].i);
+                if (ds) {
+                    for (let j = 0; j < ds.length; ++j) {
+                        if (!fn(ds[j])) {
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+    },
+
+    del: function (ele) {
+        let indexes = this.getPageIndexes();
+        if (indexes) {
+            for (let i = 0; i < indexes.length; ++i) {
+                let index = indexes[i];
+                let ds = this.getPageData(index.i);
+                if (ds) {
+                    for (let j = 0; j < ds.length; ++j) {
+                        if (ele === ds[j]) {
+                            ds.splice(j, 1);
+                            index.l -= 1;
+                            this._storage.put(this._dataKey(index.i), ds);
+                            this._storage.put(this._indexesKey(), indexes);
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    },
+
+    clear: function () {
+        let indexes = this.getPageIndexes();
+        for (let i = 0; i < indexes.length; ++i) {
+            this._storage.del(this._dataKey(indexes[i].i));
+        }
+        this._storage.del(this._indexesKey());
     }
 };
+
+
+function CurrentData(storage) {
+    this._storage = storage;
+    this._addressList = new PageList(storage, "address_list");
+
+    this._keyLastBlock = "last_block";
+    this._lastBlock = null;
+}
+
+CurrentData.prototype = {
+
+    _getPledges: function (address) {
+        let r = this._storage.get(address);
+        if (!r) {
+            r = [];
+        }
+        return r;
+    },
+
+    _canPledge: function (address) {
+        let ps = this._getPledges(address);
+        if (ps.length === 0) {
+            return true;
+        }
+        return ps[ps.length - 1].e != null;
+    },
+
+    _canDelete: function (pledge) {
+        let lastBlock = this.lastBlock;
+        return lastBlock && pledge.e && lastBlock > pledge.e;
+    },
+
+    _getPledge: function (address, startBlock, endBlock) {
+        let ps = this._getPledges(address);
+        if (ps.length === 0) {
+            return null;
+        }
+        for (let i = 0; i < ps.length; ++i) {
+            let p = ps[i];
+            if (p.s <= startBlock && (!p.e || p.e >= endBlock)) {
+                return p;
+            }
+        }
+        return null;
+    },
+
+    _checkAndDelete: function (address, deleted) {
+        let ps = this._getPledges(address);
+        if (ps.length === 0) {
+            return;
+        }
+        let newPs = [];
+        for (let i = 0; i < ps.length; ++i) {
+            let p = ps[i];
+            if (!this._canDelete(p)) {
+                newPs.push(p);
+            } else {
+                deleted.push({a: address, p: p});
+            }
+        }
+        if (newPs.length > 0 && newPs.length !== ps.length) {
+            this._storage.put(address, newPs);
+        } else if (newPs.length === 0) {
+            this._storage.del(address);
+            this._addressList.del(address);
+        }
+    },
+
+    get lastBlock() {
+        if (!this._lastBlock) {
+            this._lastBlock = this._storage.get(this._keyLastBlock);
+        }
+        return this._lastBlock;
+    },
+
+    set lastBlock(block) {
+        this._lastBlock = block;
+        this._storage.put(this._keyLastBlock, block);
+    },
+
+    checkAndDelete: function () {
+        let deleted = [];
+        let indexes = Array.from(this._addressList.getPageIndexes());
+        for (let i = 0; i < indexes.length; ++i) {
+            let index = indexes[i];
+            let as = Array.from(this._addressList.getPageData(index.i));
+            for (let j = 0; j < as.length; ++j) {
+                let a = as[j];
+                this._checkAndDelete(a, deleted);
+            }
+        }
+        return deleted;
+    },
+
+    getDistributePledges: function (startBlock, endBlock) {
+        let r = [];
+        let indexes = this._addressList.getPageIndexes();
+        for (let i = 0; i < indexes.length; ++i) {
+            let index = indexes[i];
+            let as = this._addressList.getPageData(index.i);
+            for (let j = 0; j < as.length; ++j) {
+                let a = as[j];
+                let p = this._getPledge(a, startBlock, endBlock);
+                if (p != null) {
+                    r.push({a: a, v: p.v});
+                }
+            }
+        }
+        return r;
+    },
+
+    addPledge: function (address, pledge) {
+        if (!this._canPledge(address)) {
+            throw ("You already have a pledge.");
+        }
+        let ps = this._getPledges(address);
+        if (ps.length === 0) {
+            this._addressList.add(address);
+        }
+        ps.push(pledge);
+        this._storage.put(address, ps);
+    },
+
+    cancelPledge: function (address) {
+        if (this._canPledge(address)) {
+            throw ("No pledges that can be cancelled.");
+        }
+        let ps = this._getPledges(address);
+        let p = ps[ps.length - 1];
+        p.e = Blockchain.block.height;
+        this._storage.put(address, ps);
+    },
+
+    getCurrentPledges: function (address) {
+        return this._storage.get(address);
+    }
+};
+
+
+function HistoryData(storage) {
+    this._storage = storage;
+    this._addressList = new PageList(storage, "address_list");
+}
+
+HistoryData.prototype = {
+
+    _addressHistoryData: function (address) {
+        return new PageList(this._storage, "h_" + address);
+    },
+
+    addPledge: function (address, pledge) {
+        let ad = this._addressHistoryData(address);
+        if (ad.getPageIndexes().length === 0) {
+            this._addressList.add(address);
+        }
+        ad.add(pledge);
+    },
+
+    getHistoryPledgeIndexes: function (address) {
+        return this._addressHistoryData(address).getPageIndexes();
+    },
+
+    getHistoryPledges: function (address, index) {
+        return this._addressHistoryData(address).getPageData(index);
+    },
+};
+
+
+function DistributeData(storage) {
+    this._storage = storage;
+    this._addressList = new PageList(storage, "address_list");
+}
+
+DistributeData.prototype = {
+
+    _addressData: function (address) {
+        return new PageList(this._storage, "d_" + address);
+    },
+
+    addDistribute: function (address, distribute) {
+        let ad = this._addressData(address);
+        if (ad.getPageIndexes().length === 0) {
+            this._addressList.add(address);
+        }
+        ad.add(distribute);
+    },
+
+    getDistributeIndexes: function (address) {
+        return this._addressData(address).getPageIndexes();
+    },
+
+    getDistributes: function (address, index) {
+        return this._addressData(address).getPageData(index);
+    },
+};
+
+
+function StatisticData(storage) {
+    this._storage = storage;
+    this._addressList = new PageList(storage, "address_list");
+}
+
+StatisticData.prototype = {
+
+    addAddress: function (address) {
+        let d = this._storage.get(address);
+        if (!d) {
+            this._addressList.add(address);
+            this._storage.put(address, {nat: "0"});
+        }
+    },
+
+    addNat: function (address, nat) {
+        let d = this._storage.get(address);
+        if (d) {
+            d.nat = new BigNumber(d.nat).plus(new BigNumber(nat)).toString(10);
+            this._storage.put(address, d);
+        }
+    },
+
+    getNat: function (address) {
+        let d = this._storage.get(address);
+        if (d) {
+            return d.nat;
+        }
+        return null;
+    }
+};
+
 
 function Pledge() {
     this._contractName = "Pledge";
     LocalContractStorage.defineProperties(this, {
-        _canPledge: null,
         _canExport: null,
-        _managers: null
+        _multiSignAddress: null,
+        _proxyAddress: null,
+        _prevPledgeAddress: null,
+        _distributeAddress: null,
     });
-    LocalContractStorage.defineMapProperty(this, "_storage", {
-        parse: function (text) {
-            return JSON.parse(text);
-        },
-        stringify: function (obj) {
-            return JSON.stringify(obj);
-        }
+    LocalContractStorage.defineMapProperties(this, {
+        "_storage": null,
+        "_current": null,
+        "_histories": null,
+        "_distributes": null,
     });
-    this._addressList = new PageList(this._storage, "addresses");
 
-    this.STATE_NONE = 0;
-    this.STATE_PLEDGED = 1;
-    this.STATE_CANCELED = 2;
+    this._statisticData = new StatisticData(this._storage);
+    this._currentData = new CurrentData(this._current);
+    this._historyData = new HistoryData(this._histories);
+    this._distributeData = new DistributeData(this._distributes);
+
+    this._addresses = new PageList(this._storage, "address_list");
 
     this._unit = new BigNumber(10).pow(18);
 }
 
 Pledge.prototype = {
 
-    init: function (managers) {
-        if (!managers || managers.length === 0) {
-            throw ("Need at least one administrator");
-        }
-        for (let i = 0; i < managers.length; ++i) {
-            this._verifyAddress(managers[i]);
-        }
-        this._canPledge = true;
-        this._canExport = true;
-        this._managers = managers;
-    },
-
-    _getInt: function (num) {
-        if (!/^\d+$/.test(num + "")) {
-            throw (num + " is not an integer.");
-        }
-        return parseInt(num);
+    init: function (multiSignAddress) {
+        this._verifyAddress(multiSignAddress);
+        this._multiSignAddress = multiSignAddress;
+        this._proxyAddress = null;
+        this._prevPledgeAddress = null;
+        this._distributeAddress = null;
     },
 
     _verifyAddress: function (address) {
@@ -123,139 +396,146 @@ Pledge.prototype = {
         }
     },
 
-    _addAddress: function (address) {
-        this._addressList.add(address);
-    },
-
-    _getPledge: function (address) {
-        return this._storage.get(address);
-    },
-
-    _setPledge: function (address, pledge) {
-        this._storage.put(address, pledge);
-    },
-
-    _verifyManager: function () {
-        if (this._managers.indexOf(Blockchain.transaction.from) < 0) {
+    _verifyFromMultisign: function () {
+        if (this._multiSignAddress !== Blockchain.transaction.from) {
             throw ("No permission");
         }
     },
 
-    _getPledgeState: function () {
-        let a = Blockchain.transaction.from;
-        let p = this._getPledge(a);
-        if (!p) {
-            return this.STATE_NONE;
-        }
-        return !p.c ? this.STATE_PLEDGED : this.STATE_CANCELED;
-    },
-
-    pledge: function () {
-        if (!this._canPledge) {
-            throw ("This contract no longer accepts new pledges, please use the official new contract.");
-        }
-
-        let s = this._getPledgeState();
-        if (s === this.STATE_PLEDGED) {
-            throw ("You already have a pledge.");
-        }
-        if (this._unit.gt(Blockchain.transaction.value)) {
-            throw ("The amount cannot be less than 1 NAS");
-        }
-        let a = Blockchain.transaction.from;
-        let b = Blockchain.block.height;
-        let v = new BigNumber(Blockchain.transaction.value).div(this._unit).toString(10);
-        let p = this._getPledge(a);
-        if (!p) {
-            this._addAddress(Blockchain.transaction.from);
-        }
-        p = {b: b, v: v, c: false};
-        this._setPledge(a, p);
-    },
-
-    cancelPledge: function () {
-        let s = this._getPledgeState();
-        if (s !== this.STATE_PLEDGED) {
-            throw ("No pledges that can be cancelled.");
-        }
-        let a = Blockchain.transaction.from;
-        let p = this._getPledge(a);
-        let v = new BigNumber(p.v).mul(this._unit);
-        let r = Blockchain.transfer(a, v);
-        if (r) {
-            p.c = true;
-            this._setPledge(a, p);
-            Event.Trigger("transferCancelPledge", {
-                Transfer: {
-                    from: Blockchain.transaction.to,
-                    to: a,
-                    value: v,
-                }
-            });
-        } else {
-            throw ("Cancel pledge failed.");
+    _verifyFromProxy: function () {
+        if (this._proxyAddress !== Blockchain.transaction.from) {
+            throw ("No permission");
         }
     },
 
-    stopPledge: function () {
-        this._verifyManager();
-        this._canPledge = false;
+    _verifyFromPrevPledge: function () {
+        if (this._prevPledgeAddress !== Blockchain.transaction.from) {
+            throw ("No permission");
+        }
     },
 
-    transferAmount: function (natContractAddress) {
-        this._verifyManager();
-        let b = Blockchain.getAccountState(Blockchain.transaction.to).balance;
-        let r = Blockchain.transfer(natContractAddress, new BigNumber(b));
-        if (r) {
-            Event.Trigger("transferAmount", {
-                Transfer: {
-                    from: Blockchain.transaction.to,
-                    to: natContractAddress,
-                    value: b,
-                }
-            });
-        } else {
-            throw("Transfer Amount failed");
+    _verifyFromDistribute: function () {
+        if (this._distributeAddress !== Blockchain.transaction.from) {
+            throw ("No permission");
         }
-        return r;
     },
 
-    exportDataToNat: function (natContractAddress) {
-        this._verifyManager();
-        if (!this._canExport) {
-            throw ("Data has been exported.");
+    setPrevPledgeAddress: function (address) {
+        this._verifyFromMultisign();
+        this._verifyAddress(address);
+        this._prevPledgeAddress = address;
+    },
+
+    getPrevPledgeAddress: function () {
+        return this._prevPledgeAddress;
+    },
+
+    setProxyAddress: function (address) {
+        this._verifyFromMultisign();
+        this._verifyAddress(address);
+        this._proxyAddress = address;
+    },
+
+    getProxyAddress: function () {
+        return this._proxyAddress;
+    },
+
+    setDistributeAddress: function (address) {
+        this._verifyFromMultisign();
+        this._verifyAddress(address);
+        this._distributeAddress = address;
+    },
+
+    getDistributeAddress: function () {
+        return this._distributeAddress;
+    },
+
+    canExport: function () {
+        return this._canExport;
+    },
+
+    pledge: function (address, value) {
+        this._verifyFromProxy();
+        value = new BigNumber(value);
+        if (new BigNumber(5).mul(this._unit).gt(value)) {
+            throw ("The amount cannot be less than 5 NAS");
         }
+        let h = Blockchain.block.height;
+        let v = value.div(this._unit).toString(10);
+        this._currentData.addPledge(address, {s: h, v: v, e: null});
+        this._statisticData.addAddress(address);
+    },
 
-        let nat = new Blockchain.Contract(natContractAddress);
+    cancelPledge: function (address) {
+        this._verifyFromProxy();
+        this._currentData.cancelPledge(address);
+    },
 
-        let data = [];
-        let indexes = this.getAddressIndexes();
-        for (let i = 0; i < indexes.length; ++i) {
-            let index = indexes[i];
-            let as = this.getAddresses(index.i);
-            for (let j = 0; j < as.length; ++j) {
-                data.push({a: as[j], p: this._getPledge(as[j])});
+    receivePledgeData: function (data) {
+        this._verifyFromPrevPledge();
+        for (let i = 0; i < data.length; ++i) {
+            let a = data[i].a;
+            let p = data[i].p;
+            if (p.c) {
+                continue;
             }
+            this._currentData.addPledge(a, {s: p.b, v: p.v, e: null});
+            this._statisticData.addAddress(a);
         }
-        nat.call("receivePledgeData", data);
-        this._canExport = false;
+    },
+
+    getPledge: function (startBlock, endBlock) {
+        this._verifyFromDistribute();
+        return this._currentData.getDistributePledges(startBlock, endBlock);
+    },
+
+    setPledgeResult: function (startBlock, endBlock, data) {
+        this._verifyFromDistribute();
+        this._currentData.lastBlock = endBlock;
+        let deleted = this._currentData.checkAndDelete();
+        for (let i = 0; i < deleted; ++i) {
+            let d = deleted[i];
+            this._historyData.addPledge(d.a, d.p);
+        }
+
+        for (let i = 0; i < data.length; ++i) {
+            let d = data[i];
+            this._statisticData.addNat(d.a, d.nat);
+            this._distributeData.addDistribute(d.a, {v: d.v, d: d.nat, s: startBlock, e: endBlock});
+        }
     },
 
     getAddressIndexes: function () {
-        return this._addressList.getPageIndexes();
+        return this._addresses.getPageIndexes();
     },
 
     getAddresses: function (index) {
-        return this._addressList.getPageData(index);
+        return this._addresses.getPageData(index);
     },
 
-    getPledgeWithAddress: function (address) {
-        return this._getPledge(address);
+    getCurrentPledges: function (address) {
+        this._currentData.getCurrentPledges(address);
     },
 
-    accept: function () {
-        throw("Don't allow to directly transfer money to this contract, please use pledge function");
-    }
+    getHistoryPledgeIndexes: function (address) {
+        return this._historyData.getHistoryPledgeIndexes(address);
+    },
+
+    getHistoryPledges: function (address, index) {
+        return this._historyData.getHistoryPledges(address, index);
+    },
+
+    getTotalDistribute: function (address) {
+        return this._statisticData.getNat(address);
+    },
+
+    getDistributeIndexes: function (address) {
+        return this._distributeData.getDistributeIndexes(address);
+    },
+
+    getDistributes: function (address, index) {
+        return this._distributeData.getDistributes(address, index);
+    },
 };
 
 module.exports = Pledge;
