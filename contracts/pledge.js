@@ -334,11 +334,7 @@ StatisticData.prototype = {
 function Pledge() {
     this._contractName = "Pledge";
     LocalContractStorage.defineProperties(this, {
-        _canExport: null,
-        _multiSignAddress: null,
-        _proxyAddress: null,
-        _prevPledgeAddress: null,
-        _distributeAddress: null,
+        _config: null,
     });
     LocalContractStorage.defineMapProperties(this, {
         "_storage": null,
@@ -353,7 +349,6 @@ function Pledge() {
     this._distributeData = new DistributeData(this._distributes);
 
     this._addresses = new PageList(this._storage, "address_list");
-
     this._unit = new BigNumber(10).pow(18);
 }
 
@@ -361,10 +356,7 @@ Pledge.prototype = {
 
     init: function (multiSignAddress) {
         this._verifyAddress(multiSignAddress);
-        this._multiSignAddress = multiSignAddress;
-        this._proxyAddress = null;
-        this._prevPledgeAddress = null;
-        this._distributeAddress = null;
+        this._config = {multiSign: multiSignAddress};
     },
 
     _verifyAddress: function (address) {
@@ -374,64 +366,44 @@ Pledge.prototype = {
     },
 
     _verifyFromMultisig: function () {
-        if (this._multiSignAddress !== Blockchain.transaction.from) {
+        if (this._config.multiSign !== Blockchain.transaction.from) {
             throw ("Permission Denied!");
         }
     },
 
     _verifyFromPledgeProxy: function () {
-        if (this._proxyAddress !== Blockchain.transaction.from) {
+        if (this._config.pledgeProxy !== Blockchain.transaction.from) {
             throw ("Permission Denied!");
         }
     },
 
     _verifyFromPrevPledge: function () {
-        if (this._prevPledgeAddress !== Blockchain.transaction.from) {
+        if (this._config.prevPledge !== Blockchain.transaction.from) {
             throw ("Permission Denied!");
         }
     },
 
     _verifyFromDistribute: function () {
-        if (this._distributeAddress !== Blockchain.transaction.from) {
+        if (this._config.distribute !== Blockchain.transaction.from) {
             throw ("Permission Denied!");
         }
     },
 
-    // for multisig only
-    setPrevPledgeAddress: function (address) {
+    _verifyConfig: function (config) {
+        this._verifyAddress(config.multiSign);
+        this._verifyAddress(config.pledgeProxy);
+        this._verifyAddress(config.prevPledge);
+        this._verifyAddress(config.distribute);
+    },
+
+    getConfig: function () {
+        return this._config;
+    },
+
+    setConfig: function (config) {
         this._verifyFromMultisig();
-        this._verifyAddress(address);
-        this._prevPledgeAddress = address;
-    },
-
-    getPrevPledgeAddress: function () {
-        return this._prevPledgeAddress;
-    },
-
-    // for multisig only
-    setProxyAddress: function (address) {
-        this._verifyFromMultisig();
-        this._verifyAddress(address);
-        this._proxyAddress = address;
-    },
-
-    getProxyAddress: function () {
-        return this._proxyAddress;
-    },
-
-    // for multisig only
-    setDistributeAddress: function (address) {
-        this._verifyFromMultisig();
-        this._verifyAddress(address);
-        this._distributeAddress = address;
-    },
-
-    getDistributeAddress: function () {
-        return this._distributeAddress;
-    },
-
-    canExport: function () {
-        return this._canExport;
+        this._verifyConfig(config);
+        this._config = config;
     },
 
     // for pledge_proxy.js only

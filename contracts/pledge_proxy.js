@@ -3,27 +3,20 @@ function PledgeProxy() {
     LocalContractStorage.defineProperties(this, {
         _allowPledge: null, // whether allow to pledge
         _allowFundManager: null, // whether fund manager can transfer the money
-        _multisigAddr: null, // multisig controller address
-        _fundManagerAddr:null,  // who is able to move the fund
-        _pledgeContractAddr: null // pledge contract
+        _config: null,
     });
-    // Constant value
-    this._unit = new BigNumber(10).pow(18);
+    this._pledge = null;
 }
 
 PledgeProxy.prototype = {
 
-    init: function (multisigAddr) {
-        // make sure there is a multisig contract address exist when deploy
-        if (!multisigAddr || multisigAddr.length === 0) {
-            throw ("Need to define the multisig address");
-        }
+    init: function (multiSignAddr) {
         // make sure this address is valid
-        this._verifyAddress(multisigAddr);
+        this._verifyAddress(multiSignAddr);
         // initial the status
         this._allowPledge = true;
         this._allowFundManager = false;
-        this._multisigAddr = multisigAddr;
+        this._config = {multiSign: multiSignAddr};
     },
 
     _verifyAddress: function (address) {
@@ -33,75 +26,66 @@ PledgeProxy.prototype = {
     },
 
     _allowControl: function () {
-        return this.multisigAddr === Blockchain.transaction.from;
+        return this._config.multiSign === Blockchain.transaction.from;
     },
 
     _allowTransferFund: function () {
-        if (this._allowControl) {
-            return true;
-        } 
-        if (this._allowFundManager && this._fundManagerAddr === Blockchain.transaction.from) {
+        if (this._allowControl()) {
             return true;
         }
-        return false;
+        return (this._allowFundManager && this._config.fundManager === Blockchain.transaction.from);
+    },
+
+    _verifyConfig: function (config) {
+        this._verifyAddress(config.multiSign);
+        this._verifyAddress(config.pledge);
+        if (config.fundManager) {
+            this._verifyAddress(config.fundManager);
+        }
+    },
+
+    get pledgeContract() {
+        if (!this._pledge) {
+            if (!this._config.pledge) {
+                throw ("Pledge not found.");
+            }
+            this._pledge = new Blockchain.Contract(this._config.pledge);
+        }
+        return this._pledge;
     },
 
     // Get config address
-    getConfig: function(configName) {
-        if (configName === "multisigAddress") {
-            return this._multisigAddr;
-        }
-        if (configName === "fundManager") {
-            return this._fundManagers;
-        }
+    getConfig: function () {
+        return this._config;
     },
 
     // Update config address
     // For multisig only
-    updateConfig: function(configName, addr) {
+    setConfig: function (config) {
         if (!this._allowControl()) {
             throw ("permission denied!");
         }
-
-        // Update multisigAddr
-        if (configName === "multisigAddr") {
-            this.multisigAddr = Blockchain.transaction.from;
-            return true;
-        }
-
-        // Update fund manager
-        if (configName === "fundManager") {
-            let fundManagerAddr = addr;
-            this._verifyAddress(fundManagerAddr);
-            this._fundManagers = fundManagerAddr;
-            return true;
-        }
-
-        // Update pledge smart contract
-        if (configName === "pledgeContractAddr") {
-            let pledgeContractAddr = addr; 
-            this._pledgeContractAddr = pledgeContractAddr;
-            return true;
-        }
+        this._verifyConfig(config);
+        this._config = config;
     },
 
     // for mlultisig only
-    closePledge: function() {
+    closePledge: function () {
         if (!this._allowControl()) {
             throw ("permission denied!");
         }
-        this._allowPledge = false; 
+        this._allowPledge = false;
     },
 
     // for multisig only
-    openPledge: function() {
-         if (!this._allowControl()) {
+    openPledge: function () {
+        if (!this._allowControl()) {
             throw ("permission denied!");
         }
-        this._allowPledge = true; 
+        this._allowPledge = true;
     },
 
-    getStatus: function(statusName) {
+    getStatus: function (statusName) {
         if (statusName === "allowPledge") {
             return this._allowPledge;
         }
@@ -114,15 +98,13 @@ PledgeProxy.prototype = {
         if (!this._allowPledge) {
             throw ("This contract no longer accept new pledges.");
         }
-        let targetAddr = this._pledgeContractAddr;
         let value = Blockchain.transaction.value;
         let from = Blockchain.transaction.from;
-        let c = new Blockchain.Contract(targetAddr);
-        c.value(value).call('pledge', from, value);
+        this.pledgeContract.call('pledge', from, value);
         Event.Trigger("pledgeRedirect", {
             Transfer: {
                 from: from,
-                to: targetAddr,
+                to: Blockchain.transaction.to,
                 value: value,
             }
         });
@@ -133,20 +115,17 @@ PledgeProxy.prototype = {
         if (!this._allowPledge) {
             throw ("This contract no longer accept new pledges. ");
         }
-        let targetContractAddr = this._pledgeContractAddr;
-        let c = new Blockchain.Contract(targetContractAddr);
-
-        let targetAddr = Blockchain.transaction.from;
         // Call pledge.js cancelPledge function to check plege status and update the data
         // it will return a value with bigNumber, please see pledge.js
         // if cancel failed or the address not pledge, it will fail in this step
-        let value = c.call('cancelPledge', targetAddr);
+        let value = this.pledgeContract.call('cancelPledge', Blockchain.transaction.from);
         // transfer the fund if cancel pledge data updated success
-        let r = Blockchain.transfer(targetAddr, value); 
+        let r = Blockchain.transfer(Blockchain.transaction.from, value);
         if (r) {
             Event.Trigger("cancelPledge", {
                 Transfer: {
-                    from: targetAddr,
+                    from: Blockchain.transaction.to,
+                    to: Blockchain.transaction.from,
                     value: value
                 }
             });
@@ -160,7 +139,7 @@ PledgeProxy.prototype = {
         }
         let c = new Blockchain.Contract(newAddr);
         let b = Blockchain.getAccountState(Blockchain.transaction.to).balance;
-        r = c.value(new BigNumber(b)).call('acceptFund');
+        let r = c.value(new BigNumber(b)).call('acceptFund');
         if (r) {
             Event.Trigger("transferFund", {
                 Transfer: {
@@ -176,161 +155,66 @@ PledgeProxy.prototype = {
     },
 
     // accept fund when necessary
-    acceptFund: function() {
+    acceptFund: function () {
         let value = Blockchain.transaction.value;
         let from = Blockchain.transaction.from;
 
-        Event.Trigger("Accept fund from outsource", { 
+        Event.Trigger("Accept fund from outsource", {
             Transfer: {
                 from: from,
+                to: Blockchain.transaction.to,
                 value: value,
             }
         });
-    }
+    },
 
     // proxy redirect to pledge.js
     getAddressIndexes: function () {
-        let targetAddr = this._pledgeContractAddr;
-        let c = new Blockchain.Contract(targetAddr);
-        let result = c.call('getAddressIndexes');
-        if (result) {
-            Event.Trigger("getAddressIndexes", { 
-                Transfer: {
-                    from: Blockchain.transaction.from,
-                }
-            });
-            return result;
-        } else {
-            throw ("No data found");
-        }
-    },  
+        let result = this.pledgeContract.call('getAddressIndexes');
+        return result != null ? result : "No data found";
+    },
 
     // proxy redirect to pledge.js
     getAddresses: function (index) {
-        let targetAddr = this._pledgeContractAddr;
-        let c = new Blockchain.Contract(targetAddr);
-        let result = c.call('getAddresses', index);
-        if (result) {
-            Event.Trigger("getAddresses", { 
-                Transfer: {
-                    from: Blockchain.transaction.from,
-                    index: index
-                }
-            });
-            return result;
-        } else {
-            throw ("No data found");
-        }
-    },  
+        let result = this.pledgeContract.call('getAddresses', index);
+        return result != null ? result : "No data found";
+    },
 
     // proxy redirect to pledge.js
     getCurrentPledges: function (address) {
-        let targetAddr = this._pledgeContractAddr;
-        let c = new Blockchain.Contract(targetAddr);
-        let result = c.call('getCurrentPleges', address);
-        if (result) {
-            Event.Trigger("getCurrentPleges", { 
-                Transfer: {
-                    from: Blockchain.transaction.from,
-                    addr: address
-                }
-            });
-            return result;
-        } else {
-            throw ("No data found");
-        }
-    },  
+        let result = this.pledgeContract.call('getCurrentPleges', address);
+        return result != null ? result : "No data found";
+    },
 
     // proxy redirect to pledge.js
     getHistoryPledgeIndexes: function (address) {
-        let targetAddr = this._pledgeContractAddr;
-        let c = new Blockchain.Contract(targetAddr);
-        let result = c.call('getHistoryPledgeIndexes', address);
-        if (result) {
-            Event.Trigger("getHistoryPledgeIndexes", { 
-                Transfer: {
-                    from: Blockchain.transaction.from,
-                    addr: address
-                }
-            });
-            return result;
-        } else {
-            throw ("No data found");
-        }
-    },  
+        let result = this.pledgeContract.call('getHistoryPledgeIndexes', address);
+        return result != null ? result : "No data found";
+    },
 
     // proxy redirect to pledge.js
     getHistoryPledges: function (address, index) {
-        let targetAddr = this._pledgeContractAddr;
-        let c = new Blockchain.Contract(targetAddr);
-        let result = c.call('getHistoryPledges', address, index);
-        if (result) {
-            Event.Trigger("getHistoryPledges", { 
-                Transfer: {
-                    from: Blockchain.transaction.from,
-                    addr: address
-                }
-            });
-            return result;
-        } else {
-            throw ("No data found");
-        }
-    },  
+        let result = this.pledgeContract.call('getHistoryPledges', address, index);
+        return result != null ? result : "No data found";
+    },
 
     // proxy redirect to pledge.js
     getTotalDistribute: function (address) {
-        let targetAddr = this._pledgeContractAddr;
-        let c = new Blockchain.Contract(targetAddr);
-        let result = c.call('getTotalDistribute', address);
-        if (result) {
-            Event.Trigger("getTotalDistribute", { 
-                Transfer: {
-                    from: Blockchain.transaction.from,
-                    addr: address
-                }
-            });
-            return result;
-        } else {
-            throw ("No data found");
-        }
-    },  
+        let result = this.pledgeContract.call('getTotalDistribute', address);
+        return result != null ? result : "No data found";
+    },
 
     // proxy redirect to pledge.js
     getDistributeIndexes: function (address) {
-        let targetAddr = this._pledgeContractAddr;
-        let c = new Blockchain.Contract(targetAddr);
-        let result = c.call('getDistributeIndexes', address);
-        if (result) {
-            Event.Trigger("getDistributeIndexes", { 
-                Transfer: {
-                    from: Blockchain.transaction.from,
-                    addr: address
-                }
-            });
-            return result;
-        } else {
-            throw ("No data found");
-        }
-    },  
+        let result = this.pledgeContract.call('getDistributeIndexes', address);
+        return result != null ? result : "No data found";
+    },
 
     // proxy redirect to pledge.js
     getDistributes: function (address, index) {
-        let targetAddr = this._pledgeContractAddr;
-        let c = new Blockchain.Contract(targetAddr);
-        let result = c.call('getDistributes', address, index);
-        if (result) {
-            Event.Trigger("getDistributes", { 
-                Transfer: {
-                    from: Blockchain.transaction.from,
-                    addr: address,
-                    index:index
-                }
-            });
-            return result;
-        } else {
-            throw ("No data found");
-        }
-    }, 
+        let result = this.pledgeContract.call('getDistributes', address, index);
+        return result != null ? result : "No data found";
+    },
 };
 
 module.exports = PledgeProxy;

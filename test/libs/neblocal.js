@@ -117,11 +117,14 @@ let BlockchainTool = {
 
     callContract: function (from, contract, value, func, args) {
         this._pushTransaction(this._newTransaction(from, contract, value));
+        this.transfer(from, contract, value);
         try {
             let c = new BlockContract(contract).contract;
             let r = c[func].apply(c, args);
-            this.transfer(from, contract, value);
             return r;
+        } catch (e) {
+            this.transfer(contract, from, value);
+            throw e;
         } finally {
             this._popTransaction();
         }
@@ -142,14 +145,18 @@ function BlockContract(address) {
 BlockContract.prototype = {
     value: function (amount) {
         this.amount = new BigNumber(amount);
+        return this;
     },
     call: function () {
         let tx = BlockchainTool._newTransaction(Blockchain.transaction.to, this.address, this.amount);
         BlockchainTool._pushTransaction(tx);
+        BlockchainTool.transfer(Blockchain.transaction.to, this.address, this.amount);
         try {
             let a = Array.from(arguments);
-            this.contract[a[0]].apply(this.contract, a.slice(1, a.length));
-            BlockchainTool.transfer(Blockchain.transaction.to, this.address, this.amount);
+            return this.contract[a[0]].apply(this.contract, a.slice(1, a.length));
+        } catch (e) {
+            BlockchainTool.transfer(this.address, Blockchain.transaction.to, this.amount);
+            throw e;
         } finally {
             BlockchainTool._popTransaction();
         }
