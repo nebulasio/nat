@@ -396,16 +396,8 @@ Pledge.prototype = {
         }
     },
 
-    _verifyFromMultisign: function () {
-        if (this._multiSignAddress !== Blockchain.transaction.from) {
-            throw ("No permission");
-        }
-    },
-
-    _verifyFromProxy: function () {
-        if (this._proxyAddress !== Blockchain.transaction.from) {
-            throw ("No permission");
-        }
+    _isFromMultisig: function() {
+        return this._multiSignAddress === Blockchain.transaction.from;
     },
 
     _isFromPledgeProxy: function() {
@@ -425,7 +417,9 @@ Pledge.prototype = {
     },
 
     setPrevPledgeAddress: function (address) {
-        this._verifyFromMultisign();
+        if (!this._isFromMultisig()) {
+            throw ("Permission Denied!");
+        }
         this._verifyAddress(address);
         this._prevPledgeAddress = address;
     },
@@ -435,7 +429,9 @@ Pledge.prototype = {
     },
 
     setProxyAddress: function (address) {
-        this._verifyFromMultisign();
+        if (!this._isFromMultisig()) {
+            throw ("Permission Denied!");
+        }
         this._verifyAddress(address);
         this._proxyAddress = address;
     },
@@ -445,7 +441,9 @@ Pledge.prototype = {
     },
 
     setDistributeAddress: function (address) {
-        this._verifyFromMultisign();
+        if (!this._isFromMultisig()) {
+            throw ("Permission Denied!");
+        }
         this._verifyAddress(address);
         this._distributeAddress = address;
     },
