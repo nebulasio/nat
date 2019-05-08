@@ -42,8 +42,8 @@ var NATToken = function () {
                 return o.toString(10);
             }
         },
-        _managers: null,
-        _producer: null
+        _multiSig: null,
+        _distribute: null
     });
 
     LocalContractStorage.defineMapProperties(this, {
@@ -67,34 +67,30 @@ var NATToken = function () {
 };
 
 NATToken.prototype = {
-    init: function (name, symbol, decimals, managers) {
+    init: function (name, symbol, decimals, multiSig) {
         this._name = name;
         this._symbol = symbol;
         this._decimals = decimals || 0;
         this._totalSupply = new BigNumber(0);
-        this._managers = managers;
+        this._multiSig = multiSig;
     },
 
      _verifyPermission: function () {
-        if (this._managers.indexOf(Blockchain.transaction.from) < 0) {
-            throw ("No permission");
+        if (this._multiSig !== Blockchain.transaction.from) {
+            throw ("Permission Denied!");
         }
     },
 
-    update_managers: function(managers) {
+    setConfig: function(config) {
         this._verifyPermission();
-        this._managers = managers;
-    },
-
-    update_producer: function(producer) {
-        this._verifyPermission();
-        this._producer = producer;
+        this._multiSig = config.multiSig;
+        this._distribute = config.distribute;
     },
 
     nat_produce: function(data) {
         // permission check
-        if (this._producer.indexOf(Blockchain.transaction.from) < 0) {
-            throw ("No permission");
+        if (this._distribute !== Blockchain.transaction.from) {
+            throw ("Permission Denied for distribute!");
         }
 
         let total = new BigNumber(0);

@@ -153,13 +153,13 @@ NrDataSource.prototype = {
     },
 
     init: function (managers) {
-        if (!managers || managers.length === 0) {
-            throw ("Need at least one administrator");
-        }
-        for (let i = 0; i < managers.length; ++i) {
-            this._verifyAddress(managers[i]);
-        }
-        this._managers = managers;
+        // if (!managers || managers.length === 0) {
+        //     throw ("Need at least one administrator");
+        // }
+        // for (let i = 0; i < managers.length; ++i) {
+        //     this._verifyAddress(managers[i]);
+        // }
+        // this._managers = managers;
     },
 
     // {startBlock:1, endBlock:500, addresses:["",...]}

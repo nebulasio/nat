@@ -14,7 +14,7 @@ DPledge.prototype = {
 		this._pledge_contract = contract;
 	},
 	calculate: function(section) {
-		let pledge = new Blockchain.Contract(this._nat_contract);
+		let pledge = new Blockchain.Contract(this._pledge_contract);
 		let pledgeData = pledge.call("getPledge", section.startHeight, section.endHeight);
 		let data = new Array();
 		for (let key in pledgeData) {
@@ -136,7 +136,7 @@ function Distribute() {
     LocalContractStorage.defineProperties(this, {
     	_state: null,
         _nat_contract: null,
-        _managers: null
+        _multiSig: null
     });
 
     this._pledge = new DPledge();
@@ -145,19 +145,19 @@ function Distribute() {
 };
 
 Distribute.prototype = {
-	init: function (height, managers) {
+	init: function (height, multiSig) {
 		this._state = STATE_WORK;
 		this._pledge._pledge_period = 0;
 		this._pledge._pledge_height = height;
 		this._nr._nr_period = 0;
 		this._nr._nr_height = height;
-		this._managers = managers;
+		this._multiSig = multiSig;
     },
     _verifyPermission: function () {
-        if (this._managers.indexOf(Blockchain.transaction.from) < 0) {
-            throw ("No permission");
+        if (this._multiSig !== Blockchain.transaction.from) {
+            throw ("Permission Denied!");
         }
-    },
+	},
     _verifyStatus: function() {
     	if (this._state === STATE_PAUSED) {
         	throw ("Distribute paused");
@@ -167,27 +167,23 @@ Distribute.prototype = {
     	let nat = new Blockchain.Contract(this._nat_contract);
     	nat.call("nat_produce", data);
     },
-    update_managers: function(managers) {
-    	this._verifyPermission();
-    	this._managers = managers;
-    },
     update_status: function(state) {
     	this._verifyPermission();
     	this._state = state;
     },
     setConfig: function(config) {
-    	// config = JSON.parse(config);
-    	this._verifyPermission();
+		this._verifyPermission();
+		this._multiSig = config.multiSig;
     	this._nat_contract = config.nat;
     	this._pledge.update_contract(config.pledge);
     	this._vote.update_contract(config.vote);
-    	this._nr.update_contract(config.nr);
+    	this._nr.update_contract(config.nrData);
     },
     // tigger pledge reward
     tiggerPledge: function() {
     	this._verifyPermission();
     	this._verifyStatus();
-    	let summary = this._nr.summary(this._pledge.pledge_height);
+    	let summary = this._nr.summary(this._pledge._pledge_height);
     	for (let key in summary) {
     		let data = this._pledge.calculate(summary[key].section);
     		this._produceNat(data);

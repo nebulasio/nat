@@ -68,10 +68,11 @@
 
             // Distribute
             BlockchainTool.callContract(multiSignAddress, distributeAddress, 0, "setConfig", [{
+                multiSig: multiSignAddress,
                 nat: natAddress,
                 pledge: pledgeAddress,
                 vote: voteAddress,
-                nr: nrDataAddress
+                nrData: nrDataAddress
             }]);
         }
 
@@ -143,6 +144,10 @@
             console.log("distributes:\n" + JSON.stringify(r));
         }
 
+        function distributeTest() {
+            let r = BlockchainTool.callContract(multiSignAddress, distributeAddress, 0, "tiggerPledge", []);
+        }
+
         function main() {
             initContext();
             initContractTest();
@@ -165,6 +170,8 @@
 
             getHistoryPledgesTest();
             getPledgeDistributesTest();
+
+            distributeTest();
         }
 
         main();
