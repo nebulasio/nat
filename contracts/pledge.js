@@ -199,7 +199,7 @@ CurrentData.prototype = {
     },
 
     getDistributePledges: function (startBlock, endBlock) {
-        let r = {};
+        let r = [];
         let indexes = this._addressList.getPageIndexes();
         for (let i = 0; i < indexes.length; ++i) {
             let index = indexes[i];
@@ -208,7 +208,7 @@ CurrentData.prototype = {
                 let a = as[j];
                 let p = this._getPledge(a, startBlock, endBlock);
                 if (p != null) {
-                    r[a] = p.v;
+                    r.push({addr: a, value: p.v});
                 }
             }
         }

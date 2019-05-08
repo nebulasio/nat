@@ -116,7 +116,7 @@
 
             let r = BlockchainTool.callContract(customerAddress, proxyAddress, 0, "getAddressIndexes", []);
 
-            console.log("addresses:\n" + JSON.stringify(r));
+            console.log("indexes:\n" + JSON.stringify(r));
         }
 
         function getPledgeAddressesTest() {
@@ -125,6 +125,22 @@
             let r = BlockchainTool.callContract(customerAddress, proxyAddress, 0, "getAddresses", [0]);
 
             console.log("addresses:\n" + JSON.stringify(r));
+        }
+
+        function getHistoryPledgesTest() {
+            console.log("-------------------------------------------\nGet History Pledges Test");
+
+            let r = BlockchainTool.callContract(customerAddress, proxyAddress, 0, "getHistoryPledges", [customerAddress, 0]);
+
+            console.log("histories:\n" + JSON.stringify(r));
+        }
+
+        function getPledgeDistributesTest() {
+            console.log("-------------------------------------------\nGet Pledge Distributes Test");
+
+            let r = BlockchainTool.callContract(customerAddress, proxyAddress, 0, "getDistributes", [customerAddress, 0]);
+
+            console.log("distributes:\n" + JSON.stringify(r));
         }
 
         function main() {
@@ -146,6 +162,9 @@
             getCurrentPledgesTest();
             getPledgeAddressIndexesTest();
             getPledgeAddressesTest();
+
+            getHistoryPledgesTest();
+            getPledgeDistributesTest();
         }
 
         main();
