@@ -1,3 +1,7 @@
+/*
+    This is a simple multisig smart contract, any cosigner in the list will be able to get through the function call
+    @author: Zhuoer Wang, Ping Guo, Qiyuan Wang
+*/
 function PageList(storage, key) {
     this._storage = storage;
     this._key = key;

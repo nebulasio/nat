@@ -1,11 +1,15 @@
+/*
+    This is a simple multisig smart contract, any cosigner in the list will be able to get through the function call
+    @author: Zhuoer Wang, Ping Guo, Qiyuan Wang
+*/
 function PledgeProxy() {
     this._contractName = "PledgeProxy";
     LocalContractStorage.defineProperties(this, {
         _allowPledge: null, // whether allow to pledge
         _allowFundManager: null, // whether fund manager can transfer the money
-        _config: null,
+        _config: null, // contain all contract addresses
     });
-    this._pledge = null;
+    this._pledgeContractObj = null; // pledge.js contract obj
 }
 
 PledgeProxy.prototype = {
@@ -45,13 +49,13 @@ PledgeProxy.prototype = {
     },
 
     get pledgeContract() {
-        if (!this._pledge) {
+        if (!this._pledgeContractObj) {
             if (!this._config.pledge) {
                 throw ("Pledge not found.");
             }
-            this._pledge = new Blockchain.Contract(this._config.pledge);
+            this._pledgeContractObj = new Blockchain.Contract(this._config.pledge);
         }
-        return this._pledge;
+        return this._pledgeContractObj;
     },
 
     // Get config address
