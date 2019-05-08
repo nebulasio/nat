@@ -87,7 +87,7 @@ NATToken.prototype = {
         this._distribute = config.distribute;
     },
 
-    nat_produce: function(data) {
+    produce: function(data) {
         // permission check
         if (this._distribute !== Blockchain.transaction.from) {
             throw ("Permission Denied for distribute!");
@@ -97,17 +97,32 @@ NATToken.prototype = {
         for (let key in data) {
             let item = data[key];
             let balance = this._balances.get(item.addr) || new BigNumber(0);
-            // balance + nat*10^this._decimals
-            let value = new BigNumber(10).pow(this._decimals).times(item.nat).floor();
-            total = total.plus(value);
-            balance = value.plus(balance);
+            // balance + value
+            total = total.plus(item.value);
+            balance = balance.plus(item.value);
 
             if (balance.lt(0)) {
+                this._produceEvent(false, this._totalSupply, data);
                 throw new Error("produce failed.");
             }
-            this._balances.set(item.addr, balance.sub(value));
+            this._balances.set(item.addr, balance);
         }
         this._totalSupply = this._totalSupply.plus(total);
+        if (this._totalSupply.gt(new BigNumber(10).pow(18).pow(12))) {
+            this._produceEvent(false, this._totalSupply, data);
+            throw ("Out of total supply");
+        }
+        this._produceEvent(true, this._totalSupply, data);
+    },
+
+    _produceEvent: function (status, total, data) {
+        Event.Trigger(this.name(), {
+            Status: status,
+            Produce: {
+                total: total,
+                data: data
+            }
+        });
     },
 
     // Returns the name of the token

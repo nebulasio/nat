@@ -69,7 +69,7 @@ DNR.prototype = {
 			for (let dkey in nrData.data) {
 				let item = nrData.data[dkey];
 				// x / (1 + sqrt(100/x)) * 0.997^i
-				let zx = new BigNumber(100).div(item.value).pow(0.5).plus(1).pow(-1).times(item.value);
+				let zx = new BigNumber(100).div(item.value).sqrt().plus(1).pow(-1).times(item.value);
 				let y = new BigNumber(0.997).pow(this._nr_period);
 				let value = zx.times(y);
 				item.nat = value.toString(10);
@@ -114,7 +114,7 @@ DVote.prototype = {
 		score = new BigNumber(score);
 		if (score.gt(0)) {
 			// x / (1 + sqrt(100/x)) * 0.997^i
-			let zx = new BigNumber(100).div(score).pow(0.5).plus(1).pow(-1).times(score);
+			let zx = new BigNumber(100).div(score).sqrt().plus(1).pow(-1).times(score);
 			let y = new BigNumber(0.997).pow(nr._nr_period);
 			value = zx.times(y).plus(value);
 		}
@@ -164,8 +164,14 @@ Distribute.prototype = {
         }
     },
     _produceNat: function(data) {
-    	let nat = new Blockchain.Contract(this._nat_contract);
-    	nat.call("nat_produce", data);
+		let nat = new Blockchain.Contract(this._nat_contract);
+		let natData = new Array();
+		for (let key in data) {
+			let item = data[key];
+			let value = new BigNumber(10).pow(18).times(item.nat).floor();
+			natData.push({addr: item.addr, value: value});
+		}
+    	nat.call("produce", natData);
     },
     update_status: function(state) {
     	this._verifyPermission();
