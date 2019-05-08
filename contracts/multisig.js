@@ -1,5 +1,5 @@
-function PledgeProxy() {
-    this._contractName = "PledgeProxy";
+function MultiSig() {
+    this._contractName = "MultiSig";
     LocalContractStorage.defineProperties(this, {
         _allowPledge: null, // whether allow to pledge
         _allowFundManager: null, // whether fund manager can transfer the money
@@ -7,11 +7,9 @@ function PledgeProxy() {
         _fundManagerAddr:null,  // who is able to move the fund
         _pledgeContractAddr: null // pledge contract
     });
-    // Constant value
-    this._unit = new BigNumber(10).pow(18);
 }
 
-PledgeProxy.prototype = {
+MultiSig.prototype = {
 
     init: function (multisigAddr) {
         // make sure there is a multisig contract address exist when deploy
@@ -115,8 +113,8 @@ PledgeProxy.prototype = {
             throw ("This contract no longer accept new pledges.");
         }
         let targetAddr = this._pledgeContractAddr;
-        let value = Blockchain.transcation.value;
-        let from = Blockchain.transcation.from;
+        let value = Blockchain.transaction.value;
+        let from = Blockchain.transaction.from;
         let c = new Blockchain.Contract(targetAddr);
         c.value(value).call('pledge', from, value);
         Event.Trigger("pledgeRedirect", {
@@ -133,16 +131,16 @@ PledgeProxy.prototype = {
         if (!this._allowPledge) {
             throw ("This contract no longer accept new pledges. ");
         }
-        let targetAddr = this._pledgeContractAddr;
-        let c = new Blockchain.Contract(targetAddr);
+        let targetContractAddr = this._pledgeContractAddr;
+        let c = new Blockchain.Contract(targetContractAddr);
 
-        let targetAddr = Blockchain.transcation.from;
+        let targetAddr = Blockchain.transaction.from;
         // Call pledge.js cancelPledge function to check plege status and update the data
         // it will return a value with bigNumber, please see pledge.js
         // if cancel failed or the address not pledge, it will fail in this step
         let value = c.call('cancelPledge', targetAddr);
         // transfer the fund if cancel pledge data updated success
-        let r = Blockchain.transfer(from, value); 
+        let r = Blockchain.transfer(targetAddr, value); 
         if (r) {
             Event.Trigger("cancelPledge", {
                 Transfer: {
@@ -155,7 +153,7 @@ PledgeProxy.prototype = {
 
     // for multisig and fund manager
     transferFund: function (newAddr) {
-        if (!_allowTransferFund()) {
+        if (!this._allowTransferFund()) {
             throw ("Permission denied!");
         }
         let c = new Blockchain.Contract(newAddr);
@@ -177,8 +175,8 @@ PledgeProxy.prototype = {
 
     // accept fund when necessary
     acceptFund: function() {
-        let value = Blockchain.transcation.value;
-        let from = Blockchain.transcation.from;
+        let value = Blockchain.transaction.value;
+        let from = Blockchain.transaction.from;
 
         Event.Trigger("Accept fund from outsource", { 
             Transfer: {
@@ -333,4 +331,4 @@ PledgeProxy.prototype = {
     }, 
 };
 
-module.exports = PledgeProxy;
+module.exports = MultiSig;
