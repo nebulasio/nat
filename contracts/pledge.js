@@ -396,6 +396,7 @@ Pledge.prototype = {
         }
     },
 
+    // for multisig only
     setPrevPledgeAddress: function (address) {
         this._verifyFromMultisig();
         this._verifyAddress(address);
@@ -406,6 +407,7 @@ Pledge.prototype = {
         return this._prevPledgeAddress;
     },
 
+    // for multisig only
     setProxyAddress: function (address) {
         this._verifyFromMultisig();
         this._verifyAddress(address);
@@ -416,6 +418,7 @@ Pledge.prototype = {
         return this._proxyAddress;
     },
 
+    // for multisig only
     setDistributeAddress: function (address) {
         this._verifyFromMultisig();
         this._verifyAddress(address);
