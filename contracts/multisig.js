@@ -17,6 +17,7 @@ function MultiSig() {
         pledgeProxyManager: null, //pledge proxy fund manager(can be empty)
         pledge: null, //pledge contract address
         nrData: null, //nr data contract address
+        natNRC20: null, // NAT NRC 20 contract address
     }
     contractList:
     {
