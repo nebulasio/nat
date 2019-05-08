@@ -347,6 +347,8 @@ function Pledge() {
         "_distributes": null,
     });
 
+    this._PREV_PLEDGE = "n1n5Fctkjx2pA7iLX8rgRyCa7VKinGFNe9H";
+
     this._statisticData = new StatisticData(this._storage);
     this._currentData = new CurrentData(this._current);
     this._historyData = new HistoryData(this._histories);
@@ -358,9 +360,9 @@ function Pledge() {
 
 Pledge.prototype = {
 
-    init: function (multiSignAddress) {
-        this._verifyAddress(multiSignAddress);
-        this._config = {multiSig: multiSignAddress};
+    init: function (multiSigAddress) {
+        this._verifyAddress(multiSigAddress);
+        this._config = {multiSig: multiSigAddress};
     },
 
     _verifyAddress: function (address) {
@@ -382,7 +384,7 @@ Pledge.prototype = {
     },
 
     _verifyFromPrevPledge: function () {
-        if (this._config.prevPledge !== Blockchain.transaction.from) {
+        if (this._PREV_PLEDGE !== Blockchain.transaction.from) {
             throw ("Permission Denied!");
         }
     },
@@ -396,7 +398,6 @@ Pledge.prototype = {
     _verifyConfig: function (config) {
         this._verifyAddress(config.multiSig);
         this._verifyAddress(config.pledgeProxy);
-        this._verifyAddress(config.prevPledge);
         this._verifyAddress(config.distribute);
     },
 
@@ -407,7 +408,11 @@ Pledge.prototype = {
     setConfig: function (config) {
         this._verifyFromMultisig();
         this._verifyConfig(config);
-        this._config = config;
+        this._config = {
+            multiSig: config.multiSig,
+            pledgeProxy: config.pledgeProxy,
+            distribute: config.distribute
+        };
     },
 
     // for pledge_proxy.js only

@@ -54,7 +54,6 @@
 
         function updateConfigTest() {
             // Pledge
-            //                          caller              callee      value   func            parmas
             BlockchainTool.callContract(multiSignAddress, pledgeAddress, 0, "setConfig", [{
                 multiSig: multiSignAddress,
                 pledgeProxy: proxyAddress,
@@ -104,7 +103,7 @@
         function cancelPledgeTest() {
             console.log("-------------------------------------------\nCancel Pledge Test");
             console.log("customer amount:" + balance(customerAddress));
-            console.log("proxy amount 1:" + balance(proxyAddress));
+            console.log("proxy amount:" + balance(proxyAddress));
 
             BlockchainTool.callContract(customerAddress, proxyAddress, 0, "cancelPledge", []);
 
