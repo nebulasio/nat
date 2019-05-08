@@ -90,16 +90,33 @@ PageList.prototype = {
             }
         }
     },
+};
 
-    addPage: function (page) {
-        let i = 0;
-        let index = this._lastIndex();
-        if (index) {
-            i = index.i + 1;
-        }
-        index = {i: i, l: page.length};
-        this._addIndex(index);
-        this._storage.put(this._dataKey(index.i), page);
+
+function DataReceiver(storage) {
+    this._storage = storage;
+    this._dataList = new PageList(storage, "receive");
+}
+
+DataReceiver.prototype = {
+    /**
+     * {
+     *     startHeight:1,
+     *     endHeight:500,
+     *     count:1001
+     *     startIndex:0,
+     *     endIndex:1000,
+     *     data:[
+     *         {
+     *              addr:"n1xxx",
+     *              score: "123"
+     *         }
+     *     ]
+     * }
+     *
+     */
+    receive: function (data) {
+
     }
 };
 
@@ -150,7 +167,7 @@ NrDataSource.prototype = {
         this._verifyManager();
         let key = this._key(data.startBlock, data.endBlock);
         if (!this._storage.get(key)) {
-            this._cycleList.add({sb: data.startBlock, eb: data.endBlock});
+            this._cycleList.add({startHeight: data.startBlock, endHeight: data.endBlock});
         }
         this._storage.put(this._key(data.startBlock, data.endBlock), data.addresses);
     },
@@ -158,62 +175,40 @@ NrDataSource.prototype = {
     remove: function (startBlock, endBlock) {
         this._verifyManager();
         this._cycleList.del(function (c) {
-            return c.sb === startBlock && c.eb === endBlock;
+            return c.startHeight === startBlock && c.endHeight === endBlock;
         });
         this._storage.del(this._key(startBlock, endBlock));
     },
 
-    getData: function (returnCycleIndexes, returnCycleListInfo, returnAddressesInfo) {
-        let indexes = null;
-        if (returnCycleIndexes) {
-            indexes = this._cycleList.getPageIndexes();
+    summary: function (block) {
+        if (block > 100) {
+            return null;
         }
+        return [{
+            section: {
+                startHeight: 1,
+                endHeight: 100
+            }
+        }, {
+            section: {
+                startHeight: 101,
+                endHeight: 200
+            }
+        }]
+    },
 
-        let cycleList = null;
-        if (returnCycleListInfo) {
-            let d = this._cycleList.getPageData(returnCycleListInfo.index);
-            cycleList = [];
-            for (let i = 0; i < d.length; ++i) {
-                let as = this._getAddresses(d[i].s, d[i].e);
-                if (as && as.length > 0) {
-                    cycleList.push(d[i]);
-                }
+    getNR: function (block) {
+        let sections = this.summary(block);
+        if (sections.length > 0) {
+            return {
+                section: sections[0].section,
+                data: [{
+                    "addr": "n1YPMjEDMrZhroKmB1xDBhadygwWHC4zTwm",
+                    "score": "198734"
+                }]
             }
         }
-
-        let addresses = null;
-        if (returnAddressesInfo) {
-            if (returnAddressesInfo.returnLast) {
-                if (!indexes) {
-                    indexes = this._cycleList.getPageIndexes();
-                }
-                if (indexes.length > 0) {
-                    let index = indexes[indexes.length - 1].i;
-                    let list = null;
-                    if (returnCycleListInfo && returnCycleListInfo.index === index) {
-                        list = cycleList;
-                    } else {
-                        list = this._cycleList.getPageData(index);
-                    }
-                    if (list.length > 0) {
-                        let info = list[list.length - 1];
-                        addresses = {
-                            startBlock: info.s,
-                            endBlock: info.e,
-                            data: this._getAddresses(info.s, info.e)
-                        };
-                    }
-                }
-            } else {
-                addresses = {
-                    startBlock: returnAddressesInfo.startBlock,
-                    endBlock: returnAddressesInfo.endBlock,
-                    data: this._getAddresses(returnAddressesInfo.startBlock, returnAddressesInfo.endBlock)
-                };
-            }
-        }
-
-        return {cycleIndexes: indexes, cycleList: cycleList, addresses: addresses};
+        return null;
     },
 };
 

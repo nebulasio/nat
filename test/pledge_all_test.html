@@ -9,6 +9,7 @@
     <script type="text/javascript" src="../contracts/pledge_proxy.js"></script>
     <script type="text/javascript" src="../contracts/distribute.js"></script>
     <script type="text/javascript" src="../contracts/pledge.js"></script>
+    <script type="text/javascript" src="../contracts/nr_data.js"></script>
     <script type="text/javascript">
         localStorage.clear();
 
@@ -17,8 +18,11 @@
         let pledgeAddress = "n1F5VUpUfUbnVksQWcQcAvbY9K9dbakAvpN";
         let prevPledgeAddress = "n1v4M6kpPLMBnPe48z7EmGF8uP7TZ9un8ez";
         let proxyAddress = "n1d6YyHs2eL7pE3RKFbxCWcd2ExYx1MAXgF";
-        let multiSignAddress = "n1Z6MhSZa321SnpiKfUWiybQSG3GCmRHunv";
         let distributeAddress = "n1cwsE8w4m6cRkr14R5c4hK3Lb9wPsUHhY9";
+        let nrDataAddress = "n1keX3piVEzAc14MthT25Cg6hFFSw76Msja";
+        let voteAddress = "n1LJuxRULaTUNHGjGQSfnBNjSixqXyvuPU4";
+
+        let multiSignAddress = "n1Z6MhSZa321SnpiKfUWiybQSG3GCmRHunv";
         let customerAddress = "n1YPMjEDMrZhroKmB1xDBhadygwWHC4zTwm";
 
         let fundManagerAddress = "n1XpqPVnskUP1nzRoVZ9pvQ3P6yQJgfG8qc";
@@ -31,6 +35,7 @@
             BlockchainTool.registerContract(distributeAddress, Distribute);
             BlockchainTool.registerContract(pledgeAddress, Pledge);
             BlockchainTool.registerContract(natAddress, NATToken);
+            BlockchainTool.registerContract(nrDataAddress, NrDataSource);
         }
 
         function initContractTest() {
@@ -65,8 +70,8 @@
             BlockchainTool.callContract(multiSignAddress, distributeAddress, 0, "setConfig", [{
                 nat: natAddress,
                 pledge: pledgeAddress,
-                vote: pledgeAddress,
-                nr: pledgeAddress
+                vote: voteAddress,
+                nr: nrDataAddress
             }]);
         }
 
@@ -104,7 +109,10 @@
             initContext();
             initContractTest();
             updateConfigTest();
+
+            BlockchainTool.blockHeight = 0;
             pledgeTest();
+            BlockchainTool.blockHeight = 101;
             cancelPledgeTest();
             // } catch (e) {
             //     alert(e)

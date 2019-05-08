@@ -128,6 +128,22 @@ let BlockchainTool = {
         } finally {
             this._popTransaction();
         }
+    },
+
+    set blockHeight(height) {
+        localStorage.setItem("__block", height + "");
+    },
+
+    get blockHeight() {
+        if (!this._blockHeight) {
+            let h = localStorage.getItem("__block");
+            if (h) {
+                this._blockHeight = parseInt(h);
+            } else {
+                this._blockHeight = 0;
+            }
+        }
+        return this._blockHeight;
     }
 };
 
@@ -276,14 +292,11 @@ let Blockchain = {
     },
 
     get block() {
-        let r = localStorage.getItem("__block");
-        if (!r) {
-            return {height: 0}
+        return {
+            get height() {
+                return BlockchainTool.blockHeight;
+            }
         }
-        return JSON.parse(r)
-    },
-    set block(height) {
-        localStorage.setItem("__block", JSON.stringify({height: height}));
     },
 
     transfer: function (address, val) {
