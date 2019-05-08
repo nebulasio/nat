@@ -2,14 +2,14 @@
     This is a simple multisig smart contract, any cosigner in the list will be able to get through the function call
     @author: Zhuoer Wang, Ping Guo, Qiyuan Wang
 */
-function PageList(storage, key) {
+function PledgeDataList(storage, key) {
     this._storage = storage;
     this._key = key;
     this._pageIndexes = null;
     this._pageSize = 1000;
 }
 
-PageList.prototype = {
+PledgeDataList.prototype = {
 
     _indexesKey: function () {
         return "pis_" + this._key;
@@ -107,7 +107,7 @@ PageList.prototype = {
 
 function CurrentData(storage) {
     this._storage = storage;
-    this._addressList = new PageList(storage, "address_list");
+    this._addressList = new PledgeDataList(storage, "address_list");
 
     this._keyLastBlock = "last_block";
     this._lastBlock = null;
@@ -246,13 +246,13 @@ CurrentData.prototype = {
 
 function HistoryData(storage) {
     this._storage = storage;
-    this._addressList = new PageList(storage, "address_list");
+    this._addressList = new PledgeDataList(storage, "address_list");
 }
 
 HistoryData.prototype = {
 
     _addressHistoryData: function (address) {
-        return new PageList(this._storage, "h_" + address);
+        return new PledgeDataList(this._storage, "h_" + address);
     },
 
     addPledge: function (address, pledge) {
@@ -275,13 +275,13 @@ HistoryData.prototype = {
 
 function DistributeData(storage) {
     this._storage = storage;
-    this._addressList = new PageList(storage, "address_list");
+    this._addressList = new PledgeDataList(storage, "address_list");
 }
 
 DistributeData.prototype = {
 
     _addressData: function (address) {
-        return new PageList(this._storage, "d_" + address);
+        return new PledgeDataList(this._storage, "d_" + address);
     },
 
     addDistribute: function (address, distribute) {
@@ -304,7 +304,7 @@ DistributeData.prototype = {
 
 function StatisticData(storage) {
     this._storage = storage;
-    this._addressList = new PageList(storage, "address_list");
+    this._addressList = new PledgeDataList(storage, "address_list");
 }
 
 StatisticData.prototype = {
@@ -354,7 +354,7 @@ function Pledge() {
     this._historyData = new HistoryData(this._histories);
     this._distributeData = new DistributeData(this._distributes);
 
-    this._addresses = new PageList(this._storage, "address_list");
+    this._addresses = new PledgeDataList(this._storage, "address_list");
     this._unit = new BigNumber(10).pow(18);
 }
 
@@ -458,15 +458,15 @@ Pledge.prototype = {
         this._verifyFromDistribute();
         this._currentData.lastBlock = endBlock;
         let deleted = this._currentData.checkAndDelete();
-        for (let i = 0; i < deleted; ++i) {
+        for (let i = 0; i < deleted.length; ++i) {
             let d = deleted[i];
             this._historyData.addPledge(d.a, d.p);
         }
 
         for (let i = 0; i < data.length; ++i) {
             let d = data[i];
-            this._statisticData.addNat(d.a, d.nat);
-            this._distributeData.addDistribute(d.a, {v: d.v, d: d.nat, s: startBlock, e: endBlock});
+            this._statisticData.addNat(d.addr, d.nat);
+            this._distributeData.addDistribute(d.addr, {v: d.value, d: d.nat, s: startBlock, e: endBlock});
         }
     },
 

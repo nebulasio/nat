@@ -1,11 +1,11 @@
-function PageList(storage, key) {
+function NrDataList(storage, key) {
     this._storage = storage;
     this._key = key;
     this._pageIndexes = null;
     this._pageSize = 2000;
 }
 
-PageList.prototype = {
+NrDataList.prototype = {
 
     _indexesKey: function () {
         return "pis_" + this._key;
@@ -95,7 +95,7 @@ PageList.prototype = {
 
 function DataReceiver(storage) {
     this._storage = storage;
-    this._dataList = new PageList(storage, "receive");
+    this._dataList = new NrDataList(storage, "receive");
 }
 
 DataReceiver.prototype = {
@@ -127,7 +127,7 @@ function NrDataSource() {
         _managers: null
     });
     LocalContractStorage.defineMapProperty(this, "_storage", null);
-    this._cycleList = new PageList(this._storage, "cycle_list");
+    this._cycleList = new NrDataList(this._storage, "cycle_list");
 }
 
 NrDataSource.prototype = {
