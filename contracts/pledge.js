@@ -77,22 +77,6 @@ PageList.prototype = {
         this._storage.put(this._dataKey(p.i), d);
     },
 
-    each: function (fn) {
-        let indexes = this.getPageIndexes();
-        if (indexes) {
-            for (let i = 0; i < indexes.length; ++i) {
-                let ds = this.getPageData(indexes[i].i);
-                if (ds) {
-                    for (let j = 0; j < ds.length; ++j) {
-                        if (!fn(ds[j])) {
-                            return;
-                        }
-                    }
-                }
-            }
-        }
-    },
-
     del: function (ele) {
         let indexes = this.getPageIndexes();
         if (indexes) {
@@ -114,14 +98,6 @@ PageList.prototype = {
         }
         return false;
     },
-
-    clear: function () {
-        let indexes = this.getPageIndexes();
-        for (let i = 0; i < indexes.length; ++i) {
-            this._storage.del(this._dataKey(indexes[i].i));
-        }
-        this._storage.del(this._indexesKey());
-    }
 };
 
 
@@ -219,7 +195,7 @@ CurrentData.prototype = {
     },
 
     getDistributePledges: function (startBlock, endBlock) {
-        let r = [];
+        let r = {};
         let indexes = this._addressList.getPageIndexes();
         for (let i = 0; i < indexes.length; ++i) {
             let index = indexes[i];
@@ -228,7 +204,7 @@ CurrentData.prototype = {
                 let a = as[j];
                 let p = this._getPledge(a, startBlock, endBlock);
                 if (p != null) {
-                    r.push({a: a, v: p.v});
+                    r[a] = p.v;
                 }
             }
         }
@@ -396,30 +372,32 @@ Pledge.prototype = {
         }
     },
 
-    _isFromMultisig: function() {
-        return this._multiSignAddress === Blockchain.transaction.from;
+    _verifyFromMultisig: function () {
+        if (this._multiSignAddress !== Blockchain.transaction.from) {
+            throw ("Permission Denied!");
+        }
     },
 
-    _isFromPledgeProxy: function() {
-        return this._proxyAddress === Blockchain.transaction.from;
+    _verifyFromPledgeProxy: function () {
+        if (this._proxyAddress !== Blockchain.transaction.from) {
+            throw ("Permission Denied!");
+        }
     },
 
     _verifyFromPrevPledge: function () {
         if (this._prevPledgeAddress !== Blockchain.transaction.from) {
-            throw ("No permission");
+            throw ("Permission Denied!");
         }
     },
 
     _verifyFromDistribute: function () {
         if (this._distributeAddress !== Blockchain.transaction.from) {
-            throw ("No permission");
+            throw ("Permission Denied!");
         }
     },
 
     setPrevPledgeAddress: function (address) {
-        if (!this._isFromMultisig()) {
-            throw ("Permission Denied!");
-        }
+        this._verifyFromMultisig();
         this._verifyAddress(address);
         this._prevPledgeAddress = address;
     },
@@ -429,9 +407,7 @@ Pledge.prototype = {
     },
 
     setProxyAddress: function (address) {
-        if (!this._isFromMultisig()) {
-            throw ("Permission Denied!");
-        }
+        this._verifyFromMultisig();
         this._verifyAddress(address);
         this._proxyAddress = address;
     },
@@ -441,9 +417,7 @@ Pledge.prototype = {
     },
 
     setDistributeAddress: function (address) {
-        if (!this._isFromMultisig()) {
-            throw ("Permission Denied!");
-        }
+        this._verifyFromMultisig();
         this._verifyAddress(address);
         this._distributeAddress = address;
     },
@@ -458,9 +432,7 @@ Pledge.prototype = {
 
     // for pledge_proxy.js only
     pledge: function (address, value) {
-        if (!this.isFromPledgeProxy()) {
-            throw ("Permission Denied.");
-        }
+        this._verifyFromPledgeProxy();
         value = new BigNumber(value);
         if (new BigNumber(5).mul(this._unit).gt(value)) {
             throw ("The amount cannot be less than 5 NAS");
@@ -473,9 +445,7 @@ Pledge.prototype = {
 
     // for pledge_proxy.js only
     cancelPledge: function (address) {
-        if (!this._isFromPledgeProxy()) {
-            throw ("Permission Denied.");
-        }
+        this._verifyFromPledgeProxy();
         this._currentData.cancelPledge(address);
     },
 

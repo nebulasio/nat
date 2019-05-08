@@ -68,6 +68,14 @@ PageList.prototype = {
         }
     },
 
+    clear: function () {
+        let indexes = this.getPageIndexes();
+        for (let i = 0; i < indexes.length; ++i) {
+            this._storage.del(this._dataKey(indexes[i].i));
+        }
+        this._storage.del(this._indexesKey());
+    },
+
     getPageIndexes: function () {
         if (!this._pageIndexes) {
             this._pageIndexes = this._storage.get(this._indexesKey());

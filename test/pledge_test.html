@@ -10,38 +10,48 @@
     <script type="text/javascript">
         localStorage.clear();
 
-        let nrContractAddress = "n1F5VUpUfUbnVksQWcQcAvbY9K9dbakAvpN";
+        let pledgeAddress = "n1F5VUpUfUbnVksQWcQcAvbY9K9dbakAvpN";
+        let prevPledgeAddress = "n1v4M6kpPLMBnPe48z7EmGF8uP7TZ9un8ez";
+        let proxyAddress = "n1d6YyHs2eL7pE3RKFbxCWcd2ExYx1MAXgF";
+        let multiSignAddress = "n1Z6MhSZa321SnpiKfUWiybQSG3GCmRHunv";
+        let distributeAddress = "n1cwsE8w4m6cRkr14R5c4hK3Lb9wPsUHhY9";
         let customerAddress = "n1YPMjEDMrZhroKmB1xDBhadygwWHC4zTwm";
-        let managerAddress = "n1Z6MhSZa321SnpiKfUWiybQSG3GCmRHunv";
 
         let unit = new BigNumber(10).pow(18);
-        BlockchainTool.transfer(null, managerAddress, new BigNumber(1000).mul(unit));
 
-        BlockchainTool.registerContract(nrContractAddress, NrDataSource);
-        BlockchainTool.callContract(customerAddress, nrContractAddress, 0, "init", [[managerAddress]]);
-
-        function uploadTest(startBlock, endBlock, addresses) {
-            let data = {startBlock: startBlock, endBlock: endBlock, addresses: addresses};
-            BlockchainTool.callContract(managerAddress, nrContractAddress, 0, "upload", [data]);
+        function initContext() {
+            BlockchainTool.transfer(null, customerAddress, new BigNumber(1000).mul(unit));
+            BlockchainTool.registerContract(pledgeAddress, Pledge);
         }
 
-        function uploadErrorTest(startBlock, endBlock, addresses) {
-            let data = {startBlock: startBlock, endBlock: endBlock, addresses: addresses};
-            BlockchainTool.callContract(customerAddress, nrContractAddress, 0, "upload", [data]);
+        function initContractTest(){
+            BlockchainTool.callContract(customerAddress, pledgeAddress, 0, "init", [multiSignAddress]);
         }
 
-        function getDataTest() {
-            let r = BlockchainTool.callContract(managerAddress, nrContractAddress, 0, "getData", [true, {index: 0}, {returnLast: true}]);
-            console.log("getData:\n" + JSON.stringify(r));
+        function initContractErrorTest(){
+            BlockchainTool.callContract(customerAddress, pledgeAddress, 0, "init", ["abc"]);
+        }
+
+        function updateConfigTest() {
+            BlockchainTool.callContract(multiSignAddress, pledgeAddress, 0, "setProxyAddress", [proxyAddress]);
+            BlockchainTool.callContract(multiSignAddress, pledgeAddress, 0, "setPrevPledgeAddress", [prevPledgeAddress]);
+            BlockchainTool.callContract(multiSignAddress, pledgeAddress, 0, "setDistributeAddress", [distributeAddress]);
+        }
+
+        function pledgeTest() {
+            let amount = new BigNumber("5").mul(unit);
+            BlockchainTool.callContract(proxyAddress, pledgeAddress, 0, "pledge", [customerAddress, amount]);
         }
 
         function main() {
             try {
-                uploadTest(1, 500, [customerAddress]);
-                // uploadErrorTest(1, 500, [customerAddress]);
-                getDataTest();
+                initContext();
+                initContractTest();
+                // initContractErrorTest();
+                updateConfigTest();
+                pledgeTest();
             } catch (e) {
-                console.log(e)
+                alert(e)
             }
         }
 
