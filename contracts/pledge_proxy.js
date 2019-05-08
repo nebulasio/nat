@@ -19,9 +19,7 @@ PledgeProxy.prototype = {
             throw ("Need to define the multisig address");
         }
         // make sure this address is valid
-        if (this._verifyAddress(multisigAddr) === 0) {
-            throw ("The multisig address is invalid");
-        }
+        this._verifyAddress(multisigAddr);
         // initial the status
         this._allowPledge = true;
         this._allowFundManager = false;
@@ -74,9 +72,7 @@ PledgeProxy.prototype = {
         // Update fund manager
         if (configName === "fundManager") {
             let fundManagerAddr = addr;
-            if (this._verifyAddress(fundManagerAddr) === )) {
-                throw ("Invalid Address");
-            }
+            this._verifyAddress(fundManagerAddr);
             this._fundManagers = fundManagerAddr;
             return true;
         }
