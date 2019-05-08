@@ -231,6 +231,7 @@ CurrentData.prototype = {
         let p = ps[ps.length - 1];
         p.e = Blockchain.block.height;
         this._storage.put(address, ps);
+        return new BigNumber(p.v).mul(new BigNumber(10).pow(18));
     },
 
     getCurrentPledges: function (address) {
@@ -449,7 +450,7 @@ Pledge.prototype = {
     // for pledge_proxy.js only
     cancelPledge: function (address) {
         this._verifyFromPledgeProxy();
-        this._currentData.cancelPledge(address);
+        return this._currentData.cancelPledge(address);
     },
 
     receivePledgeData: function (data) {

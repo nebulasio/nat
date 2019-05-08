@@ -7,6 +7,8 @@
     <script type="text/javascript" src="libs/neblocal.js"></script>
 
     <script type="text/javascript" src="../contracts/pledge.js"></script>
+    <script type="text/javascript" src="../contracts/pledge_proxy.js"></script>
+    <script type="text/javascript" src="../contracts/distribute.js"></script>
     <script type="text/javascript">
         localStorage.clear();
 
@@ -22,27 +24,48 @@
         function initContext() {
             BlockchainTool.transfer(null, customerAddress, new BigNumber(1000).mul(unit));
             BlockchainTool.registerContract(pledgeAddress, Pledge);
+            BlockchainTool.registerContract(proxyAddress, PledgeProxy);
+            BlockchainTool.registerContract(distributeAddress, Distribute);
         }
 
-        function initContractTest() {
+        function initContractTest(){
+            // Pledge
             BlockchainTool.callContract(customerAddress, pledgeAddress, 0, "init", [multiSignAddress]);
+
+            // Proxy
+            // TODO:
+
+            // Distribute
+            // TODO:
+        }
+
+        function initContractErrorTest(){
+            BlockchainTool.callContract(customerAddress, pledgeAddress, 0, "init", ["abc"]);
         }
 
         function updateConfigTest() {
+            // Pledge
             BlockchainTool.callContract(multiSignAddress, pledgeAddress, 0, "setProxyAddress", [proxyAddress]);
             BlockchainTool.callContract(multiSignAddress, pledgeAddress, 0, "setPrevPledgeAddress", [prevPledgeAddress]);
             BlockchainTool.callContract(multiSignAddress, pledgeAddress, 0, "setDistributeAddress", [distributeAddress]);
+
+            // Proxy
+            // TODO:
+
+            // Distribute
+            // TODO:
         }
 
         function pledgeTest() {
             let amount = new BigNumber("5").mul(unit);
-            BlockchainTool.callContract(proxyAddress, pledgeAddress, 0, "pledge", [customerAddress, amount]);
+            BlockchainTool.callContract(customerAddress, proxyAddress, amount, "pledge", []);
         }
 
         function main() {
             try {
                 initContext();
                 initContractTest();
+                // initContractErrorTest();
                 updateConfigTest();
                 pledgeTest();
             } catch (e) {
