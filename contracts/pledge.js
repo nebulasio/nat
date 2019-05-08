@@ -356,6 +356,7 @@ function Pledge() {
 
     this._addresses = new PledgeDataList(this._storage, "address_list");
     this._unit = new BigNumber(10).pow(18);
+    this._canEmptyConfig = ["distributeManager", "pledgeProxyManager"];
 }
 
 Pledge.prototype = {
@@ -396,9 +397,12 @@ Pledge.prototype = {
     },
 
     _verifyConfig: function (config) {
-        this._verifyAddress(config.multiSig);
-        this._verifyAddress(config.pledgeProxy);
-        this._verifyAddress(config.distribute);
+        for (let conf in config) {
+            let contractAddr = config[conf];
+            if (conf in this._canEmptyConfig || contractAddr !== null) {
+                this._verifyAddress(contractAddr);
+            }   
+        }  
     },
 
     getConfig: function () {

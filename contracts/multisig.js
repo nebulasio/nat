@@ -10,14 +10,15 @@ function MultiSig() {
     _config format:
     natConfig:
     {
-        multiSig: null, // multisig address
-        distribute: null, // distribute.js address
-        distributeManager: null, // distribute.js manager(can be empty)
-        pledgeProxy: null, // pledge proxy address
-        pledgeProxyManager: null, //pledge proxy fund manager(can be empty)
-        pledge: null, //pledge contract address
-        nrData: null, //nr data contract address
-        natNRC20: null, // NAT NRC 20 contract address
+        multiSig: addr, // multisig address
+        distribute: addr, // distribute.js address
+        distributeManager: addr, // distribute.js manager(can be empty)
+        pledgeProxy: addr, // pledge proxy address
+        pledgeProxyManager: addr, //pledge proxy fund manager(can be empty)
+        pledge: addr, //pledge contract address
+        nrData: addr, //nr data contract address
+        natNRC20: addr, // NAT NRC 20 contract address
+        vote: addr
     }
     contractList:
     {
@@ -29,6 +30,7 @@ function MultiSig() {
         vote: addr6,    // vote.js
     }
     */
+    this._canEmptyConfig = ["distributeManager", "pledgeProxyManager"];
     LocalContractStorage.defineProperties(this, {
         _coSigners: null, // List of coSigner Addr
         _config: null // all the smart contract configration
@@ -49,7 +51,8 @@ MultiSig.prototype = {
 
     _verifyAddress: function (address) {
         if (Blockchain.verifyAddress(address) === 0) {
-            throw ("Address format error");
+            console.log(new Error().stack);
+            throw ("Address format error, address=" + address);
         }
     },
 
@@ -63,12 +66,15 @@ MultiSig.prototype = {
     _verifyConfig: function (config) {
         let natConfig = config.natConfig;
         for (let conf in natConfig) {
-            this._verifyAddress(natConfig.con);
+            let contractAddr = natConfig[conf];
+            if (conf in this._canEmptyConfig || contractAddr !== null) {
+                this._verifyAddress(contractAddr);
+            }
         }
 
         let contractList = config.contractList;
-        for (let conf in natConfig) {
-            this._verifyAddress(natConfig.con);
+        for (let conf in contractList) {
+            this._verifyAddress(contractList[conf]);
         }
     },
 
@@ -86,7 +92,7 @@ MultiSig.prototype = {
         let contractList = config.contractList;
 
         for (contractName in contractList) {
-            let contractObj = new Blockchain.Contract(contractList.contractName);
+            let contractObj = new Blockchain.Contract(contractList[contractName]);
             contractObj.call("setConfig", natConfig);
         } 
         // update current config
