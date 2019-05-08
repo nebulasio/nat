@@ -1,6 +1,9 @@
 {
-  "multiSign": "",
-  "distribute": "",
-  "pledgeProxy": "",
-  "pledge": ""
+  "multiSign": "多签合约地址",
+  "distribute": "Distribute合约地址",
+  "distributeManager": "Distribute合约管理员地址(可为空)",
+  "pledgeProxy": "质押代理合约地址",
+  "pledgeProxyManager": "质押代理合约管理员地址(可为空)",
+  "pledge": "质押合约地址",
+  "nrData": "nr数据合约地址"
 }
