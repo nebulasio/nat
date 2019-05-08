@@ -222,6 +222,10 @@ BigNumber.prototype = {
         this.v = this.v.pow(new BigNumber(n).v);
         return this;
     },
+    sqrt: function () {
+        this.v = this.v.sqrt();
+        return this;
+    },
     gt: function (n) {
         return this.v.gt(new BigNumber(n).v);
     },
@@ -233,6 +237,10 @@ BigNumber.prototype = {
     },
     lte: function (n) {
         return this.v.lte(new BigNumber(n).v);
+    },
+    floor: function (n) {
+        this.v = this.v.floor();
+        return this;
     },
     toString: function (base) {
         return this.v.toString(base);

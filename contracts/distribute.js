@@ -21,9 +21,9 @@ DPledge.prototype = {
 			let item = pledgeData[key];
 			// 5 * 0.0025 * x / (1 + sqrt(100/x)) * 0.997^i
 			let gx = new BigNumber(0.0025).times(item.value);
-			let zx = new BigNumber(100).div(item.value).pow(0.5).plus(1).pow(-1);
+			let zx = new BigNumber(100).div(item.value).sqrt().plus(1).pow(-1);
 			let y = new BigNumber(0.997).pow(this._pledge_period);
-			value = new BigNumber(5).times(gx).times(zx).times(y);
+			let value = new BigNumber(5).times(gx).times(zx).times(y);
 			item.nat = value.toString(10);
 			data.push(item);
 		}

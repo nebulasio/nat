@@ -47,6 +47,9 @@
 
             // Distribute
             BlockchainTool.callContract(customerAddress, distributeAddress, 0, "init", [1, multiSignAddress]);
+
+            // Nat
+            BlockchainTool.callContract(customerAddress, natAddress, 0, "init", ["NAT", "NAT", 18, multiSignAddress]);
         }
 
         function updateConfigTest() {
@@ -73,6 +76,12 @@
                 pledge: pledgeAddress,
                 vote: voteAddress,
                 nrData: nrDataAddress
+            }]);
+
+            // Nat 
+            BlockchainTool.callContract(multiSignAddress, natAddress, 0, "setConfig", [{
+                multiSig: multiSignAddress,
+                distribute: distributeAddress
             }]);
         }
 
@@ -168,10 +177,12 @@
             getPledgeAddressIndexesTest();
             getPledgeAddressesTest();
 
+            BlockchainTool.blockHeight = 201;
+            distributeTest();
+
             getHistoryPledgesTest();
             getPledgeDistributesTest();
 
-            distributeTest();
         }
 
         main();
