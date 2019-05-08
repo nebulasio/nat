@@ -59,6 +59,7 @@ PledgeProxy.prototype = {
     },
 
     // Update config address
+    // For multisig only
     updateConfig: function(configName, addr) {
         if (!this._allowControl()) {
             throw ("permission denied!");
@@ -88,6 +89,7 @@ PledgeProxy.prototype = {
         }
     },
 
+    // for mlultisig only
     closePledge: function() {
         if (!this._allowControl()) {
             throw ("permission denied!");
@@ -95,6 +97,7 @@ PledgeProxy.prototype = {
         this._allowPledge = false; 
     },
 
+    // for multisig only
     openPledge: function() {
          if (!this._allowControl()) {
             throw ("permission denied!");
@@ -119,7 +122,6 @@ PledgeProxy.prototype = {
         let value = Blockchain.transcation.value;
         let from = Blockchain.transcation.from;
         let c = new Blockchain.Contract(targetAddr);
-        // TODO add try catch
         c.value(value).call('pledge', from, value);
         Event.Trigger("pledgeRedirect", {
             Transfer: {
@@ -130,6 +132,7 @@ PledgeProxy.prototype = {
         });
     },
 
+    // proxy redirect to pledge.js
     cancelPledge: function () {
         if (!this._allowPledge) {
             throw ("This contract no longer accept new pledges. ");
@@ -138,7 +141,6 @@ PledgeProxy.prototype = {
         let value = Blockchain.transcation.value;
         let from = Blockchain.transcation.from;
         let c = new Blockchain.Contract(targetAddr);
-        // TODO add try catch
         let r = c.call('cancelPledge', from);
         if (r.pledged) {
             let v = new BigNumber(r.v).mul(this._unit);
@@ -163,11 +165,7 @@ PledgeProxy.prototype = {
         }
     },
 
-    stopPledge: function () {
-        this._verifyManager();
-        this._canPledge = false;
-    },
-
+    // for multisig and fund manager
     transferFund: function (newAddr) {
         if (!_allowTransferFund()) {
             throw ("Permission denied!");
@@ -189,6 +187,7 @@ PledgeProxy.prototype = {
         return r;
     },
 
+    // accept fund when necessary
     acceptFund: function() {
         let value = Blockchain.transcation.value;
         let from = Blockchain.transcation.from;
@@ -201,6 +200,7 @@ PledgeProxy.prototype = {
         });
     }
 
+    // proxy redirect to pledge.js
     getPledgeIndexes: function () {
         let targetAddr = this._pledgeContractAddr;
         let c = new Blockchain.Contract(targetAddr);
@@ -217,6 +217,7 @@ PledgeProxy.prototype = {
         }
     },
 
+    // proxy to pledge.js
     getPledgeHistoryByAddr: function(searchAddr) {
         let targetAddr = this._pledgeContractAddr;
         let c = new Blockchain.Contract(targetAddr);

@@ -408,6 +408,10 @@ Pledge.prototype = {
         }
     },
 
+    _isFromPledgeProxy: function() {
+        return this._proxyAddress === Blockchain.transaction.from;
+    },
+
     _verifyFromPrevPledge: function () {
         if (this._prevPledgeAddress !== Blockchain.transaction.from) {
             throw ("No permission");
@@ -454,8 +458,11 @@ Pledge.prototype = {
         return this._canExport;
     },
 
+    // for pledge_proxy.js only
     pledge: function (address, value) {
-        this._verifyFromProxy();
+        if (!this.isFromPledgeProxy()) {
+            throw ("Permission Denied.");
+        }
         value = new BigNumber(value);
         if (new BigNumber(5).mul(this._unit).gt(value)) {
             throw ("The amount cannot be less than 5 NAS");
@@ -466,8 +473,11 @@ Pledge.prototype = {
         this._statisticData.addAddress(address);
     },
 
+    // for pledge_proxy.js only
     cancelPledge: function (address) {
-        this._verifyFromProxy();
+        if (!this._isFromPledgeProxy()) {
+            throw ("Permission Denied.");
+        }
         this._currentData.cancelPledge(address);
     },
 
@@ -484,11 +494,13 @@ Pledge.prototype = {
         }
     },
 
+    // for distribute.js
     getPledge: function (startBlock, endBlock) {
         this._verifyFromDistribute();
         return this._currentData.getDistributePledges(startBlock, endBlock);
     },
 
+    // for distribute.js
     setPledgeResult: function (startBlock, endBlock, data) {
         this._verifyFromDistribute();
         this._currentData.lastBlock = endBlock;
