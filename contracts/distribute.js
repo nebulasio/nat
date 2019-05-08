@@ -109,7 +109,7 @@ DVote.prototype = {
 	},
 	calculate: function(nr, addr, value) {
 		this._verifyPermission();
-		let value = new BigNumber(0).minus(value);
+		value = new BigNumber(0).minus(value);
 		let score = Blockchain.getLatestNebulasRank(addr);
 		score = new BigNumber(score);
 		if (score.gt(0)) {
@@ -175,31 +175,16 @@ Distribute.prototype = {
     	this._verifyPermission();
     	this._state = state;
     },
-    _update_contract: function(nat, pledge, vote, nr) {
+    setConfig: function(config) {
+    	// config = JSON.parse(config);
     	this._verifyPermission();
-    	this._nat_contract = contract;
-    	this._pledge.update_contract(pledge);
-    	this._vote.update_contract(vote);
-    	this._nr.update_contract(nr);
-    },
-    update_nat: function(contract) {
-    	this._verifyPermission();
-    	this._nat_contract = contract;
-    },
-    update_pledge: function(contract) {
-    	this._verifyPermission();
-    	this._pledge.update_contract(pledge);
-    },
-    update_nr: function(contract) {
-    	this._verifyPermission();
-    	this._nr.update_contract(contract);
-    },
-    update_vote: function(contract) {
-    	this._verifyPermission();
-    	this._vote.update_contract(contract);
+    	this._nat_contract = config.nat;
+    	this._pledge.update_contract(config.pledge);
+    	this._vote.update_contract(config.vote);
+    	this._nr.update_contract(config.nr);
     },
     // tigger pledge reward
-    tigger_pledge: function() {
+    tiggerPledge: function() {
     	this._verifyPermission();
     	this._verifyStatus();
     	let summary = this._nr.summary(this._pledge.pledge_height);
@@ -209,7 +194,7 @@ Distribute.prototype = {
     	}
     },
     // tigger nr reward
-    tigger_nr: function() {
+    tiggerNR: function() {
     	this._verifyPermission();
     	this._verifyStatus();
     	let data = this._nr.calculate();

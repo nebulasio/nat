@@ -5,12 +5,14 @@
     <title>Pledge All Test</title>
     <script type="text/javascript" src="libs/nebulas.js"></script>
     <script type="text/javascript" src="libs/neblocal.js"></script>
-
+    <script type="text/javascript" src="../contracts/nat.js"></script>
     <script type="text/javascript" src="../contracts/pledge_proxy.js"></script>
     <script type="text/javascript" src="../contracts/distribute.js"></script>
     <script type="text/javascript" src="../contracts/pledge.js"></script>
     <script type="text/javascript">
         localStorage.clear();
+
+        let natAddress = "  n1zUNqeBPvsyrw5zxp9mKcDdLTjuaEL7s39";
 
         let pledgeAddress = "n1F5VUpUfUbnVksQWcQcAvbY9K9dbakAvpN";
         let prevPledgeAddress = "n1v4M6kpPLMBnPe48z7EmGF8uP7TZ9un8ez";
@@ -28,6 +30,7 @@
             BlockchainTool.registerContract(proxyAddress, PledgeProxy);
             BlockchainTool.registerContract(distributeAddress, Distribute);
             BlockchainTool.registerContract(pledgeAddress, Pledge);
+            BlockchainTool.registerContract(natAddress, NATToken);
         }
 
         function initContractTest() {
@@ -38,7 +41,7 @@
             BlockchainTool.callContract(customerAddress, proxyAddress, 0, "init", [multiSignAddress]);
 
             // Distribute
-            // TODO:
+            BlockchainTool.callContract(customerAddress, distributeAddress, 0, "init", [1, multiSignAddress]);
         }
 
         function updateConfigTest() {
@@ -59,7 +62,12 @@
             }]);
 
             // Distribute
-            // TODO:
+            BlockchainTool.callContract(multiSignAddress, distributeAddress, 0, "setConfig", [{
+                nat: natAddress,
+                pledge: pledgeAddress,
+                vote: pledgeAddress,
+                nr: pledgeAddress
+            }]);
         }
 
         function balance(address) {
