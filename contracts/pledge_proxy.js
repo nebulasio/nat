@@ -115,8 +115,8 @@ PledgeProxy.prototype = {
             throw ("This contract no longer accept new pledges.");
         }
         let targetAddr = this._pledgeContractAddr;
-        let value = Blockchain.transcation.value;
-        let from = Blockchain.transcation.from;
+        let value = Blockchain.transaction.value;
+        let from = Blockchain.ttransaction.from;
         let c = new Blockchain.Contract(targetAddr);
         c.value(value).call('pledge', from, value);
         Event.Trigger("pledgeRedirect", {
@@ -133,16 +133,16 @@ PledgeProxy.prototype = {
         if (!this._allowPledge) {
             throw ("This contract no longer accept new pledges. ");
         }
-        let targetAddr = this._pledgeContractAddr;
-        let c = new Blockchain.Contract(targetAddr);
+        let targetContractAddr = this._pledgeContractAddr;
+        let c = new Blockchain.Contract(targetContractAddr);
 
-        let targetAddr = Blockchain.transcation.from;
+        let targetAddr = Blockchain.transaction.from;
         // Call pledge.js cancelPledge function to check plege status and update the data
         // it will return a value with bigNumber, please see pledge.js
         // if cancel failed or the address not pledge, it will fail in this step
         let value = c.call('cancelPledge', targetAddr);
         // transfer the fund if cancel pledge data updated success
-        let r = Blockchain.transfer(from, value); 
+        let r = Blockchain.transfer(targetAddr, value); 
         if (r) {
             Event.Trigger("cancelPledge", {
                 Transfer: {
@@ -177,8 +177,8 @@ PledgeProxy.prototype = {
 
     // accept fund when necessary
     acceptFund: function() {
-        let value = Blockchain.transcation.value;
-        let from = Blockchain.transcation.from;
+        let value = Blockchain.transaction.value;
+        let from = Blockchain.transaction.from;
 
         Event.Trigger("Accept fund from outsource", { 
             Transfer: {
