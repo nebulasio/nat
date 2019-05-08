@@ -45,6 +45,7 @@
 
         function updateConfigTest() {
             // Pledge
+            //                          caller              callee      value   func            parmas
             BlockchainTool.callContract(multiSignAddress, pledgeAddress, 0, "setProxyAddress", [proxyAddress]);
             BlockchainTool.callContract(multiSignAddress, pledgeAddress, 0, "setPrevPledgeAddress", [prevPledgeAddress]);
             BlockchainTool.callContract(multiSignAddress, pledgeAddress, 0, "setDistributeAddress", [distributeAddress]);
