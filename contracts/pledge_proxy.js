@@ -116,7 +116,7 @@ PledgeProxy.prototype = {
         }
         let targetAddr = this._pledgeContractAddr;
         let value = Blockchain.transaction.value;
-        let from = Blockchain.ttransaction.from;
+        let from = Blockchain.transaction.from;
         let c = new Blockchain.Contract(targetAddr);
         c.value(value).call('pledge', from, value);
         Event.Trigger("pledgeRedirect", {
@@ -155,7 +155,7 @@ PledgeProxy.prototype = {
 
     // for multisig and fund manager
     transferFund: function (newAddr) {
-        if (!_allowTransferFund()) {
+        if (!this._allowTransferFund()) {
             throw ("Permission denied!");
         }
         let c = new Blockchain.Contract(newAddr);
