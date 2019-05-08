@@ -61,7 +61,7 @@ DNR.prototype = {
 	},
 	calculate: function() {
 		let nr = new Blockchain.Contract(this._nr_contract);
-		let nrList = nr.call("nr", this._nr_height);
+		let nrList = nr.call("getNR", this._nr_height);
 		let dataArray = new Array();
 		for (let key in nrList) {
 			let nrData = nrList[key];
@@ -145,12 +145,13 @@ function Distribute() {
 };
 
 Distribute.prototype = {
-	init: function (height) {
+	init: function (height, managers) {
 		this._state = STATE_WORK;
 		this._pledge._pledge_period = 0;
 		this._pledge._pledge_height = height;
 		this._nr._nr_period = 0;
 		this._nr._nr_height = height;
+		this._managers = managers;
     },
     _verifyPermission: function () {
         if (this._managers.indexOf(Blockchain.transaction.from) < 0) {
@@ -201,9 +202,9 @@ Distribute.prototype = {
     tigger_pledge: function() {
     	this._verifyPermission();
     	this._verifyStatus();
-    	let sections = this._nr.summary(this._pledge.pledge_height);
-    	for (let key in sections) {
-    		let data = this._pledge.calculate(sections[key]);
+    	let summary = this._nr.summary(this._pledge.pledge_height);
+    	for (let key in summary) {
+    		let data = this._pledge.calculate(summary[key].section);
     		this._produceNat(data);
     	}
     },
