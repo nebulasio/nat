@@ -1,5 +1,5 @@
 {
-  "multiSign": "",
-  "fundManager": "",
+  "multiSig": "",
+  "pledgeProxyManager": "",
   "pledge": ""
 }

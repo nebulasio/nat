@@ -14,13 +14,13 @@ function PledgeProxy() {
 
 PledgeProxy.prototype = {
 
-    init: function (multiSignAddr) {
+    init: function (multiSigAddr) {
         // make sure this address is valid
-        this._verifyAddress(multiSignAddr);
+        this._verifyAddress(multiSigAddr);
         // initial the status
         this._allowPledge = true;
         this._allowFundManager = false;
-        this._config = {multiSign: multiSignAddr};
+        this._config = {multiSig: multiSigAddr};
     },
 
     _verifyAddress: function (address) {
@@ -30,21 +30,21 @@ PledgeProxy.prototype = {
     },
 
     _allowControl: function () {
-        return this._config.multiSign === Blockchain.transaction.from;
+        return this._config.multiSig === Blockchain.transaction.from;
     },
 
     _allowTransferFund: function () {
         if (this._allowControl()) {
             return true;
         }
-        return (this._allowFundManager && this._config.fundManager === Blockchain.transaction.from);
+        return (this._allowFundManager && this._config.pledgeProxyManager === Blockchain.transaction.from);
     },
 
     _verifyConfig: function (config) {
-        this._verifyAddress(config.multiSign);
+        this._verifyAddress(config.multiSig);
         this._verifyAddress(config.pledge);
-        if (config.fundManager) {
-            this._verifyAddress(config.fundManager);
+        if (config.pledgeProxyManager) {
+            this._verifyAddress(config.pledgeProxyManager);
         }
     },
 
@@ -186,7 +186,7 @@ PledgeProxy.prototype = {
 
     // proxy redirect to pledge.js
     getCurrentPledges: function (address) {
-        let result = this.pledgeContract.call('getCurrentPleges', address);
+        let result = this.pledgeContract.call('getCurrentPledges', address);
         return result != null ? result : "No data found";
     },
 

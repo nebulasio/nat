@@ -360,7 +360,7 @@ Pledge.prototype = {
 
     init: function (multiSignAddress) {
         this._verifyAddress(multiSignAddress);
-        this._config = {multiSign: multiSignAddress};
+        this._config = {multiSig: multiSignAddress};
     },
 
     _verifyAddress: function (address) {
@@ -370,7 +370,7 @@ Pledge.prototype = {
     },
 
     _verifyFromMultisig: function () {
-        if (this._config.multiSign !== Blockchain.transaction.from) {
+        if (this._config.multiSig !== Blockchain.transaction.from) {
             throw ("Permission Denied!");
         }
     },
@@ -394,7 +394,7 @@ Pledge.prototype = {
     },
 
     _verifyConfig: function (config) {
-        this._verifyAddress(config.multiSign);
+        this._verifyAddress(config.multiSig);
         this._verifyAddress(config.pledgeProxy);
         this._verifyAddress(config.prevPledge);
         this._verifyAddress(config.distribute);
@@ -474,7 +474,7 @@ Pledge.prototype = {
     },
 
     getCurrentPledges: function (address) {
-        this._currentData.getCurrentPledges(address);
+        return this._currentData.getCurrentPledges(address);
     },
 
     getHistoryPledgeIndexes: function (address) {

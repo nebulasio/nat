@@ -1,5 +1,5 @@
 {
-  "multiSign": "多签合约地址",
+  "multiSig": "多签合约地址",
   "distribute": "Distribute合约地址",
   "distributeManager": "Distribute合约管理员地址(可为空)",
   "pledgeProxy": "质押代理合约地址",

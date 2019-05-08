@@ -25,7 +25,7 @@
         let multiSignAddress = "n1Z6MhSZa321SnpiKfUWiybQSG3GCmRHunv";
         let customerAddress = "n1YPMjEDMrZhroKmB1xDBhadygwWHC4zTwm";
 
-        let fundManagerAddress = "n1XpqPVnskUP1nzRoVZ9pvQ3P6yQJgfG8qc";
+        let proxyManagerAddress = "n1XpqPVnskUP1nzRoVZ9pvQ3P6yQJgfG8qc";
 
         let unit = new BigNumber(10).pow(18);
 
@@ -53,7 +53,7 @@
             // Pledge
             //                          caller              callee      value   func            parmas
             BlockchainTool.callContract(multiSignAddress, pledgeAddress, 0, "setConfig", [{
-                multiSign: multiSignAddress,
+                multiSig: multiSignAddress,
                 pledgeProxy: proxyAddress,
                 distribute: distributeAddress,
                 prevPledge: prevPledgeAddress
@@ -61,9 +61,9 @@
 
             // Proxy
             BlockchainTool.callContract(multiSignAddress, proxyAddress, 0, "setConfig", [{
-                multiSign: multiSignAddress,
+                multiSig: multiSignAddress,
                 pledge: pledgeAddress,
-                fundManager: fundManagerAddress,
+                pledgeProxyManager: proxyManagerAddress,
             }]);
 
             // Distribute
@@ -80,7 +80,7 @@
         }
 
         function pledgeTest() {
-            console.log("--------------------\nPledge Test");
+            console.log("-------------------------------------------\nPledge Test");
             console.log("customer amount:" + balance(customerAddress));
             console.log("proxy amount:" + balance(proxyAddress));
 
@@ -89,11 +89,10 @@
 
             console.log("customer amount 1:" + balance(customerAddress));
             console.log("proxy amount 1:" + balance(proxyAddress));
-            console.log("--------------------");
         }
 
         function cancelPledgeTest() {
-            console.log("--------------------\nCancel Pledge Test");
+            console.log("-------------------------------------------\nCancel Pledge Test");
             console.log("customer amount:" + balance(customerAddress));
             console.log("proxy amount 1:" + balance(proxyAddress));
 
@@ -101,22 +100,52 @@
 
             console.log("customer amount 1:" + balance(customerAddress));
             console.log("proxy amount 1:" + balance(proxyAddress));
-            console.log("--------------------");
+        }
+
+        function getCurrentPledgesTest() {
+            console.log("-------------------------------------------\nGet Current Pledges Test");
+
+            // BlockchainTool.callContract(customerAddress, proxyAddress, 0, "cancelPledge", []);
+            let r = BlockchainTool.callContract(customerAddress, proxyAddress, 0, "getCurrentPledges", [customerAddress]);
+
+            console.log("pledges:\n" + JSON.stringify(r));
+        }
+
+        function getPledgeAddressIndexesTest() {
+            console.log("-------------------------------------------\nGet Pledge Address Indexes Test");
+
+            let r = BlockchainTool.callContract(customerAddress, proxyAddress, 0, "getAddressIndexes", []);
+
+            console.log("addresses:\n" + JSON.stringify(r));
+        }
+
+        function getPledgeAddressesTest() {
+            console.log("-------------------------------------------\nGet Pledge Addresses Test");
+
+            let r = BlockchainTool.callContract(customerAddress, proxyAddress, 0, "getAddresses", [0]);
+
+            console.log("addresses:\n" + JSON.stringify(r));
         }
 
         function main() {
-            // try {
             initContext();
             initContractTest();
             updateConfigTest();
 
+            getCurrentPledgesTest();
+            getPledgeAddressesTest();
+
             BlockchainTool.blockHeight = 0;
             pledgeTest();
+
+            getCurrentPledgesTest();
+
             BlockchainTool.blockHeight = 101;
             cancelPledgeTest();
-            // } catch (e) {
-            //     alert(e)
-            // }
+
+            getCurrentPledgesTest();
+            getPledgeAddressIndexesTest();
+            getPledgeAddressesTest();
         }
 
         main();
