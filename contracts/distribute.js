@@ -174,6 +174,8 @@ Distribute.prototype = {
         }
         nat.call("produce", natData);
     },
+
+    // for mulisig.js
     update_status: function(state) {
         this._verifyPermission();
         this._state = state;

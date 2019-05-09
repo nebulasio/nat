@@ -102,11 +102,13 @@ MultiSig.prototype = {
         this._config = config;
     },
 
+    // for distribute.js
     getNRBlacklist: function() {
         this._verifyCosigner();
         return this._nrBlacklist;
     },
 
+    // for distribute.js
     setNRBlacklist: function(addrList) {
         this._verifyCosigner();
         for (let i = 0; i < addrList.length; ++i) {
@@ -118,6 +120,16 @@ MultiSig.prototype = {
         contractObj.call("setNRBlacklist", addrList);
         this._nrBlacklist = addrList; 
     },
+
+    // for distribute.js
+    // const STATE_WORK = 0;
+    // const STATE_PAUSED = 1;
+    setDistStatus: function(distributeStatus) {
+        this._verifyCosigner();
+        let distributeContract = this._config.natConfig.distribute;
+        let contractObj = new Blockchain.Contract(distributeContract);
+        contractObj.call("update_status", distributeStatus);
+    }
 
     // Get coSigner 
     getCosigners: function() {
