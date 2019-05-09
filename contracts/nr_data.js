@@ -1,10 +1,8 @@
-let PAGE_SIZE = 400;
-
-function NrDataList(storage, key) {
+function NrDataList(storage, key, pageSize) {
     this._storage = storage;
     this._key = key;
     this._pageIndexes = null;
-    this._pageSize = 400;
+    this._pageSize = pageSize;
 }
 
 NrDataList.prototype = {
@@ -243,7 +241,7 @@ DataReceiver.prototype = {
 function CycleData(storage, cycle) {
     this._storage = storage;
     let name = _cycleName(cycle.startHeight, cycle.endHeight);
-    this._pageList = new NrDataList(storage, name);
+    this._pageList = new NrDataList(storage, name, 400);
     this._countKey = name + "_count";
 }
 
@@ -263,10 +261,10 @@ CycleData.prototype = {
 
     setData: function (data) {
         this._pageList.clear();
-        let n = Math.ceil(data.length / parseFloat("" + PAGE_SIZE));
+        let n = Math.ceil(data.length / parseFloat("" + this._pageList._pageSize));
         for (let i = 0; i < n; ++i) {
             let d = [];
-            for (let j = i * n; j < i * n + PAGE_SIZE; ++j) {
+            for (let j = i * n; j < i * n + this._pageList._pageSize; ++j) {
                 if (j >= data.length) {
                     break;
                 }
@@ -307,7 +305,7 @@ CycleData.prototype = {
 
 function CycleManager(storage) {
     this._storage = storage;
-    this._pageList = new NrDataList(storage, "cycle_list");
+    this._pageList = new NrDataList(storage, "cycle_list", 1000);
 }
 
 CycleManager.prototype = {
