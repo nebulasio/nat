@@ -177,13 +177,15 @@ Distribute.prototype = {
         this._verifyPermission();
         this._state = state;
     },
-    setConfig: function(config) {
+    setConfig: function(natConfig) {
         this._verifyPermission();
-        this._multiSig = config.multiSig;
-        this._nat_contract = config.nat;
-        this._pledge.update_contract(config.pledge);
-        this._vote.update_contract(config.vote);
-        this._nr.update_contract(config.nrData);
+        this._config = natConfig;
+        this._multiSig = natConfig.multiSig;
+        this._distribute = natConfig.distribute;
+        this._nat_contract = natConfig.natNRC20;
+        this._pledge.update_contract(natConfig.pledge);
+        this._vote.update_contract(natConfig.vote);
+        this._nr.update_contract(natConfig.nrData);
     },
     // trigger pledge reward
     triggerPledge: function() {

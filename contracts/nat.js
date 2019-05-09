@@ -43,7 +43,8 @@ var NATToken = function () {
             }
         },
         _multiSig: null,
-        _distribute: null
+        _distribute: null,
+        _config: null
     });
 
     LocalContractStorage.defineMapProperties(this, {
@@ -81,10 +82,11 @@ NATToken.prototype = {
         }
     },
 
-    setConfig: function(config) {
+    setConfig: function(natConfig) {
         this._verifyPermission();
-        this._multiSig = config.multiSig;
-        this._distribute = config.distribute;
+        this._config = natConfig;
+        this._multiSig = natConfig.multiSig;
+        this._distribute = natConfig.distribute;
     },
 
     produce: function(data) {

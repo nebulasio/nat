@@ -80,7 +80,7 @@ MultiSig.prototype = {
 
     // Get config address
     getConfig: function() {
-        this._verifyConfig();
+        this._verifyCosigner();
         return this._config;
     },
 
@@ -93,10 +93,12 @@ MultiSig.prototype = {
 
         for (contractName in contractList) {
             let contractObj = new Blockchain.Contract(contractList[contractName]);
+            console.log(contractName, "start");
             contractObj.call("setConfig", natConfig);
+            console.log(contractName, "end");
         } 
         // update current config
-        this_.config = config;
+        this._config = config;
     },
 
     // Get coSigner 
