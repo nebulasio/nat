@@ -10,39 +10,55 @@
     <script type="text/javascript">
         localStorage.clear();
 
-        let nrContractAddress = "n1F5VUpUfUbnVksQWcQcAvbY9K9dbakAvpN";
+        let nrContractAddress = "n1keX3piVEzAc14MthT25Cg6hFFSw76Msja";
+        let managerAddress = "n1bnDhFr9K2g1EnyKBQ2cLZuhzCpSTCf4jW";
+
+        let multiSignAddress = "n1Z6MhSZa321SnpiKfUWiybQSG3GCmRHunv";
         let customerAddress = "n1YPMjEDMrZhroKmB1xDBhadygwWHC4zTwm";
-        let managerAddress = "n1Z6MhSZa321SnpiKfUWiybQSG3GCmRHunv";
+        let customerAddress1 = "n1JuGuSaa92L9eZkaL51UHVVeC1u57yTkR8";
 
         let unit = new BigNumber(10).pow(18);
-        BlockchainTool.transfer(null, managerAddress, new BigNumber(1000).mul(unit));
 
-        BlockchainTool.registerContract(nrContractAddress, NrDataSource);
-        BlockchainTool.callContract(customerAddress, nrContractAddress, 0, "init", [[managerAddress]]);
+        function initContext() {
+            BlockchainTool.transfer(null, customerAddress, new BigNumber(1000).mul(unit));
+            BlockchainTool.registerContract(nrContractAddress, NrDataSource);
+        }
 
-        function uploadTest(startBlock, endBlock, addresses) {
-            let data = {startBlock: startBlock, endBlock: endBlock, addresses: addresses};
+        function initContract() {
+            BlockchainTool.callContract(customerAddress, nrContractAddress, 0, "init", [multiSignAddress]);
+        }
+
+        function initConfig() {
+            BlockchainTool.callContract(customerAddress, nrContractAddress, 0, "setConfig", [{
+                multiSig: multiSignAddress,
+                nrDataManager: managerAddress
+            }]);
+        }
+
+        function uploadTest(startBlock, endBlock, count, startIndex, addresses) {
+            let data = {
+                startHeight: startBlock,
+                endHeight: endBlock,
+                count: count,
+                startIndex: startIndex,
+                data: addresses
+            };
             BlockchainTool.callContract(managerAddress, nrContractAddress, 0, "upload", [data]);
         }
 
-        function uploadErrorTest(startBlock, endBlock, addresses) {
-            let data = {startBlock: startBlock, endBlock: endBlock, addresses: addresses};
-            BlockchainTool.callContract(customerAddress, nrContractAddress, 0, "upload", [data]);
-        }
-
-        function getDataTest() {
-            let r = BlockchainTool.callContract(managerAddress, nrContractAddress, 0, "getData", [true, {index: 0}, {returnLast: true}]);
+        function getNRTest() {
+            console.log("-------------------------------------------\nGet NR Test");
+            let r = BlockchainTool.callContract(managerAddress, nrContractAddress, 0, "getNR", [0, 0]);
             console.log("getData:\n" + JSON.stringify(r));
         }
 
         function main() {
-            try {
-                uploadTest(1, 500, [customerAddress]);
-                // uploadErrorTest(1, 500, [customerAddress]);
-                getDataTest();
-            } catch (e) {
-                console.log(e)
-            }
+            initContext();
+            initContract();
+            initConfig();
+            uploadTest(1, 100, 2, 0, [customerAddress]);
+            uploadTest(1, 100, 2, 1, [customerAddress1]);
+            getNRTest();
         }
 
         main();

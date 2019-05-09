@@ -291,6 +291,7 @@ let LocalContractStorage = {
     }
 };
 
+let __nrStorage = new MapStorage("__nr_data", _defaultStringify, _defaultParse);
 
 let Blockchain = {
 
@@ -330,6 +331,15 @@ let Blockchain = {
             balance: NasBalance.get(address),
             nonce: 0
         }
+    },
+
+    getLatestNebulasRank: function (address) {
+        let r = __nrStorage.get(address);
+        if (!r) {
+            r = "" + Math.ceil(Math.random() * 100000000);
+            __nrStorage.set(address, r);
+        }
+        return r;
     }
 };
 

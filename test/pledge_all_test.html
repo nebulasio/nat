@@ -14,11 +14,10 @@
     <script type="text/javascript">
         localStorage.clear();
 
-
         let natAddress = "n1zUNqeBPvsyrw5zxp9mKcDdLTjuaEL7s39";
 
         let pledgeAddress = "n1F5VUpUfUbnVksQWcQcAvbY9K9dbakAvpN";
-        let prevPledgeAddress = "n1v4M6kpPLMBnPe48z7EmGF8uP7TZ9un8ez";
+        let prevPledgeAddress = "n1n5Fctkjx2pA7iLX8rgRyCa7VKinGFNe9H";
         let proxyAddress = "n1d6YyHs2eL7pE3RKFbxCWcd2ExYx1MAXgF";
         let distributeAddress = "n1cwsE8w4m6cRkr14R5c4hK3Lb9wPsUHhY9";
         let distributeVoteTaxAddrv = "n1Xz96gDHrrs4ymBgpirav6LbFxZ1p5aRL1";
@@ -31,34 +30,32 @@
         let customerAddress = "n1YPMjEDMrZhroKmB1xDBhadygwWHC4zTwm";
 
         let proxyManagerAddress = "n1XpqPVnskUP1nzRoVZ9pvQ3P6yQJgfG8qc";
-        let coSignerAddress = ["n1YkXBfHqaGXBYmi3d3L65ECLLzfRResX5n", "n1b2yNRseEaZmvZqoc2mHEtyiteoKVCnJPY"]; 
+        let coSignerAddress = ["n1YkXBfHqaGXBYmi3d3L65ECLLzfRResX5n", "n1b2yNRseEaZmvZqoc2mHEtyiteoKVCnJPY"];
         let blacklist = ["n1XXoWQaucXCNew4cYUhzXzPKAXAQzRPbvt", "n1HYTU3v2zZeMdBPKor3ow1YhoEPNs5EgQ8", "n1NMVvLQxvkH3zkFu53Siz4xsw4kC2Z6g1v"];
 
-        let multiSigConfig = { 
-            natConfig:
-                {
-                    multiSig: multiSignAddress,
-                    distribute: distributeAddress,
-                    distributeVoteTaxAddrv: distributeVoteTaxAddrv,
-                    distributeManager: null,
-                    pledgeProxy: proxyAddress,
-                    pledgeProxyManager: proxyManagerAddress,
-                    pledge: pledgeAddress,
-                    nrData: nrDataAddress,
-                    nrDataManager: nrDataManager,
-                    natNRC20: natAddress,
-                    vote:voteAddress,
-                },
-            contractList:
-                {
-                    distribute: distributeAddress, // distribute.js
-                    pledge_proxy: proxyAddress, // pledge_proxy.js
-                    pledge: pledgeAddress, // pledge.js
-                    //nr_data: nrDataAddress, // nr_data.js
-                    nat_nrc20: natAddress, // nat_nrc20.js
-                    //vote: voteAddress,    // vote.js
-                }
-            };
+        let multiSigConfig = {
+            natConfig: {
+                multiSig: multiSignAddress,
+                distribute: distributeAddress,
+                distributeVoteTaxAddrv: distributeVoteTaxAddrv,
+                distributeManager: null,
+                pledgeProxy: proxyAddress,
+                pledgeProxyManager: proxyManagerAddress,
+                pledge: pledgeAddress,
+                nrData: nrDataAddress,
+                nrDataManager: nrDataManager,
+                natNRC20: natAddress,
+                vote: voteAddress,
+            },
+            contractList: {
+                distribute: distributeAddress, // distribute.js
+                pledge_proxy: proxyAddress, // pledge_proxy.js
+                pledge: pledgeAddress, // pledge.js
+                //nr_data: nrDataAddress, // nr_data.js
+                nat_nrc20: natAddress, // nat_nrc20.js
+                //vote: voteAddress,    // vote.js
+            }
+        };
 
         let unit = new BigNumber(10).pow(18);
 
@@ -118,7 +115,7 @@
 
         function pledgeProxyTest() {
             BlockchainTool.callContract(proxyManagerAddress, proxyAddress, 0, "geiiitCosigners", []);
-        } 
+        }
 
         function pledgeTest() {
             console.log("-------------------------------------------\nPledge Test");
@@ -146,7 +143,6 @@
         function getCurrentPledgesTest() {
             console.log("-------------------------------------------\nGet Current Pledges Test");
 
-            // BlockchainTool.callContract(customerAddress, proxyAddress, 0, "cancelPledge", []);
             let r = BlockchainTool.callContract(customerAddress, proxyAddress, 0, "getCurrentPledges", [customerAddress]);
 
             console.log("pledges:\n" + JSON.stringify(r));
