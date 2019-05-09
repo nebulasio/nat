@@ -28,12 +28,12 @@ DPledge.prototype = {
             data.push(item);
         }
         pledge.call("setPledgeResult", section.startHeight, section.endHeight, data);
-        this._tigger_event(section, data);
+        this._trigger_event(section, data);
         this._pledge_period = this._pledge_period + 1;
         this._pledge_height = section.endHeight;
         return data;
     },
-    _tigger_event: function(section, data) {
+    _trigger_event: function(section, data) {
         Event.Trigger("pledge", {
                 period: this._pledge_period,
                 start_height: section.startHeight,
@@ -76,13 +76,13 @@ DNR.prototype = {
                 data.push(item);
             }
             dataArray.push(...data);
-            this._tigger_event(nrData.section, data);
+            this._trigger_event(nrData.section, data);
             this._nr_period = this._nr_period + 1;
             this._nr_height = nrData.section.endHeight;
         }
         return dataArray;
     },
-    _tigger_event: function(section, data) {
+    _trigger_event: function(section, data) {
         Event.Trigger("nr", {
                 period: this._nr_period,
                 start_height: section.startHeight,
@@ -123,10 +123,10 @@ DVote.prototype = {
             nat: value.toString(10)
         };
         // vote reward
-        this._tigger_event(data);
+        this._trigger_event(data);
         return new Array().push(data);
     },
-    _tigger_event: function(data) {
+    _trigger_event: function(data) {
         Event.Trigger("vote", data);
     }
 };
@@ -185,8 +185,8 @@ Distribute.prototype = {
         this._vote.update_contract(config.vote);
         this._nr.update_contract(config.nrData);
     },
-    // tigger pledge reward
-    tiggerPledge: function() {
+    // trigger pledge reward
+    triggerPledge: function() {
         this._verifyPermission();
         this._verifyStatus();
         let summary = this._nr.summary(this._pledge._pledge_height);
@@ -195,14 +195,14 @@ Distribute.prototype = {
             this._produceNat(data);
         }
     },
-    // tigger nr reward
-    tiggerNR: function() {
+    // trigger nr reward
+    triggerNR: function() {
         this._verifyPermission();
         this._verifyStatus();
         let data = this._nr.calculate();
         this._produceNat(data);
     },
-    // tigger vote reward
+    // trigger vote reward
     vote: function(address, value) {
         this._verifyPermission();
         this._verifyStatus();
