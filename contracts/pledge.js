@@ -395,25 +395,12 @@ Pledge.prototype = {
         }
     },
 
-    _verifyConfig: function (config) {
-        for (let conf in config) {
-            let contractAddr = config[conf];
-            if (conf in this._canEmptyConfig || contractAddr !== null) {
-                this._verifyAddress(contractAddr);
-            }   
-        }  
-    },
-
     getConfig: function () {
         return this._config;
     },
 
     setConfig: function (config) {
         this._verifyFromMultisig();
-        this._verifyAddress(config.multiSig);
-        this._verifyAddress(config.pledgeProxy);
-        this._verifyAddress(config.distribute);
-
         this._config = {
             multiSig: config.multiSig,
             pledgeProxy: config.pledgeProxy,

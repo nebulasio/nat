@@ -40,14 +40,6 @@ PledgeProxy.prototype = {
         return (this._allowFundManager && this._config.pledgeProxyManager === Blockchain.transaction.from);
     },
 
-    _verifyConfig: function (config) {
-        this._verifyAddress(config.multiSig);
-        this._verifyAddress(config.pledge);
-        if (config.pledgeProxyManager) {
-            this._verifyAddress(config.pledgeProxyManager);
-        }
-    },
-
     get pledgeContract() {
         if (!this._pledgeContractObj) {
             if (!this._config.pledge) {
@@ -69,7 +61,6 @@ PledgeProxy.prototype = {
         if (!this._allowControl()) {
             throw ("permission denied!");
         }
-        this._verifyConfig(config);
         this._config = config;
     },
 

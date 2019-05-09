@@ -12,6 +12,7 @@ function MultiSig() {
     {
         multiSig: addr, // multisig address
         distribute: addr, // distribute.js address
+        distributeVoteTaxAddr: addr, // distribute Vote Tax to a particular address 
         distributeManager: addr, // distribute.js manager(can be empty)
         pledgeProxy: addr, // pledge proxy address
         pledgeProxyManager: addr, //pledge proxy fund manager(can be empty)
@@ -93,9 +94,7 @@ MultiSig.prototype = {
 
         for (contractName in contractList) {
             let contractObj = new Blockchain.Contract(contractList[contractName]);
-            console.log(contractName, "start");
             contractObj.call("setConfig", natConfig);
-            console.log(contractName, "end");
         } 
         // update current config
         this._config = config;
