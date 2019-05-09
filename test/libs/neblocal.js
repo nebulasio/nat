@@ -25,7 +25,7 @@ MapStorage.prototype = {
 
     set _keyList(list) {
         this.__keyList = list;
-        localStorage.setItem(this._key("__key_list"), this.serializer(list));
+        localStorage.setItem(this._key("__key_list"), JSON.stringify(list));
     },
 
     _addKey: function (key) {

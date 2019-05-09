@@ -85,7 +85,7 @@
             BlockchainTool.callContract(customerAddress, proxyAddress, 0, "init", [multiSignAddress]);
 
             // Distribute
-            BlockchainTool.callContract(customerAddress, distributeAddress, 0, "init", [1, multiSignAddress]);
+            BlockchainTool.callContract(customerAddress, distributeAddress, 0, "init", [0, multiSignAddress]);
 
             // NAT
             BlockchainTool.callContract(customerAddress, natAddress, 0, "init", ["NAT", "NAT", 18, multiSignAddress]);
@@ -203,7 +203,8 @@
         }
 
         function distributeTest() {
-            let r = BlockchainTool.callContract(multiSignAddress, distributeAddress, 0, "triggerPledge", []);
+            let pledge = BlockchainTool.callContract(multiSignAddress, distributeAddress, 0, "triggerPledge", []);
+            let nr = BlockchainTool.callContract(multiSignAddress, distributeAddress, 0, "triggerNR", []);
         }
 
         function main() {

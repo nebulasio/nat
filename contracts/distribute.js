@@ -1,6 +1,6 @@
 const STATE_WORK = 0;
 const STATE_PAUSED = 1;
-const HEIGHT_INTERVAL = 40320;
+const HEIGHT_INTERVAL = 100; // 40320
 
 function DPledge() {
     LocalContractStorage.defineProperties(this, {
@@ -75,7 +75,7 @@ DNR.prototype = {
         for (let key in nrData.data) {
             let item = nrData.data[key];
             // 0.0025 * 0.997^i * x
-            let value = new BigNumber(0.0025).times(item.value);
+            let value = new BigNumber(0.0025).times(item.score);
             let y = new BigNumber(0.997).pow(this._nr_period);
             if (blacklist.indexOf(item.addr) < 0) {
                 value = value.times(y);
@@ -94,9 +94,9 @@ DNR.prototype = {
             this._nr_height = nrData.section.endHeight + 1;
             this._nr_page = 0;
         }
-        return {hashNext: nrData.hasNext, data: data};;
+        return {hashNext: nrData.hasNext, data: data};
     },
-    _trigger_event: function(section, data) {
+    _trigger_event: function(section, page, data) {
         Event.Trigger("nr", {
                 period: this._nr_period,
                 page: page,
@@ -235,7 +235,7 @@ Distribute.prototype = {
         for (let key in data) {
             let item = data[key];
             let value = new BigNumber(10).pow(18).times(item.nat).floor();
-            natData.push({addr: item.addr, value: value});
+            natData.push({addr: item.addr, value: value.toString(10)});
         }
         nat.call("produce", natData);
     },
