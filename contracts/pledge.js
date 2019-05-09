@@ -176,7 +176,7 @@ CurrentData.prototype = {
     _getPagePledges: function (pledges, pageNum) {
         let pageCount = Math.ceil(pledges.length / parseFloat("" + this._pageSize));
         if (pageNum > pageCount - 1) {
-            throw ("");
+            throw ("pageNum out of range.");
         }
         let r = [];
         for (let i = pageNum * this._pageSize; i < (pageNum + 1) * this._pageSize; ++i) {

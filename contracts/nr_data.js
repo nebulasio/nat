@@ -280,6 +280,9 @@ CycleData.prototype = {
     },
 
     getPageData: function (index) {
+        if (index > this.pageCount - 1) {
+            throw ("index out of range.");
+        }
         return this._pageList.getPageData(index);
     },
 };
@@ -403,15 +406,15 @@ NrDataSource.prototype = {
         }
     },
 
-    getNR: function (block, startPageIndex) {
+    getNR: function (block, pageIndex) {
         let cycles = this._cycleManager.getCycles(block);
         if (cycles.length > 0) {
             let c = cycles[cycles.length - 1];
             let cd = new CycleData(this._storage, c);
             return {
                 section: c,
-                hasNext: startPageIndex < cd.pageCount - 1,
-                data: cd.getPageData(startPageIndex)
+                hasNext: pageIndex < cd.pageCount - 1,
+                data: cd.getPageData(pageIndex)
             }
         }
         return null;
