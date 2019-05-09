@@ -110,10 +110,6 @@ NATToken.prototype = {
             this._balances.set(item.addr, balance);
         }
         this._totalSupply = this._totalSupply.plus(total);
-        if (this._totalSupply.gt(new BigNumber(10).pow(18).pow(12))) {
-            this._produceEvent(false, this._totalSupply, data);
-            throw ("Out of total supply");
-        }
         this._produceEvent(true, this._totalSupply, data);
     },
 
