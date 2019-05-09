@@ -136,7 +136,8 @@ function Distribute() {
     LocalContractStorage.defineProperties(this, {
         _state: null,
         _nat_contract: null,
-        _multiSig: null
+        _multiSig: null,
+        _nrBlacklist: null
     });
 
     this._pledge = new DPledge();
@@ -187,6 +188,13 @@ Distribute.prototype = {
         this._vote.update_contract(natConfig.vote);
         this._nr.update_contract(natConfig.nrData);
     },
+
+    // update nr blacklist
+    setNRBlacklist: function(addrList) {
+        this._verifyPermission();
+        this._nrBlacklist = addrList
+    }, 
+
     // trigger pledge reward
     triggerPledge: function() {
         this._verifyPermission();

@@ -34,7 +34,8 @@ function MultiSig() {
     this._canEmptyConfig = ["distributeManager", "pledgeProxyManager"];
     LocalContractStorage.defineProperties(this, {
         _coSigners: null, // List of coSigner Addr
-        _config: null // all the smart contract configration
+        _config: null, // all the smart contract configration
+        _nrBlacklist: null // nr blacklist
     });
 }
 
@@ -87,6 +88,7 @@ MultiSig.prototype = {
 
     // Set Config
     setConfig: function(config) {
+        this._verifyCosigner();
         this._verifyConfig(config);
         // update the config to other smart contract
         let natConfig = config.natConfig;
@@ -98,6 +100,23 @@ MultiSig.prototype = {
         } 
         // update current config
         this._config = config;
+    },
+
+    getNRBlacklist: function() {
+        this._verifyCosigner();
+        return this._nrBlacklist;
+    },
+
+    setNRBlacklist: function(addrList) {
+        this._verifyCosigner();
+        for (let i = 0; i < addrList.length; ++i) {
+            this._verifyAddress(addrList[i]);
+        }
+        // update to distribute contract
+        let distributeContract = this._config.natConfig.distribute;
+        let contractObj = new Blockchain.Contract(distributeContract);
+        contractObj.call("setNRBlacklist", addrList);
+        this._nrBlacklist = addrList; 
     },
 
     // Get coSigner 
