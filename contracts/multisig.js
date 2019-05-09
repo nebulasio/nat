@@ -129,7 +129,7 @@ MultiSig.prototype = {
         let distributeContract = this._config.natConfig.distribute;
         let contractObj = new Blockchain.Contract(distributeContract);
         contractObj.call("update_status", distributeStatus);
-    }
+    },
 
     // Get coSigner 
     getCosigners: function() {
