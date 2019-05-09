@@ -10,6 +10,39 @@ function MapStorage(keyPrefix, serializer, deserializer) {
 
 MapStorage.prototype = {
 
+    get _keyList() {
+        if (!this.__keyList) {
+            this.__keyList = localStorage.getItem(this._key("__key_list"));
+            if (this.__keyList) {
+                this.__keyList = JSON.parse(this.__keyList);
+            }
+        }
+        if (!this.__keyList) {
+            this.__keyList = [];
+        }
+        return this.__keyList;
+    },
+
+    set _keyList(list) {
+        this.__keyList = list;
+        localStorage.setItem(this._key("__key_list"), this.serializer(list));
+    },
+
+    _addKey: function (key) {
+        if (this._keyList.indexOf(key) >= 0) {
+            return;
+        }
+        this._keyList.push(key);
+        this._keyList = this._keyList;
+    },
+
+    _clear: function () {
+        for (let i = 0; i < this._keyList.length; ++i) {
+            this.del(this._keyList[i]);
+        }
+        this._keyList = null;
+    },
+
     _key: function (key) {
         return this.keyPrefix + key;
     },
@@ -20,6 +53,7 @@ MapStorage.prototype = {
 
     set: function (key, value) {
         localStorage.setItem(this._key(key), this.serializer(value));
+        this._addKey(key);
     },
 
     put: function (key, value) {
@@ -28,7 +62,7 @@ MapStorage.prototype = {
 
     del: function (key) {
         localStorage.removeItem(this._key(key));
-    }
+    },
 };
 
 
@@ -128,6 +162,10 @@ let BlockchainTool = {
         } finally {
             this._popTransaction();
         }
+    },
+
+    resetNr: function () {
+        __nrStorage._clear();
     },
 
     set blockHeight(height) {

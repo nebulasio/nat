@@ -28,6 +28,7 @@
 
         let multiSignAddress = "n1Z6MhSZa321SnpiKfUWiybQSG3GCmRHunv";
         let customerAddress = "n1YPMjEDMrZhroKmB1xDBhadygwWHC4zTwm";
+        let customerAddress1 = "n1JuGuSaa92L9eZkaL51UHVVeC1u57yTkR8";
 
         let proxyManagerAddress = "n1XpqPVnskUP1nzRoVZ9pvQ3P6yQJgfG8qc";
         let coSignerAddress = ["n1YkXBfHqaGXBYmi3d3L65ECLLzfRResX5n", "n1b2yNRseEaZmvZqoc2mHEtyiteoKVCnJPY"];
@@ -51,7 +52,7 @@
                 distribute: distributeAddress, // distribute.js
                 pledge_proxy: proxyAddress, // pledge_proxy.js
                 pledge: pledgeAddress, // pledge.js
-                //nr_data: nrDataAddress, // nr_data.js
+                nr_data: nrDataAddress, // nr_data.js
                 nat_nrc20: natAddress, // nat_nrc20.js
                 //vote: voteAddress,    // vote.js
             }
@@ -117,6 +118,37 @@
             BlockchainTool.callContract(proxyManagerAddress, proxyAddress, 0, "geiiitCosigners", []);
         }
 
+        function uploadNrDataTest(startBlock, endBlock, count, startIndex, addresses) {
+            let data = {
+                startHeight: startBlock,
+                endHeight: endBlock,
+                count: count,
+                startIndex: startIndex,
+                data: addresses
+            };
+            BlockchainTool.callContract(nrDataManager, nrDataAddress, 0, "upload", [data]);
+        }
+
+        function nrDataTest() {
+            console.log("-------------------------------------------\nNrDataSource Test");
+
+            uploadNrDataTest(1, 100, 2, 0, [customerAddress]);
+            uploadNrDataTest(1, 100, 2, 1, [customerAddress1]);
+
+            BlockchainTool.resetNr();
+            uploadNrDataTest(101, 200, 2, 0, [customerAddress]);
+            uploadNrDataTest(101, 200, 2, 1, [customerAddress1]);
+
+            let cycles = BlockchainTool.callContract(nrDataManager, nrDataAddress, 0, "getCycles", [0]);
+            console.log("cycles:" + JSON.stringify(cycles));
+
+            let nrs = BlockchainTool.callContract(nrDataManager, nrDataAddress, 0, "getNRWithCycle", [1, 100, 0]);
+            console.log("1-100 nrs:" + JSON.stringify(nrs));
+
+            nrs = BlockchainTool.callContract(nrDataManager, nrDataAddress, 0, "getNRWithCycle", [101, 200, 0]);
+            console.log("101-200 nrs:" + JSON.stringify(nrs));
+        }
+
         function pledgeTest() {
             console.log("-------------------------------------------\nPledge Test");
             console.log("customer amount:" + balance(customerAddress));
@@ -142,41 +174,31 @@
 
         function getCurrentPledgesTest() {
             console.log("-------------------------------------------\nGet Current Pledges Test");
-
             let r = BlockchainTool.callContract(customerAddress, proxyAddress, 0, "getCurrentPledges", [customerAddress]);
-
             console.log("pledges:\n" + JSON.stringify(r));
         }
 
         function getPledgeAddressIndexesTest() {
             console.log("-------------------------------------------\nGet Pledge Address Indexes Test");
-
             let r = BlockchainTool.callContract(customerAddress, proxyAddress, 0, "getAddressIndexes", []);
-
             console.log("indexes:\n" + JSON.stringify(r));
         }
 
         function getPledgeAddressesTest() {
             console.log("-------------------------------------------\nGet Pledge Addresses Test");
-
             let r = BlockchainTool.callContract(customerAddress, proxyAddress, 0, "getAddresses", [0]);
-
             console.log("addresses:\n" + JSON.stringify(r));
         }
 
         function getHistoryPledgesTest() {
             console.log("-------------------------------------------\nGet History Pledges Test");
-
             let r = BlockchainTool.callContract(customerAddress, proxyAddress, 0, "getHistoryPledges", [customerAddress, 0]);
-
             console.log("histories:\n" + JSON.stringify(r));
         }
 
         function getPledgeDistributesTest() {
             console.log("-------------------------------------------\nGet Pledge Distributes Test");
-
             let r = BlockchainTool.callContract(customerAddress, proxyAddress, 0, "getDistributes", [customerAddress, 0]);
-
             console.log("distributes:\n" + JSON.stringify(r));
         }
 
@@ -190,8 +212,11 @@
             updateConfigTest();
 
             multisigTest();
+
             getCurrentPledgesTest();
             getPledgeAddressesTest();
+
+            nrDataTest();
 
             BlockchainTool.blockHeight = 0;
             pledgeTest();
@@ -206,7 +231,7 @@
             getPledgeAddressesTest();
 
             BlockchainTool.blockHeight = 201;
-            distributeTest();
+            // distributeTest();
 
             getHistoryPledgesTest();
             getPledgeDistributesTest();

@@ -275,24 +275,6 @@ CycleData.prototype = {
         this.count = data.length;
     },
 
-    getData: function (startPageIndex, count) {
-        let r = [];
-        let indexes = this._pageList.getPageIndexes();
-        for (let i = 0; i < indexes.length; ++i) {
-            if (i < startPageIndex) {
-                continue;
-            }
-            if (i >= startPageIndex + count) {
-                break;
-            }
-            let d = this._pageList.getPageData(indexes[i].i);
-            for (let j = 0; j < d.length; ++j) {
-                r.push(d[j]);
-            }
-        }
-        return r;
-    },
-
     getPageIndexes: function () {
         return this._pageList.getPageIndexes();
     },
@@ -429,7 +411,7 @@ NrDataSource.prototype = {
             return {
                 section: c,
                 hasNext: startPageIndex < cd.pageCount - 1,
-                data: cd.getData(startPageIndex, 1)
+                data: cd.getPageData(startPageIndex)
             }
         }
         return null;

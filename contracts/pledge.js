@@ -109,6 +109,7 @@ function CurrentData(storage) {
     this._storage = storage;
     this._addressList = new PledgeDataList(storage, "address_list");
 
+    this._pageSize = 400;
     this._keyLastBlock = "last_block";
     this._lastBlock = null;
 }
@@ -172,6 +173,21 @@ CurrentData.prototype = {
         }
     },
 
+    _getPagePledges: function (pledges, pageNum) {
+        let pageCount = Math.ceil(pledges.length / parseFloat("" + this._pageSize));
+        if (pageNum > pageCount - 1) {
+            throw ("");
+        }
+        let r = [];
+        for (let i = pageNum * this._pageSize; i < (pageNum + 1) * this._pageSize; ++i) {
+            if (i > pledges.length - 1) {
+                break;
+            }
+            r.push(pledges[i]);
+        }
+        return {hasNext: pageNum < pageCount - 1, data: r};
+    },
+
     get lastBlock() {
         if (!this._lastBlock) {
             this._lastBlock = this._storage.get(this._keyLastBlock);
@@ -198,7 +214,7 @@ CurrentData.prototype = {
         return deleted;
     },
 
-    getDistributePledges: function (startBlock, endBlock) {
+    getDistributePledges: function (startBlock, endBlock, pageNum) {
         let r = [];
         let indexes = this._addressList.getPageIndexes();
         for (let i = 0; i < indexes.length; ++i) {
@@ -212,7 +228,7 @@ CurrentData.prototype = {
                 }
             }
         }
-        return r;
+        return this._getPagePledges(r, pageNum);
     },
 
     addPledge: function (address, pledge) {
@@ -441,9 +457,9 @@ Pledge.prototype = {
     },
 
     // for distribute.js
-    getPledge: function (startBlock, endBlock) {
+    getPledge: function (startBlock, endBlock, pageNum) {
         this._verifyFromDistribute();
-        return this._currentData.getDistributePledges(startBlock, endBlock);
+        return this._currentData.getDistributePledges(startBlock, endBlock, pageNum);
     },
 
     // for distribute.js
