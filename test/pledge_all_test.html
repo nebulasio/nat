@@ -77,6 +77,7 @@
 
         function initContext() {
             BlockchainTool.transfer(null, customerAddress, new BigNumber(1000).mul(unit));
+            BlockchainTool.transfer(null, customerAddress1, new BigNumber(1000).mul(unit));
             BlockchainTool.transfer(null, coSignerAddress[0], new BigNumber(1000).mul(unit));
             BlockchainTool.transfer(null, coSignerAddress[1], new BigNumber(1000).mul(unit));
 
@@ -172,20 +173,31 @@
             }
         }
 
+        function pledge(customerAddress, amount) {
+            log(0, "***Pledge Address:" + customerAddress);
+            log(2, "before:\ncustomer amount:" + balance(customerAddress) + " proxy amount:" + balance(proxyAddress));
+            let a = new BigNumber(amount).mul(unit);
+            BlockchainTool.callContract(customerAddress, proxyAddress, a, "pledge", []);
+            log(2, "after:\ncustomer amount:" + balance(customerAddress) + " proxy amount:" + balance(proxyAddress));
+        }
+
+        function cancelPledge(customerAddress) {
+            log(0, "*** Cancel Pledge Address:" + customerAddress);
+            log(2, "before:\ncustomer amount:" + balance(customerAddress) + " proxy amount:" + balance(proxyAddress));
+            BlockchainTool.callContract(customerAddress, proxyAddress, 0, "cancelPledge", []);
+            log(2, "after:\ncustomer amount:" + balance(customerAddress) + " proxy amount:" + balance(proxyAddress));
+        }
 
         function pledgeTest() {
             log(0, "-------------------------------------------\nPledge Test");
-            log(0, "before:\ncustomer amount:" + balance(customerAddress) + " proxy amount:" + balance(proxyAddress));
-            let amount = new BigNumber("5").mul(unit);
-            BlockchainTool.callContract(customerAddress, proxyAddress, amount, "pledge", []);
-            log(0, "after:\ncustomer amount:" + balance(customerAddress) + " proxy amount:" + balance(proxyAddress));
+            pledge(customerAddress, 5.6);
+            pledge(customerAddress1, 108.111);
         }
 
         function cancelPledgeTest() {
             log(0, "-------------------------------------------\nCancel Pledge Test");
-            log(0, "before:\ncustomer amount:" + balance(customerAddress) + " proxy amount:" + balance(proxyAddress));
-            BlockchainTool.callContract(customerAddress, proxyAddress, 0, "cancelPledge", []);
-            log(0, "after:\ncustomer amount:" + balance(customerAddress) + " proxy amount:" + balance(proxyAddress));
+            cancelPledge(customerAddress);
+            cancelPledge(customerAddress1);
         }
 
 
@@ -249,7 +261,7 @@
         function distributeTest() {
             console.log("-------------------------------------------\nDistribute Test");
             triggerPledge();
-            triggerNR();
+            // triggerNR();
         }
 
 
