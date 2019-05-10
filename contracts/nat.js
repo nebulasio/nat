@@ -106,15 +106,39 @@ NATToken.prototype = {
         }
     },
 
+    _verifyAddress: function (address) {
+        if (Blockchain.verifyAddress(address) === 0) {
+            console.log(new Error().stack);
+            throw ("Address format error, address=" + address);
+        }
+    },
+
+    _verifyValue: function(value, checkNegative) {
+        let bigVal = new BigNumber(value);
+        if (bigVal.isNaN() || !bigVal.isFinite()) {
+            throw ("Invalid value, value=" + value);
+        }
+        if (checkNegative && bigVal.isNegative()) {
+            throw ("Value is negative, value=" + value);
+        }
+    },
+
     produce: function(data) {
         // permission check
         if (this._distribute !== Blockchain.transaction.from) {
             throw ("Permission Denied for distribute!");
         }
 
+        if (!(data instanceof Array)) {
+            throw ("Data format error.")
+        }
+
         let total = new BigNumber(0);
         for (let key in data) {
             let item = data[key];
+            this._verifyAddress(item.addr);
+            this._verifyValue(item.value, false);
+
             let balance = this._balances.get(item.addr) || new BigNumber(0);
             // balance + value
             total = total.plus(item.value);
@@ -179,6 +203,8 @@ NATToken.prototype = {
 
     transfer: function (to, value) {
         this._verifyBlacklist(Blockchain.transaction.from);
+        this._verifyAddress(to);
+        this._verifyValue(value, true);
 
         value = new BigNumber(value);
         if (value.lt(0)) {
@@ -201,6 +227,9 @@ NATToken.prototype = {
 
     transferFrom: function (from, to, value) {
         this._verifyBlacklist(from);
+        this._verifyAddress(from);
+        this._verifyAddress(to);
+        this._verifyValue(value, true);
 
         var spender = Blockchain.transaction.from;
         var balance = this._balances.get(from) || new BigNumber(0);
@@ -240,6 +269,9 @@ NATToken.prototype = {
     approve: function (spender, currentValue, value) {
         var from = Blockchain.transaction.from;
         this._verifyBlacklist(from);
+        this._verifyAddress(spender);
+        this._verifyValue(currentValue, true);
+        this._verifyValue(value, true);
 
         var oldValue = this.allowance(from, spender);
         if (oldValue != currentValue.toString()) {

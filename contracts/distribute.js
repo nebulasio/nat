@@ -24,8 +24,8 @@ DPledge.prototype = {
         let data = new Array();
         for (let key in pledgeData.data) {
             let item = pledgeData.data[key];
-            // 5 * 0.0025 * x / (1 + sqrt(200/x)) * 0.997^i
-            let gx = new BigNumber(0.0025).times(item.value);
+            // 5 * 12.663 * x / (1 + sqrt(200/x)) * 0.997^i
+            let gx = new BigNumber(12.663).times(item.value);
             let zx = new BigNumber(200).div(item.value).sqrt().plus(1).pow(-1);
             let y = new BigNumber(0.997).pow(this._pledge_period);
             let value = new BigNumber(5).times(gx).times(zx).times(y);
@@ -74,8 +74,8 @@ DNR.prototype = {
         let data = new Array();
         for (let key in nrData.data) {
             let item = nrData.data[key];
-            // 0.0025 * 0.997^i * x
-            let value = new BigNumber(0.0025).times(item.score);
+            // 12.663 * 0.997^i * x
+            let value = new BigNumber(12.663).times(item.score);
             let y = new BigNumber(0.997).pow(this._nr_period);
             value = value.times(y);
             item.nat = value.toString(10);
@@ -152,8 +152,8 @@ DVote.prototype = {
                 // if nr not found, use 0
             }
             if (score.gt(0)) {
-                // 0.0025 * 0.997^i * x
-                let nrReward = new BigNumber(0.997).pow(context._nr._nr_period).times(nr).times(0.0025);
+                // 12.663 * 0.997^i * x
+                let nrReward = new BigNumber(0.997).pow(context._nr._nr_period).times(nr).times(12.663);
                 nrData = {
                     period: context._nr._nr_period,
                     reward: nrReward.toString(10)

@@ -280,6 +280,15 @@ BigNumber.prototype = {
         this.v = this.v.floor();
         return this;
     },
+    isNegative: function (n) {
+        return this.v.isNegative(new BigNumber(n).v);
+    },
+    isNaN: function (n) {
+        return this.v.isNaN(new BigNumber(n).v);
+    },
+    isFinite: function (n) {
+        return this.v.isFinite(new BigNumber(n).v);
+    },
     toString: function (base) {
         return this.v.toString(base);
     }
