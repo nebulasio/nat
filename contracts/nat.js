@@ -102,7 +102,7 @@ NATToken.prototype = {
 
     _verifyBlacklist: function(addr) {
         if (this._blacklist.indexOf(addr) >= 0) {
-            throw new Error("Address is in blacklist, no transaction is allowed.");
+            throw new Error("Address is not allowed for transaction.");
         }
     },
 

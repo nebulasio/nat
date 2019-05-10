@@ -27,6 +27,7 @@ DPledge.prototype = {
         if (pledgeData === null) {
             throw new Error("No Pledge Data Found.");
         }
+
         let data = new Array();
         for (let key in pledgeData.data) {
             let item = pledgeData.data[key];
@@ -80,13 +81,11 @@ DNR.prototype = {
         if (nrData === null) {
             throw new Error("No NR Data Found.");
         }
+
         let data = new Array();
         for (let key in nrData.data) {
             let item = nrData.data[key];
-            // 12.663 * 0.997^i * x
-            let value = new BigNumber(12.663).times(item.score);
-            let y = new BigNumber(0.997).pow(this._nr_period);
-            value = value.times(y);
+            let value = this._calculateNAT(item.score);
             item.nat = value.toString(10);
             data.push(item);
         }
@@ -99,6 +98,13 @@ DNR.prototype = {
             this._nr_page = 0;
         }
         return {hasNext: nrData.hasNext, data: data};
+    },
+    // 12.663 * 0.997^i * x
+    _calculateNAT: function (score) {
+        let value = new BigNumber(12.663).times(score);
+        let y = new BigNumber(0.997).pow(this._nr_period);
+        value = value.times(y);
+        return value;
     },
     _trigger_event: function(section, page, data) {
         Event.Trigger("nr", {
@@ -137,32 +143,25 @@ DVote.prototype = {
     },
     // vote rule:
     // 3% give to the designated tax address
-    // reward 10 * min{Nv, Nnr} * y^i
+    // reward 10 * min{Nv, Nnr}
     calculate: function(context, addr, value) {
         this._verifyPermission();
-        if (context._blacklist.indexOf(addr) >= 0) {
-            throw new Error("Address is not allowed to vote.");
-        }
 
         let data = new Array();
         let tax = new BigNumber(value).times(0.03);
         data.push({addr: this._vote_tax_addr, nat:tax.toString(10)});
 
-        let y = new BigNumber(0.997).pow(context._nr._nr_period);
-        let consumption = y.times(value).times(0.97);
-
         let nrData = this._vote_nr_data.get(addr);
         if (nrData === null || nrData.period !== context._nr._nr_period) {
-            let nr = new BigNumber(0);
+            let score = "0";
             try {
-                let score = Blockchain.getLatestNebulasRank(addr);
-                nr = new BigNumber(score);
+                score = Blockchain.getLatestNebulasRank(addr);
             } catch (e) {
                 // if nr not found, use 0
             }
-            if (score.gt(0)) {
+            if (new BigNumber(score).gt(0)) {
                 // 12.663 * 0.997^i * x
-                let nrReward = new BigNumber(0.997).pow(context._nr._nr_period).times(nr).times(12.663);
+                let nrReward = context._nr._calculateNAT(score);
                 nrData = {
                     period: context._nr._nr_period,
                     reward: nrReward.toString(10)
@@ -182,10 +181,12 @@ DVote.prototype = {
             reward = new BigNumber(nrData.reward);
             nrData.reward = "0";
         }
+        this._vote_nr_data.set(addr, nrData);
+
         if (reward.gt(0)) {
             reward = reward.times(10);
         }
-        value = reward.minus(consumption);
+        value = reward.minus(value);
 
         data.push({addr: addr, nat: value.toString(10)});
         // vote reward
@@ -239,6 +240,11 @@ Distribute.prototype = {
             throw new Error("Distribute paused");
         }
     },
+    _verifyBlacklist: function(addr) {
+        if (this._blacklist.indexOf(addr) >= 0) {
+            throw new Error("Address is not allowed for distribute.");
+        }
+    },
     _produceNat: function(data) {
         let nat = new Blockchain.Contract(this._nat_contract);
         let natData = new Array();
@@ -269,7 +275,7 @@ Distribute.prototype = {
     // update blacklist
     setBlacklist: function(addrList) {
         this._verifyPermission();
-        this._blacklist = addrList
+        this._blacklist = addrList;
     }, 
 
     // trigger pledge reward
@@ -285,6 +291,7 @@ Distribute.prototype = {
     triggerNR: function() {
         this._verifyManager();
         this._verifyStatus();
+
         let nr = this._nr.calculate();
         this._produceNat(nr.data);
         return {needTrigger: nr.hasNext};
@@ -293,6 +300,8 @@ Distribute.prototype = {
     vote: function(address, value) {
         this._verifyManager();
         this._verifyStatus();
+        this._verifyBlacklist(address);
+
         let data = this._vote.calculate(this, address, value);
         this._produceNat(data);
     }
