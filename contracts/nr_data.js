@@ -88,6 +88,7 @@ NrDataList.prototype = {
             this._storage.del(this._dataKey(indexes[i].i));
         }
         this._storage.del(this._indexesKey());
+        this._pageIndexes = null;
     },
 };
 
@@ -198,6 +199,10 @@ DataReceiver.prototype = {
         for (let i = 0; i < this._indexes.length; ++i) {
             c += this._indexes[i].length;
         }
+        if (c > this._info.count) {
+            this._clear();
+            throw ("Wrong data length");
+        }
         return c === this._info.count;
     },
 
@@ -221,19 +226,25 @@ DataReceiver.prototype = {
             };
         }
         this._saveData(data);
-        let c = this._isComplete();
-        if (c) {
-            let r = {
-                completed: c,
-                info: this._info,
-                data: this._allData
+        try {
+            let c = this._isComplete();
+            if (c) {
+                let r = {
+                    completed: c,
+                    info: this._info,
+                    data: this._allData
+                };
+                this._clear();
+                return r;
+            }
+            return {
+                completed: false,
             };
-            this._clear();
-            return r;
+        } catch (e) {
+            return {
+                error: e
+            }
         }
-        return {
-            completed: false,
-        };
     }
 };
 
@@ -241,7 +252,7 @@ DataReceiver.prototype = {
 function CycleData(storage, cycle) {
     this._storage = storage;
     let name = _cycleName(cycle.startHeight, cycle.endHeight);
-    this._pageList = new NrDataList(storage, name, 400);
+    this._pageList = new NrDataList(storage, name, 1);
     this._countKey = name + "_count";
 }
 
@@ -264,7 +275,7 @@ CycleData.prototype = {
         let n = Math.ceil(data.length / parseFloat("" + this._pageList._pageSize));
         for (let i = 0; i < n; ++i) {
             let d = [];
-            for (let j = i * n; j < i * n + this._pageList._pageSize; ++j) {
+            for (let j = i * this._pageList._pageSize; j < (i + 1) * this._pageList._pageSize; ++j) {
                 if (j >= data.length) {
                     break;
                 }
@@ -401,9 +412,13 @@ NrDataSource.prototype = {
     upload: function (data) {
         this._verifyFromManager();
         let r = this._receiver.receive(data);
+        if (r.error) {
+            return r;
+        }
         if (r.completed) {
             this._didReceiveData(r.info, r.data);
         }
+        return {data: true};
     },
 
     getNR: function (block, pageIndex) {

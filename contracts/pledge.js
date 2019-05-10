@@ -255,7 +255,11 @@ CurrentData.prototype = {
     },
 
     getCurrentPledges: function (address) {
-        return this._storage.get(address);
+        let r = this._storage.get(address);
+        if (!r) {
+            r = [];
+        }
+        return r;
     }
 };
 
@@ -346,7 +350,7 @@ StatisticData.prototype = {
         if (d) {
             return d.nat;
         }
-        return null;
+        return "0";
     }
 };
 
@@ -370,7 +374,6 @@ function Pledge() {
     this._historyData = new HistoryData(this._histories);
     this._distributeData = new DistributeData(this._distributes);
 
-    this._addresses = new PledgeDataList(this._storage, "address_list");
     this._unit = new BigNumber(10).pow(18);
 }
 
@@ -480,11 +483,11 @@ Pledge.prototype = {
     },
 
     getAddressIndexes: function () {
-        return this._addresses.getPageIndexes();
+        return this._statisticData._addressList.getPageIndexes();
     },
 
     getAddresses: function (index) {
-        return this._addresses.getPageData(index);
+        return this._statisticData._addressList.getPageData(index);
     },
 
     getCurrentPledges: function (address) {

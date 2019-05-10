@@ -325,9 +325,9 @@ let LocalContractStorage = {
 
     defineMapProperty: function (obj, n, p) {
         if (p) {
-            obj[n] = new MapStorage(obj._contractName, p.stringify, p.parse);
+            obj[n] = new MapStorage(obj._contractName + "_" + n, p.stringify, p.parse);
         } else {
-            obj[n] = new MapStorage(obj._contractName, _defaultStringify, _defaultParse);
+            obj[n] = new MapStorage(obj._contractName + "_" + n, _defaultStringify, _defaultParse);
         }
     },
 
