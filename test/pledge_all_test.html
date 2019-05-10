@@ -11,6 +11,9 @@
     <script type="text/javascript" src="../contracts/distribute.js"></script>
     <script type="text/javascript" src="../contracts/pledge.js"></script>
     <script type="text/javascript" src="../contracts/nr_data.js"></script>
+
+    <script type="text/javascript" src="old_pledge.js"></script>
+
     <script type="text/javascript">
         localStorage.clear();
 
@@ -75,6 +78,9 @@
             }
         }
 
+
+        // Init --------------------------------------------------------------------------------------------------------
+
         function initContext() {
             BlockchainTool.transfer(null, customerAddress, new BigNumber(1000).mul(unit));
             BlockchainTool.transfer(null, customerAddress1, new BigNumber(1000).mul(unit));
@@ -88,6 +94,8 @@
             BlockchainTool.registerContract(nrDataAddress, NrDataSource);
             BlockchainTool.registerContract(multiSignAddress, MultiSig);
             //BlockchainTool.registerContract(voteAddress, Vote);
+
+            BlockchainTool.registerContract(prevPledgeAddress, OldPledge);
         }
 
         function initContractTest() {
@@ -105,7 +113,13 @@
 
             // NAT
             BlockchainTool.callContract(customerAddress, natAddress, 0, "init", ["NAT", "NAT", 18, multiSignAddress]);
+
+            // Prev Pledge
+            BlockchainTool.callContract(customerAddress, prevPledgeAddress, 0, "init", [[multiSignAddress]]);
         }
+
+
+        // MultiSig ----------------------------------------------------------------------------------------------------
 
         function updateConfigTest() {
             // Multisig
@@ -126,10 +140,15 @@
             console.log("blacklist", list);
         }
 
+
+        // Pledge Proxy ------------------------------------------------------------------------------------------------
+
         function pledgeProxyTest() {
             BlockchainTool.callContract(proxyManagerAddress, proxyAddress, 0, "geiiitCosigners", []);
         }
 
+
+        // NrData ------------------------------------------------------------------------------------------------------
 
         function uploadOnePageNrData(startBlock, endBlock, count, startIndex, addresses) {
             let data = {
@@ -173,6 +192,9 @@
             }
         }
 
+
+        // Pledge ------------------------------------------------------------------------------------------------------
+
         function pledge(customerAddress, amount) {
             log(0, "***Pledge Address:" + customerAddress);
             log(0, "before:\ncustomer amount:" + balance(customerAddress) + " proxy amount:" + balance(proxyAddress));
@@ -200,6 +222,18 @@
             cancelPledge(customerAddress1);
         }
 
+        function prevPledgeExportTest() {
+            log(0, "-------------------------------------------\nPrev Pledge Export Test");
+            let amount1 = new BigNumber("1.2").mul(unit);
+            BlockchainTool.callContract(customerAddress, prevPledgeAddress, amount1, "pledge", []);
+            let amount2 = new BigNumber("2.4").mul(unit);
+            BlockchainTool.callContract(customerAddress1, prevPledgeAddress, amount2, "pledge", []);
+            try {
+                BlockchainTool.callContract(multiSignAddress, prevPledgeAddress, 0, "exportDataToNat", [pledgeAddress]);
+            } catch (e) {
+                log(0, "error: " + e);
+            }
+        }
 
         function printAddressPledgeData(address) {
             log(2, "****Address: " + address);
@@ -241,6 +275,22 @@
             }
         }
 
+        function pledgeAllTest() {
+            BlockchainTool.blockHeight = 0;
+            pledgeTest();
+
+            getPledgeDataTest();
+
+            BlockchainTool.blockHeight = 101;
+            cancelPledgeTest();
+
+            prevPledgeExportTest();
+
+            getPledgeDataTest();
+        }
+
+
+        // Distribute --------------------------------------------------------------------------------------------------
 
         function triggerPledge() {
             try {
@@ -285,6 +335,8 @@
         }
 
 
+        // NAT ---------------------------------------------------------------------------------------------------------
+
         function getNatBalance(address) {
             log(0, "*** Get Nat Balance, Address: " + address);
 
@@ -300,6 +352,8 @@
         }
 
 
+        // Main --------------------------------------------------------------------------------------------------------
+
         function main() {
             initContext();
             initContractTest();
@@ -311,15 +365,7 @@
 
             nrDataTest();
 
-            BlockchainTool.blockHeight = 0;
-            pledgeTest();
-
-            getPledgeDataTest();
-
-            BlockchainTool.blockHeight = 101;
-            cancelPledgeTest();
-
-            getPledgeDataTest();
+            pledgeAllTest();
 
             BlockchainTool.blockHeight = 201;
             distributeTest();
