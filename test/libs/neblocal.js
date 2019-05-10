@@ -236,6 +236,10 @@ function BigNumber(n) {
 }
 
 BigNumber.prototype = {
+    add: function (n) {
+        this.v = this.v.add(new BigNumber(n).v);
+        return this;
+    },
     plus: function (n) {
         this.v = this.v.plus(new BigNumber(n).v);
         return this;

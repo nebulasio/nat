@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Pledge All Test</title>
+    <script type="text/javascript" src="libs/nebulas.js"></script>
+    <script type="text/javascript" src="libs/neblocal.js"></script>
+    <script type="text/javascript" src="../contracts/nat.js"></script>
+    <script type="text/javascript" src="../contracts/multisig.js"></script>
+    <script type="text/javascript" src="../contracts/pledge_proxy.js"></script>
+    <script type="text/javascript" src="../contracts/distribute.js"></script>
+    <script type="text/javascript" src="../contracts/pledge.js"></script>
+    <script type="text/javascript" src="../contracts/nr_data.js"></script>
+    <script type="text/javascript">
+        localStorage.clear();
+
+        let natAddress = "n1zUNqeBPvsyrw5zxp9mKcDdLTjuaEL7s39";
+
+        let pledgeAddress = "n1F5VUpUfUbnVksQWcQcAvbY9K9dbakAvpN";
+        let prevPledgeAddress = "n1n5Fctkjx2pA7iLX8rgRyCa7VKinGFNe9H";
+        let proxyAddress = "n1d6YyHs2eL7pE3RKFbxCWcd2ExYx1MAXgF";
+        let distributeAddress = "n1cwsE8w4m6cRkr14R5c4hK3Lb9wPsUHhY9";
+        let distributeVoteTaxAddrv = "n1Xz96gDHrrs4ymBgpirav6LbFxZ1p5aRL1";
+        let distributeManageAddress = "n1Jc4mkpbvLeGFq4LMzAx5f5dK4pKHEUUDb";
+        let nrDataAddress = "n1keX3piVEzAc14MthT25Cg6hFFSw76Msja";
+        let nrDataManager = "n1NznNCpYvuWdXBBbj1CSZn8huAPkQHM9t2";
+        let voteAddress = "n1LJuxRULaTUNHGjGQSfnBNjSixqXyvuPU4";
+
+        let multiSignAddress = "n1Z6MhSZa321SnpiKfUWiybQSG3GCmRHunv";
+        let customerAddress = "n1YPMjEDMrZhroKmB1xDBhadygwWHC4zTwm";
+        let customerAddress1 = "n1JuGuSaa92L9eZkaL51UHVVeC1u57yTkR8";
+
+        let proxyManagerAddress = "n1XpqPVnskUP1nzRoVZ9pvQ3P6yQJgfG8qc";
+        let coSignerAddress = ["n1YkXBfHqaGXBYmi3d3L65ECLLzfRResX5n", "n1b2yNRseEaZmvZqoc2mHEtyiteoKVCnJPY"];
+        let blacklist = ["n1XXoWQaucXCNew4cYUhzXzPKAXAQzRPbvt", "n1HYTU3v2zZeMdBPKor3ow1YhoEPNs5EgQ8", "n1NMVvLQxvkH3zkFu53Siz4xsw4kC2Z6g1v"];
+
+        let multiSigConfig = {
+            natConfig: {
+                multiSig: multiSignAddress,
+                distribute: distributeAddress,
+                distributeVoteTaxAddrv: distributeVoteTaxAddrv,
+                distributeManager: distributeManageAddress,
+                pledgeProxy: proxyAddress,
+                pledgeProxyManager: proxyManagerAddress,
+                pledge: pledgeAddress,
+                nrData: nrDataAddress,
+                nrDataManager: nrDataManager,
+                natNRC20: natAddress,
+                vote: voteAddress,
+            },
+            contractList: {
+                distribute: distributeAddress, // distribute.js
+                pledge_proxy: proxyAddress, // pledge_proxy.js
+                pledge: pledgeAddress, // pledge.js
+                nr_data: nrDataAddress, // nr_data.js
+                nat_nrc20: natAddress, // nat_nrc20.js
+                //vote: voteAddress,    // vote.js
+            }
+        };
+
+        let unit = new BigNumber(10).pow(18);
+
+        function balance(address) {
+            return BlockchainTool.getBalance(address).div(unit).toString(10);
+        }
+
+        function log(space, data) {
+            let array = data.split("\n");
+            let prefix = "";
+            for (let i = 0; i < space; ++i) {
+                prefix += " ";
+            }
+            for (let i = 0; i < array.length; ++i) {
+                console.log(prefix + array[i]);
+            }
+        }
+
+        function initContext() {
+            BlockchainTool.transfer(null, customerAddress, new BigNumber(1000).mul(unit));
+            BlockchainTool.transfer(null, coSignerAddress[0], new BigNumber(1000).mul(unit));
+            BlockchainTool.transfer(null, coSignerAddress[1], new BigNumber(1000).mul(unit));
+
+            BlockchainTool.registerContract(proxyAddress, PledgeProxy);
+            BlockchainTool.registerContract(distributeAddress, Distribute);
+            BlockchainTool.registerContract(pledgeAddress, Pledge);
+            BlockchainTool.registerContract(natAddress, NATToken);
+            BlockchainTool.registerContract(nrDataAddress, NrDataSource);
+            BlockchainTool.registerContract(multiSignAddress, MultiSig);
+            //BlockchainTool.registerContract(voteAddress, Vote);
+        }
+
+        function initContractTest() {
+            // multisig
+            BlockchainTool.callContract(customerAddress, multiSignAddress, 0, "init", [coSignerAddress]);
+
+            // Pledge
+            BlockchainTool.callContract(customerAddress, pledgeAddress, 0, "init", [multiSignAddress]);
+
+            // Proxy
+            BlockchainTool.callContract(customerAddress, proxyAddress, 0, "init", [multiSignAddress]);
+
+            // Distribute
+            BlockchainTool.callContract(customerAddress, distributeAddress, 0, "init", [0, multiSignAddress]);
+
+            // NAT
+            BlockchainTool.callContract(customerAddress, natAddress, 0, "init", ["NAT", "NAT", 18, multiSignAddress]);
+        }
+
+        function updateConfigTest() {
+            // Multisig
+            BlockchainTool.callContract(multiSignAddress, natAddress, 0, "setConfig", [multiSigConfig.natConfig]);
+        }
+
+        function totalSupply() {
+            let total = BlockchainTool.callContract(customerAddress, natAddress, 0, "totalSupply", []);
+            return total;
+        }
+
+        function NATProduceTest() {
+            // 1. normal
+            let data = [{
+                addr: "n1cwsE8w4m6cRkr14R5c4hK3Lb9wPsUHhY9",
+                value: "1"
+            }, {
+                addr: "n1LJuxRULaTUNHGjGQSfnBNjSixqXyvuPU4",
+                value: "1"
+            }];
+            BlockchainTool.callContract(distributeAddress, natAddress, 0, "produce", [data]);
+            if (totalSupply() !== "2") {
+                throw ("total supply error");
+            }
+
+            // 2. permission denied
+            try {
+                let data = [{addr: "n1cwsE8w4m6cRkr14R5c4hK3Lb9wPsUHhY9", value: "0"}];
+                BlockchainTool.callContract(customerAddress, natAddress, 0, "produce", [data]);
+            } catch(e) {
+                if (e.message != "Permission Denied for distribute!") {
+                    throw e;
+                }
+            }
+
+            // 3. address invalid
+            try {
+                let data = [{addr: "n1cwsE8w4m6cRkr14R5c4hK3Lb9wPsUH", value: "0"}];
+                BlockchainTool.callContract(distributeAddress, natAddress, 0, "produce", [data]);
+            } catch(e) {
+                if (e.message != "Address format error, address=n1cwsE8w4m6cRkr14R5c4hK3Lb9wPsUH") {
+                    throw e;
+                }
+            }
+
+            // 4. value invalid
+            try {
+                let data = [{addr: "n1cwsE8w4m6cRkr14R5c4hK3Lb9wPsUHhY9", value: "asd"}];
+                BlockchainTool.callContract(distributeAddress, natAddress, 0, "produce", [data]);
+            } catch(e) {
+                if (e.name != "BigNumber Error") {
+                    throw e;
+                }
+            }
+
+            // 5. value negative
+            data = [{
+                addr: "n1cwsE8w4m6cRkr14R5c4hK3Lb9wPsUHhY9",
+                value: "-1"
+            }];
+            BlockchainTool.callContract(distributeAddress, natAddress, 0, "produce", [data]);
+            if (totalSupply() !== "1") {
+                throw ("total supply error");
+            }
+
+            // 5. value negative out of balance
+            try {
+                data = [{
+                addr: "n1LJuxRULaTUNHGjGQSfnBNjSixqXyvuPU4",
+                value: "-2"
+            }];
+                BlockchainTool.callContract(distributeAddress, natAddress, 0, "produce", [data]);
+            } catch(e) {
+                if (e.message != "Produce failed.") {
+                    throw e;
+                }
+            }
+        }
+
+        function NATBlacklist() {
+            BlockchainTool.callContract(multiSignAddress, natAddress, 0, "setBlacklist", [[customerAddress1]]);
+
+            let blacklist = BlockchainTool.callContract(multiSignAddress, natAddress, 0, "blacklist", []);
+            if ( JSON.stringify(blacklist) != JSON.stringify([customerAddress1])) {
+                throw ("black list error");
+            }
+
+            try {
+                BlockchainTool.callContract(customerAddress, natAddress, 0, "setBlacklist", [[customerAddress1]]);
+            } catch (e) {
+                if (e.message != "Permission Denied!") {
+                    throw e;
+                }
+            }
+        }
+
+        function NATTransactionTest() {
+            let data = [{addr: customerAddress, value: "100000"}];
+            BlockchainTool.callContract(distributeAddress, natAddress, 0, "produce", [data]);
+
+            // 1. normal transaction
+            BlockchainTool.callContract(customerAddress, natAddress, 0, "transfer", [customerAddress1, "100"]);
+
+            // 2. out of balance
+            try {
+                BlockchainTool.callContract(customerAddress, natAddress, 0, "transfer", [pledgeAddress, "100000"]);
+            } catch (e) {
+                if (e.message != "Transfer Failed.") {
+                    throw e;
+                }
+            }
+
+            // 3. black list
+            try {
+                BlockchainTool.callContract(customerAddress1, natAddress, 0, "transfer", [pledgeAddress, "100"]);
+            } catch (e) {
+                if (e.message != "Address is in blacklist, no transaction is allowed.") {
+                    throw e;
+                }
+            }
+
+            // 4. addr invalid
+            try {
+                BlockchainTool.callContract(customerAddress, natAddress, 0, "transfer", ["pledgeAddress", "100"]);
+            } catch (e) {
+                if (e.message != "Address format error, address=pledgeAddress") {
+                    throw e;
+                }
+            }
+
+            // 5. value 0
+            BlockchainTool.callContract(customerAddress, natAddress, 0, "transfer", [pledgeAddress, "0"]);
+
+            // 6. value invalid
+            try {
+                BlockchainTool.callContract(customerAddress, natAddress, 0, "transfer", [pledgeAddress, "xs"]);
+            } catch (e) {
+                if (e.message != "new BigNumber() not a number: xs") {
+                    throw e;
+                }
+            }
+
+            // 7. value negative
+            try {
+                BlockchainTool.callContract(customerAddress, natAddress, 0, "transfer", [pledgeAddress, "-1"]);
+            } catch (e) {
+                if (e.message != "Value is negative, value=-1") {
+                    throw e;
+                }
+            }
+        }
+
+        function NATApproveTest() {
+
+            // 1. normal
+            BlockchainTool.callContract(customerAddress, natAddress, 0, "approve", [pledgeAddress, "0", "100"]);
+
+            let allowance = BlockchainTool.callContract(customerAddress, natAddress, 0, "allowance", [customerAddress, pledgeAddress]);
+            if (allowance != "100") {
+                throw ("allowance error");
+            }
+
+            // 2. address invalid
+            try {
+                BlockchainTool.callContract(customerAddress, natAddress, 0, "transfer", ["pledgeAddress", "0"]);
+            } catch (e) {
+                if (e.message != "Address format error, address=pledgeAddress") {
+                    throw e;
+                }
+            }
+
+            // 3. value invalid
+            try {
+                BlockchainTool.callContract(customerAddress, natAddress, 0, "transfer", [pledgeAddress, "-1"]);
+            } catch (e) {
+                if (e.message != "Value is negative, value=-1") {
+                    throw e;
+                }
+            }
+
+            //
+
+        }
+
+        function main() {
+            initContext();
+            initContractTest();
+            updateConfigTest();
+
+            NATProduceTest();
+            NATBlacklist();
+            NATTransactionTest();
+            NATApproveTest();
+
+        }
+
+        main();
+    </script>
+</head>
+
+<body>
+</body>
+</html>

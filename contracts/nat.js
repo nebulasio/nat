@@ -80,7 +80,7 @@ NATToken.prototype = {
 
      _verifyPermission: function () {
         if (this._multiSig !== Blockchain.transaction.from) {
-            throw ("Permission Denied!");
+            throw new Error("Permission Denied!");
         }
     },
 
@@ -91,7 +91,7 @@ NATToken.prototype = {
         this._distribute = natConfig.distribute;
     },
 
-    setBlackList: function(blacklist) {
+    setBlacklist: function(blacklist) {
         this._verifyPermission();
         this._blacklist = blacklist;
     },
@@ -101,36 +101,35 @@ NATToken.prototype = {
     },
 
     _verifyBlacklist: function(addr) {
-        if (blacklist.indexOf(addr) >= 0) {
-            throw ("Address is in blacklist, no transaction is allowed.");
+        if (this._blacklist.indexOf(addr) >= 0) {
+            throw new Error("Address is in blacklist, no transaction is allowed.");
         }
     },
 
     _verifyAddress: function (address) {
         if (Blockchain.verifyAddress(address) === 0) {
-            console.log(new Error().stack);
-            throw ("Address format error, address=" + address);
+            throw new Error("Address format error, address=" + address);
         }
     },
 
     _verifyValue: function(value, checkNegative) {
         let bigVal = new BigNumber(value);
         if (bigVal.isNaN() || !bigVal.isFinite()) {
-            throw ("Invalid value, value=" + value);
+            throw new Error("Invalid value, value=" + value);
         }
         if (checkNegative && bigVal.isNegative()) {
-            throw ("Value is negative, value=" + value);
+            throw new Error("Value is negative, value=" + value);
         }
     },
 
     produce: function(data) {
         // permission check
         if (this._distribute !== Blockchain.transaction.from) {
-            throw ("Permission Denied for distribute!");
+            throw new Error("Permission Denied for distribute!");
         }
 
         if (!(data instanceof Array)) {
-            throw ("Data format error.")
+            throw new Error("Data format error.")
         }
 
         let total = new BigNumber(0);
@@ -146,7 +145,7 @@ NATToken.prototype = {
 
             if (balance.lt(0)) {
                 this._produceEvent(false, this._totalSupply, data);
-                throw new Error("produce failed.");
+                throw new Error("Produce failed.");
             }
             this._balances.set(item.addr, balance);
         }
@@ -206,16 +205,11 @@ NATToken.prototype = {
         this._verifyAddress(to);
         this._verifyValue(value, true);
 
-        value = new BigNumber(value);
-        if (value.lt(0)) {
-            throw new Error("invalid value.");
-        }
-
         var from = Blockchain.transaction.from;
         var balance = this._balances.get(from) || new BigNumber(0);
 
         if (balance.lt(value)) {
-            throw new Error("transfer failed.");
+            throw new Error("Transfer Failed.");
         }
 
         this._balances.set(from, balance.sub(value));

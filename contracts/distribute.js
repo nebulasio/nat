@@ -21,6 +21,9 @@ DPledge.prototype = {
         let end = this._pledge_height + HEIGHT_INTERVAL - 1;
         let page = this._pledge_page;
         let pledgeData = pledge.call("getPledge", start, end, page);
+        if (pledgeData === null) {
+            throw new Error("No Pledge Data Found.");
+        }
         let data = new Array();
         for (let key in pledgeData.data) {
             let item = pledgeData.data[key];
@@ -71,6 +74,9 @@ DNR.prototype = {
         let nr = new Blockchain.Contract(this._nr_contract);
         let page = this._nr_page;
         let nrData = nr.call("getNR", this._nr_height, this._nr_page);
+        if (nrData === null) {
+            throw new Error("No NR Data Found.");
+        }
         let data = new Array();
         for (let key in nrData.data) {
             let item = nrData.data[key];
@@ -123,7 +129,7 @@ DVote.prototype = {
     },
     _verifyPermission: function() {
         if (this._vote_contract.indexOf(Blockchain.transaction.from) < 0) {
-            throw ("No permission");
+            throw new Error("No permission");
         }
     },
     // vote rule:
@@ -132,7 +138,7 @@ DVote.prototype = {
     calculate: function(context, addr, value) {
         this._verifyPermission();
         if (context._blacklist.indexOf(addr) >= 0) {
-            throw ("Address is not allowed to vote");
+            throw new Error("Address is not allowed to vote");
         }
 
         let data = new Array();
@@ -217,17 +223,17 @@ Distribute.prototype = {
     },
     _verifyPermission: function () {
         if (this._multiSig !== Blockchain.transaction.from) {
-            throw ("Permission Denied!");
+            throw new Error("Permission Denied!");
         }
     },
     _verifyManager: function () {
         if (this._distributeManager !== Blockchain.transaction.from) {
-            throw ("Distribute Manager Permission Denied!");
+            throw new Error("Distribute Manager Permission Denied!");
         }
     },
     _verifyStatus: function() {
         if (this._state === STATE_PAUSED) {
-            throw ("Distribute paused");
+            throw new Error("Distribute paused");
         }
     },
     _produceNat: function(data) {
