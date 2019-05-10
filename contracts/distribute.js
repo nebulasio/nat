@@ -19,6 +19,9 @@ DPledge.prototype = {
         let pledge = new Blockchain.Contract(this._pledge_contract);
         let start = this._pledge_height;
         let end = this._pledge_height + HEIGHT_INTERVAL - 1;
+        if (end > Blockchain.block.height) {
+            throw new Error("Pledge period exceeds the current height.");
+        }
         let page = this._pledge_page;
         let pledgeData = pledge.call("getPledge", start, end, page);
         if (pledgeData === null) {
@@ -138,7 +141,7 @@ DVote.prototype = {
     calculate: function(context, addr, value) {
         this._verifyPermission();
         if (context._blacklist.indexOf(addr) >= 0) {
-            throw new Error("Address is not allowed to vote");
+            throw new Error("Address is not allowed to vote.");
         }
 
         let data = new Array();
