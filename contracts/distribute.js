@@ -136,7 +136,7 @@ DVote.prototype = {
     // reward 10 * min{Nv, Nnr} * y^i
     calculate: function(context, addr, value) {
         this._verifyPermission();
-        if (context._nrBlacklist.indexOf(addr) >= 0) {
+        if (context._blacklist.indexOf(addr) >= 0) {
             throw ("Address is not allowed to vote");
         }
 
@@ -170,16 +170,16 @@ DVote.prototype = {
                 }
             }
         }
-        let reward = new BigNumber(0);
+        let reward = null;
         if (new BigNumber(nrData.reward).gt(value)) {
             nrData.reward = new BigNumber(nrData.reward).minus(value).toString(10);
             reward = new BigNumber(value);
         } else {
-            nrData.reward = "0";
             reward = new BigNumber(nrData.reward);
+            nrData.reward = "0";
         }
         if (reward.gt(0)) {
-            reward = new BigNumber(0.997).pow(context._nr._nr_period).times(10).times(reward);
+            reward = reward.times(10);
         }
         value = reward.minus(consumption);
 
@@ -199,7 +199,8 @@ function Distribute() {
         _state: null,
         _nat_contract: null,
         _multiSig: null,
-        _nrBlacklist: null
+        _distributeManager: null,
+        _blacklist: null
     });
 
     this._pledge = new DPledge();
@@ -217,11 +218,16 @@ Distribute.prototype = {
         this._nr._nr_page = 0;
         this._nr._nr_height = height;
         this._multiSig = multiSig;
-        this._nrBlacklist = [];
+        this._blacklist = [];
     },
     _verifyPermission: function () {
         if (this._multiSig !== Blockchain.transaction.from) {
             throw ("Permission Denied!");
+        }
+    },
+    _verifyManager: function () {
+        if (this._distributeManager !== Blockchain.transaction.from) {
+            throw ("Distribute Manager Permission Denied!");
         }
     },
     _verifyStatus: function() {
@@ -248,6 +254,7 @@ Distribute.prototype = {
     setConfig: function(natConfig) {
         this._verifyPermission();
         this._config = natConfig;
+        this._distributeManager = natConfig.distributeManager;
         this._multiSig = natConfig.multiSig;
         this._nat_contract = natConfig.natNRC20;
         this._pledge.update_contract(natConfig.pledge);
@@ -255,32 +262,32 @@ Distribute.prototype = {
         this._nr.update_contract(natConfig.nrData);
     },
 
-    // update nr blacklist
+    // update blacklist
     setNRBlacklist: function(addrList) {
         this._verifyPermission();
-        this._nrBlacklist = addrList
+        this._blacklist = addrList
     }, 
 
     // trigger pledge reward
     triggerPledge: function() {
-        this._verifyPermission();
+        this._verifyManager();
         this._verifyStatus();
 
-        let pledge = this._pledge.calculate(this._nrBlacklist);
+        let pledge = this._pledge.calculate(this._blacklist);
         this._produceNat(pledge.data);
         return {needTrigger: pledge.hashNext};
     },
     // trigger nr reward
     triggerNR: function() {
-        this._verifyPermission();
+        this._verifyManager();
         this._verifyStatus();
-        let nr = this._nr.calculate(this._nrBlacklist);
+        let nr = this._nr.calculate(this._blacklist);
         this._produceNat(nr.data);
         return {needTrigger: nr.hashNext};
     },
     // trigger vote reward
     vote: function(address, value) {
-        this._verifyPermission();
+        this._verifyManager();
         this._verifyStatus();
         let data = this._vote.calculate(this, address, value);
         this._produceNat(data);

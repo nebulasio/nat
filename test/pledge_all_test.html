@@ -39,7 +39,7 @@
                 multiSig: multiSignAddress,
                 distribute: distributeAddress,
                 distributeVoteTaxAddrv: distributeVoteTaxAddrv,
-                distributeManager: null,
+                distributeManager: distributeManageAddress,
                 pledgeProxy: proxyAddress,
                 pledgeProxyManager: proxyManagerAddress,
                 pledge: pledgeAddress,
@@ -203,8 +203,8 @@
         }
 
         function distributeTest() {
-            let pledge = BlockchainTool.callContract(multiSignAddress, distributeAddress, 0, "triggerPledge", []);
-            let nr = BlockchainTool.callContract(multiSignAddress, distributeAddress, 0, "triggerNR", []);
+            let pledge = BlockchainTool.callContract(distributeManageAddress, distributeAddress, 0, "triggerPledge", []);
+            let nr = BlockchainTool.callContract(distributeManageAddress, distributeAddress, 0, "triggerNR", []);
         }
 
         function main() {
