@@ -119,7 +119,7 @@ DNR.prototype = {
 
 function DVote() {
     LocalContractStorage.defineProperties(this, {
-        _vote_contract: null,
+        _vote_contracts: null,
         _vote_tax_addr: null
     });
 
@@ -133,12 +133,12 @@ function DVote() {
 
 DVote.prototype = {
     update_contract: function(contract, taxAddr) {
-        this._vote_contract = contract;
+        this._vote_contracts = contract;
         this._vote_tax_addr = taxAddr;
     },
     _verifyPermission: function() {
-        if (this._vote_contract.indexOf(Blockchain.transaction.from) < 0) {
-            throw new Error("No permission");
+        if (this._vote_contracts.indexOf(Blockchain.transaction.from) < 0) {
+            throw new Error("No permission for vote.");
         }
     },
     // vote rule:
@@ -158,6 +158,7 @@ DVote.prototype = {
                 score = Blockchain.getLatestNebulasRank(addr);
             } catch (e) {
                 // if nr not found, use 0
+                score = "0";
             }
             if (new BigNumber(score).gt(0)) {
                 // 12.663 * 0.997^i * x
@@ -222,6 +223,7 @@ Distribute.prototype = {
         this._nr._nr_period = 0;
         this._nr._nr_page = 0;
         this._nr._nr_height = height;
+        this._vote._vote_contracts = [];
         this._multiSig = multiSig;
         this._blacklist = [];
     },
@@ -237,7 +239,7 @@ Distribute.prototype = {
     },
     _verifyStatus: function() {
         if (this._state === STATE_PAUSED) {
-            throw new Error("Distribute paused");
+            throw new Error("Distribute paused.");
         }
     },
     _verifyBlacklist: function(addr) {
@@ -257,7 +259,7 @@ Distribute.prototype = {
     },
 
     // for mulisig.js
-    update_status: function(state) {
+    updateStatus: function(state) {
         this._verifyPermission();
         this._state = state;
     },
@@ -298,7 +300,6 @@ Distribute.prototype = {
     },
     // trigger vote reward
     vote: function(address, value) {
-        this._verifyManager();
         this._verifyStatus();
         this._verifyBlacklist(address);
 

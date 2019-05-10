@@ -248,6 +248,10 @@ BigNumber.prototype = {
         this.v = this.v.sub(new BigNumber(n).v);
         return this;
     },
+    minus: function (n) {
+        this.v = this.v.sub(new BigNumber(n).v);
+        return this;
+    },
     times: function (n) {
         this.v = this.v.mul(new BigNumber(n).v);
         return this;

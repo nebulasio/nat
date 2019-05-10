@@ -356,6 +356,32 @@
             getNatBalance(customerAddress1);
         }
 
+        function voteDistributeTest() {
+            BlockchainTool.callContract(multiSignAddress, distributeAddress, 0, "updateStatus", [1]);
+            // 1. distribute paused
+            try {
+                BlockchainTool.callContract(voteAddress, distributeAddress, 0, "vote", ["n1UwKRaTZUrp9z8YTdGKQRNjudkP4oZEe2A", 4113048.089]);
+            } catch (e) {
+                if (e.message != "Distribute paused.") {
+                    throw e;
+                }
+            }
+
+            BlockchainTool.callContract(multiSignAddress, distributeAddress, 0, "updateStatus", [0]);
+
+            // 2. normal vote
+            BlockchainTool.callContract(voteAddress, distributeAddress, 0, "vote", ["n1UwKRaTZUrp9z8YTdGKQRNjudkP4oZEe2A", 4113048.089]);
+
+            // 3. vote permission
+            try {
+                BlockchainTool.callContract(multiSignAddress, distributeAddress, 0, "vote", ["n1UwKRaTZUrp9z8YTdGKQRNjudkP4oZEe2A", 4113048.089]);
+            } catch (e) {
+                if (e.message != "No permission for vote.") {
+                    throw e;
+                }
+            }
+        }
+
 
         // Main --------------------------------------------------------------------------------------------------------
 
@@ -378,6 +404,8 @@
             getPledgeDataTest();
 
             natBalanceTest();
+
+            voteDistributeTest();
         }
 
         main();
