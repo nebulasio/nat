@@ -18,7 +18,7 @@ Vote.prototype = {
         }
     },
 
-    _verifyData: function (dataSource, hash) {
+    _getData: function (dataSource, hash) {
         this._verifyDataSource(dataSource);
         let c = new Blockchain.Contract(dataSource);
         let d = c.call("getData", hash);
@@ -28,7 +28,7 @@ Vote.prototype = {
         }
     },
 
-    _verifyVoteValue: function (value, weight) {
+    _verifyVote: function (value, weight) {
         if ([this.YES, this.NO, this.OTHER].indexOf(parseInt(value)) < 0) {
             // TODO: error msg
             throw ("");
@@ -103,12 +103,12 @@ Vote.prototype = {
         this._vote(dataSource, hash, value, weight);
     },
 
-    getVoteIndexes: function (dataSource) {
+    getHashIndexes: function (dataSource) {
         this._verifyDataSource(dataSource);
         return new PageList(this._storage, dataSource).getPageIndexes();
     },
 
-    getVotes: function (dataSource, index) {
+    getHashes: function (dataSource, index) {
         this._verifyDataSource(dataSource);
         return new PageList(this._storage, dataSource).getPageData(index);
     },
