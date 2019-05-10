@@ -41,7 +41,7 @@ DPledge.prototype = {
             this._pledge_height = end + 1;
             this._pledge_page = 0;
         }
-        return {hashNext: pledgeData.hasNext, data: data};
+        return {hasNext: pledgeData.hasNext, data: data};
     },
     _trigger_event: function(start, end, page, data) {
         Event.Trigger("pledge", {
@@ -82,14 +82,14 @@ DNR.prototype = {
             data.push(item);
         }
         this._trigger_event(nrData.section, page, data);
-        if (nrData.hashNext) {
+        if (nrData.hasNext) {
             this._nr_page = page + 1;
         } else {
             this._nr_period = this._nr_period + 1;
-            this._nr_height = nrData.section.endHeight + 1;
+            this._nr_height = nrData.section.endHeight;
             this._nr_page = 0;
         }
-        return {hashNext: nrData.hasNext, data: data};
+        return {hasNext: nrData.hasNext, data: data};
     },
     _trigger_event: function(section, page, data) {
         Event.Trigger("nr", {
@@ -270,7 +270,7 @@ Distribute.prototype = {
 
         let pledge = this._pledge.calculate();
         this._produceNat(pledge.data);
-        return {needTrigger: pledge.hashNext};
+        return {needTrigger: pledge.hasNext};
     },
     // trigger nr reward
     triggerNR: function() {
@@ -278,7 +278,7 @@ Distribute.prototype = {
         this._verifyStatus();
         let nr = this._nr.calculate();
         this._produceNat(nr.data);
-        return {needTrigger: nr.hashNext};
+        return {needTrigger: nr.hasNext};
     },
     // trigger vote reward
     vote: function(address, value) {
