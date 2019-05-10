@@ -285,7 +285,17 @@
                 }
             }
 
-            //
+            // 4. transfer from
+            BlockchainTool.callContract(pledgeAddress, natAddress, 0, "transferFrom", [customerAddress, customerAddress1, "10"]);
+
+            // 5. transfer from failed
+            try {
+                BlockchainTool.callContract(pledgeAddress, natAddress, 0, "transferFrom", [customerAddress, customerAddress1, "100"]);
+            } catch (e) {
+                if (e.message != "Transfer failed.") {
+                    throw e;
+                }
+            }
 
         }
 

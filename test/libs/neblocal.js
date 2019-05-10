@@ -295,6 +295,9 @@ BigNumber.prototype = {
     },
     toString: function (base) {
         return this.v.toString(base);
+    },
+    toJSON: function () {
+        return this.v.toString(10);
     }
 };
 

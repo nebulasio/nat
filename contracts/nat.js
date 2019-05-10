@@ -245,7 +245,7 @@ NATToken.prototype = {
 
             this._transferEvent(true, from, to, value);
         } else {
-            throw new Error("transfer failed.");
+            throw new Error("Transfer failed.");
         }
     },
 
@@ -269,14 +269,14 @@ NATToken.prototype = {
 
         var oldValue = this.allowance(from, spender);
         if (oldValue != currentValue.toString()) {
-            throw new Error("current approve value mistake.");
+            throw new Error("Current approve value mistake.");
         }
 
         var balance = new BigNumber(this.balanceOf(from));
         var value = new BigNumber(value);
 
         if (value.lt(0) || balance.lt(value)) {
-            throw new Error("invalid value.");
+            throw new Error("Invalid value.");
         }
 
         var owned = this._allowed.get(from) || new Allowed();
