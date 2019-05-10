@@ -252,7 +252,7 @@ DataReceiver.prototype = {
 function CycleData(storage, cycle) {
     this._storage = storage;
     let name = _cycleName(cycle.startHeight, cycle.endHeight);
-    this._pageList = new NrDataList(storage, name, 1);
+    this._pageList = new NrDataList(storage, name, 400);
     this._countKey = name + "_count";
 }
 

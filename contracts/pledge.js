@@ -109,7 +109,7 @@ function CurrentData(storage) {
     this._storage = storage;
     this._addressList = new PledgeDataList(storage, "address_list");
 
-    this._pageSize = 1;
+    this._pageSize = 400;
     this._keyLastBlock = "last_block";
     this._lastBlock = null;
 }
