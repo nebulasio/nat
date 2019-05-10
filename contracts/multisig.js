@@ -35,7 +35,7 @@ function MultiSig() {
     LocalContractStorage.defineProperties(this, {
         _coSigners: null, // List of coSigner Addr
         _config: null, // all the smart contract configration
-        _nrBlacklist: null // nr blacklist
+        _blacklist: null // blacklist
     });
 }
 
@@ -103,13 +103,13 @@ MultiSig.prototype = {
     },
 
     // for distribute.js
-    getNRBlacklist: function() {
+    getBlacklist: function() {
         this._verifyCosigner();
-        return this._nrBlacklist;
+        return this._blacklist;
     },
 
     // for distribute.js
-    setNRBlacklist: function(addrList) {
+    setBlacklist: function(addrList) {
         this._verifyCosigner();
         for (let i = 0; i < addrList.length; ++i) {
             this._verifyAddress(addrList[i]);
@@ -117,8 +117,8 @@ MultiSig.prototype = {
         // update to distribute contract
         let distributeContract = this._config.natConfig.distribute;
         let contractObj = new Blockchain.Contract(distributeContract);
-        contractObj.call("setNRBlacklist", addrList);
-        this._nrBlacklist = addrList; 
+        contractObj.call("setBlacklist", addrList);
+        this._blacklist = addrList; 
     },
 
     // for distribute.js

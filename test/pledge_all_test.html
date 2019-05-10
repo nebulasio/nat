@@ -105,8 +105,8 @@
             let cosigners = BlockchainTool.callContract(coSignerAddress[0], multiSignAddress, 0, "getCosigners", []);
             console.log("cosigners", cosigners);
 
-            BlockchainTool.callContract(coSignerAddress[0], multiSignAddress, 0, "setNRBlacklist", [blacklist]);
-            let list = BlockchainTool.callContract(coSignerAddress[0], multiSignAddress, 0, "getNRBlacklist", []);
+            BlockchainTool.callContract(coSignerAddress[0], multiSignAddress, 0, "setBlacklist", [blacklist]);
+            let list = BlockchainTool.callContract(coSignerAddress[0], multiSignAddress, 0, "getBlacklist", []);
             console.log("blacklist", list);
         }
 

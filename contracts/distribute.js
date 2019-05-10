@@ -15,7 +15,7 @@ DPledge.prototype = {
     update_contract: function(contract) {
         this._pledge_contract = contract;
     },
-    calculate: function(blacklist) {
+    calculate: function() {
         let pledge = new Blockchain.Contract(this._pledge_contract);
         let start = this._pledge_height;
         let end = this._pledge_height + HEIGHT_INTERVAL - 1;
@@ -67,7 +67,7 @@ DNR.prototype = {
     update_contract: function(contract) {
         this._nr_contract = contract;
     },
-    calculate: function(blacklist) {
+    calculate: function() {
         let nr = new Blockchain.Contract(this._nr_contract);
         let page = this._nr_page;
         let nrData = nr.call("getNR", this._nr_height, this._nr_page);
@@ -77,12 +77,7 @@ DNR.prototype = {
             // 0.0025 * 0.997^i * x
             let value = new BigNumber(0.0025).times(item.score);
             let y = new BigNumber(0.997).pow(this._nr_period);
-            if (blacklist.indexOf(item.addr) < 0) {
-                value = value.times(y);
-            } else {
-                // in blacklist
-                value = new BigNumber(1).minus(y).times(y).times(value);
-            }
+            value = value.times(y);
             item.nat = value.toString(10);
             data.push(item);
         }
@@ -263,7 +258,7 @@ Distribute.prototype = {
     },
 
     // update blacklist
-    setNRBlacklist: function(addrList) {
+    setBlacklist: function(addrList) {
         this._verifyPermission();
         this._blacklist = addrList
     }, 
@@ -273,7 +268,7 @@ Distribute.prototype = {
         this._verifyManager();
         this._verifyStatus();
 
-        let pledge = this._pledge.calculate(this._blacklist);
+        let pledge = this._pledge.calculate();
         this._produceNat(pledge.data);
         return {needTrigger: pledge.hashNext};
     },
@@ -281,7 +276,7 @@ Distribute.prototype = {
     triggerNR: function() {
         this._verifyManager();
         this._verifyStatus();
-        let nr = this._nr.calculate(this._blacklist);
+        let nr = this._nr.calculate();
         this._produceNat(nr.data);
         return {needTrigger: nr.hashNext};
     },
