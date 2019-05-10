@@ -175,17 +175,17 @@
 
         function pledge(customerAddress, amount) {
             log(0, "***Pledge Address:" + customerAddress);
-            log(2, "before:\ncustomer amount:" + balance(customerAddress) + " proxy amount:" + balance(proxyAddress));
+            log(0, "before:\ncustomer amount:" + balance(customerAddress) + " proxy amount:" + balance(proxyAddress));
             let a = new BigNumber(amount).mul(unit);
             BlockchainTool.callContract(customerAddress, proxyAddress, a, "pledge", []);
-            log(2, "after:\ncustomer amount:" + balance(customerAddress) + " proxy amount:" + balance(proxyAddress));
+            log(0, "after:\ncustomer amount:" + balance(customerAddress) + " proxy amount:" + balance(proxyAddress));
         }
 
         function cancelPledge(customerAddress) {
             log(0, "*** Cancel Pledge Address:" + customerAddress);
-            log(2, "before:\ncustomer amount:" + balance(customerAddress) + " proxy amount:" + balance(proxyAddress));
+            log(0, "before:\ncustomer amount:" + balance(customerAddress) + " proxy amount:" + balance(proxyAddress));
             BlockchainTool.callContract(customerAddress, proxyAddress, 0, "cancelPledge", []);
-            log(2, "after:\ncustomer amount:" + balance(customerAddress) + " proxy amount:" + balance(proxyAddress));
+            log(0, "after:\ncustomer amount:" + balance(customerAddress) + " proxy amount:" + balance(proxyAddress));
         }
 
         function pledgeTest() {
@@ -204,26 +204,26 @@
         function printAddressPledgeData(address) {
             log(2, "****Address: " + address);
             let r = BlockchainTool.callContract(customerAddress, proxyAddress, 0, "getCurrentPledges", [address]);
-            log(4, "getCurrentPledges:\n" + JSON.stringify(r));
+            log(2, "getCurrentPledges:\n" + JSON.stringify(r));
 
             let indexes = BlockchainTool.callContract(customerAddress, proxyAddress, 0, "getHistoryPledgeIndexes", [address]);
-            log(4, "getHistoryPledgeIndexes:\n" + JSON.stringify(indexes));
+            log(2, "getHistoryPledgeIndexes:\n" + JSON.stringify(indexes));
 
             for (let i = 0; i < indexes.length; ++i) {
                 r = BlockchainTool.callContract(customerAddress, proxyAddress, 0, "getHistoryPledges", [address, indexes[i].i]);
-                log(6, "getHistoryPledgesWithIndex:" + JSON.stringify(indexes[i]) + "\nhistoryPledges:\n" + JSON.stringify(r));
+                log(4, "getHistoryPledgesWithIndex:" + JSON.stringify(indexes[i]) + "\nhistoryPledges:\n" + JSON.stringify(r));
             }
 
             indexes = BlockchainTool.callContract(customerAddress, proxyAddress, 0, "getDistributeIndexes", [address]);
-            log(4, "getDistributeIndexes:\n" + JSON.stringify(indexes));
+            log(2, "getDistributeIndexes:\n" + JSON.stringify(indexes));
 
             for (let i = 0; i < indexes.length; ++i) {
                 r = BlockchainTool.callContract(customerAddress, proxyAddress, 0, "getDistributes", [address, indexes[i].i]);
-                log(6, "getDistributesWithIndex:" + JSON.stringify(indexes[i]) + "\ndistributes:\n" + JSON.stringify(r));
+                log(4, "getDistributesWithIndex:" + JSON.stringify(indexes[i]) + "\ndistributes:\n" + JSON.stringify(r));
             }
 
             r = BlockchainTool.callContract(customerAddress, proxyAddress, 0, "getTotalDistribute", [address]);
-            log(4, "getTotalDistribute: " + r);
+            log(2, "getTotalDistribute: " + r);
         }
 
         function getPledgeDataTest() {
@@ -234,7 +234,7 @@
 
             for (let i = 0; i < indexes.length; ++i) {
                 let r = BlockchainTool.callContract(customerAddress, proxyAddress, 0, "getAddresses", [indexes[i].i]);
-                log(2, "getAddresses:\nindex:\n" + JSON.stringify(indexes[i]) + "\naddresses:\n" + JSON.stringify(r));
+                log(2, "getAddressesWithIndex:" + JSON.stringify(indexes[i]) + "\naddresses:\n" + JSON.stringify(r));
                 for (let j = 0; j < r.length; ++j) {
                     printAddressPledgeData(r[j]);
                 }
@@ -243,25 +243,60 @@
 
 
         function triggerPledge() {
-            let r = BlockchainTool.callContract(distributeManageAddress, distributeAddress, 0, "triggerPledge", []);
-            console.log("triggerPledge:\n" + JSON.stringify(r));
-            if (r.needTrigger) {
-                triggerPledge();
+            try {
+                let r = BlockchainTool.callContract(distributeManageAddress, distributeAddress, 0, "triggerPledge", []);
+                console.log(JSON.stringify(r));
+                if (r.needTrigger) {
+                    triggerPledge();
+                }
+            } catch (e) {
+                log(0, "error: " + e);
             }
         }
 
         function triggerNR() {
-            let r = BlockchainTool.callContract(distributeManageAddress, distributeAddress, 0, "triggerNR", []);
-            console.log("triggerNR:\n" + JSON.stringify(r));
-            if (r.needTrigger) {
-                triggerNR();
+            try {
+                let r = BlockchainTool.callContract(distributeManageAddress, distributeAddress, 0, "triggerNR", []);
+                console.log(JSON.stringify(r));
+                if (r.needTrigger) {
+                    triggerNR();
+                }
+            } catch (e) {
+                log(0, "error: " + e);
             }
         }
 
         function distributeTest() {
             console.log("-------------------------------------------\nDistribute Test");
+
+            console.log("*** Trigger Pledge");
             triggerPledge();
-            // triggerNR();
+            console.log("*** Trigger Pledge");
+            triggerPledge();
+            console.log("*** Trigger Pledge");
+            triggerPledge();
+
+            console.log("*** Trigger NR");
+            triggerNR();
+            console.log("*** Trigger NR");
+            triggerNR();
+            console.log("*** Trigger NR");
+            triggerNR();
+        }
+
+
+        function getNatBalance(address) {
+            log(0, "*** Get Nat Balance, Address: " + address);
+
+            let r = BlockchainTool.callContract(customerAddress, natAddress, 0, "balanceOf", [address]);
+            r = new BigNumber(r).div(unit).toString(10);
+            log(0, "balance: " + r);
+        }
+
+        function natBalanceTest() {
+            console.log("-------------------------------------------\nNat Balance Test");
+            getNatBalance(customerAddress);
+            getNatBalance(customerAddress1);
         }
 
 
@@ -291,6 +326,7 @@
 
             getPledgeDataTest();
 
+            natBalanceTest();
         }
 
         main();

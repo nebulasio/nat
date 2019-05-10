@@ -174,6 +174,9 @@ CurrentData.prototype = {
     },
 
     _getPagePledges: function (pledges, pageNum) {
+        if (!pledges || pledges.length === 0) {
+            return null;
+        }
         let pageCount = Math.ceil(pledges.length / parseFloat("" + this._pageSize));
         if (pageNum > pageCount - 1) {
             throw ("pageNum out of range.");
