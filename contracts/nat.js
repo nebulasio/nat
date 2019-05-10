@@ -44,7 +44,8 @@ var NATToken = function () {
         },
         _multiSig: null,
         _distribute: null,
-        _config: null
+        _config: null,
+        _blacklist: null
     });
 
     LocalContractStorage.defineMapProperties(this, {
@@ -74,6 +75,7 @@ NATToken.prototype = {
         this._decimals = decimals || 0;
         this._totalSupply = new BigNumber(0);
         this._multiSig = multiSig;
+        this._blacklist = [];
     },
 
      _verifyPermission: function () {
@@ -87,6 +89,21 @@ NATToken.prototype = {
         this._config = natConfig;
         this._multiSig = natConfig.multiSig;
         this._distribute = natConfig.distribute;
+    },
+
+    setBlackList: function(blacklist) {
+        this._verifyPermission();
+        this._blacklist = blacklist;
+    },
+
+    blacklist: function() {
+        return this._blacklist;
+    },
+
+    _verifyBlacklist: function(addr) {
+        if (blacklist.indexOf(addr) >= 0) {
+            throw ("Address is in blacklist, no transaction is allowed.");
+        }
     },
 
     produce: function(data) {
@@ -161,6 +178,8 @@ NATToken.prototype = {
     },
 
     transfer: function (to, value) {
+        this._verifyBlacklist(Blockchain.transaction.from);
+
         value = new BigNumber(value);
         if (value.lt(0)) {
             throw new Error("invalid value.");
@@ -181,6 +200,8 @@ NATToken.prototype = {
     },
 
     transferFrom: function (from, to, value) {
+        this._verifyBlacklist(from);
+
         var spender = Blockchain.transaction.from;
         var balance = this._balances.get(from) || new BigNumber(0);
 
@@ -218,6 +239,7 @@ NATToken.prototype = {
 
     approve: function (spender, currentValue, value) {
         var from = Blockchain.transaction.from;
+        this._verifyBlacklist(from);
 
         var oldValue = this.allowance(from, spender);
         if (oldValue != currentValue.toString()) {
