@@ -215,14 +215,14 @@ function Distribute() {
 };
 
 Distribute.prototype = {
-    init: function (height, multiSig) {
+    init: function (pledgeHeight, nrHeight, multiSig) {
         this._state = STATE_WORK;
         this._pledge._pledge_period = 0;
         this._pledge._pledge_page = 0;
-        this._pledge._pledge_height = height;
+        this._pledge._pledge_height = pledgeHeight;
         this._nr._nr_period = 0;
         this._nr._nr_page = 0;
-        this._nr._nr_height = height;
+        this._nr._nr_height = nrHeight;
         this._vote._vote_contracts = [];
         this._multiSig = multiSig;
         this._blacklist = [];
