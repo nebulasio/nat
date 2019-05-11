@@ -190,9 +190,19 @@ def setconfig(neb, from_account, multisig_addr):
     result = neb.api.sendRawTransaction(tx.to_proto()).text
     print(result)
 
+
+def getconfig(neb, from_account, proxy_addr):
+    from_addr = from_account.get_address_obj()
+    account_addr = from_addr.string()
+    nonce = get_nonce(neb, from_account)
+    contract = {"function":"getConfig","args":"[]"}
+    ret = neb.api.call(account_addr, proxy_addr, "0", nonce + 1, str(gas_limit), str(gas_price), contract).text
+    print(json.loads(ret))
+
 '''
 python natcli mainnet ks.json deployall
 python natcli testnet screte.json setconfig multisig_addr
+python natcli testnet screte.json getconfig proxy_addr 
 '''
 if __name__ == "__main__":
     # Confirm chain id
@@ -235,3 +245,6 @@ if __name__ == "__main__":
         if sys.argv[3] == "setconfig":
             multisig_addr = sys.argv[4]
             setconfig(neb, from_account, multisig_addr)
+        if sys.argv[3] == "getconfig":
+            proxy_addr = sys.argv[4]
+            getconfig(neb, from_account, proxy_addr)
