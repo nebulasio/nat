@@ -247,6 +247,11 @@ Distribute.prototype = {
             throw new Error("Address is not allowed for distribute.");
         }
     },
+    _verifyAddress: function (address) {
+        if (Blockchain.verifyAddress(address) === 0) {
+            throw new Error("Address format error, address=" + address);
+        }
+    },
     _produceNat: function(data) {
         let nat = new Blockchain.Contract(this._nat_contract);
         let natData = new Array();
@@ -257,7 +262,10 @@ Distribute.prototype = {
         }
         nat.call("produce", natData);
     },
-
+    _balanceOf: function(address) {
+        let nat = new Blockchain.Contract(this._nat_contract);
+        return nat.call("balanceOf", address);
+    },
     // for mulisig.js
     updateStatus: function(state) {
         this._verifyPermission();
@@ -301,7 +309,13 @@ Distribute.prototype = {
     // trigger vote reward
     vote: function(address, value) {
         this._verifyStatus();
+        this._verifyAddress(address);
         this._verifyBlacklist(address);
+
+        let balance = this._balanceOf(address);
+        if (new BigNumber(value).gt(balance)) {
+            throw new Error("Insufficient balance.");
+        }
 
         let data = this._vote.calculate(this, address, value);
         this._produceNat(data);

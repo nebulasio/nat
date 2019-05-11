@@ -121,7 +121,7 @@
             BlockchainTool.callContract(customerAddress, proxyAddress, 0, "init", [multiSignAddress]);
 
             // Distribute
-            BlockchainTool.callContract(customerAddress, distributeAddress, 0, "init", [0, multiSignAddress]);
+            BlockchainTool.callContract(customerAddress, distributeAddress, 0, "init", [0, 0, multiSignAddress]);
 
             // NAT
             BlockchainTool.callContract(customerAddress, natAddress, 0, "init", ["NAT", "NAT", 18, multiSignAddress]);
@@ -397,7 +397,7 @@
             BlockchainTool.callContract(multiSignAddress, distributeAddress, 0, "updateStatus", [1]);
             // 1. distribute paused
             try {
-                BlockchainTool.callContract(voteAddress, distributeAddress, 0, "vote", ["n1UwKRaTZUrp9z8YTdGKQRNjudkP4oZEe2A", 4113048.089]);
+                BlockchainTool.callContract(voteAddress, distributeAddress, 0, "vote", [customerAddress, 1]);
             } catch (e) {
                 if (e.message != "Distribute paused.") {
                     throw e;
@@ -407,16 +407,21 @@
             BlockchainTool.callContract(multiSignAddress, distributeAddress, 0, "updateStatus", [0]);
 
             // 2. normal vote
-            BlockchainTool.callContract(voteAddress, distributeAddress, 0, "vote", ["n1UwKRaTZUrp9z8YTdGKQRNjudkP4oZEe2A", 4113048.089]);
+            BlockchainTool.callContract(voteAddress, distributeAddress, 0, "vote", [customerAddress, 1]);
 
             // 3. vote permission
             try {
-                BlockchainTool.callContract(multiSignAddress, distributeAddress, 0, "vote", ["n1UwKRaTZUrp9z8YTdGKQRNjudkP4oZEe2A", 4113048.089]);
+                BlockchainTool.callContract(multiSignAddress, distributeAddress, 0, "vote", [customerAddress, 1]);
             } catch (e) {
                 if (e.message != "No permission for vote.") {
                     throw e;
                 }
             }
+
+            BlockchainTool.callContract(voteAddress, distributeAddress, 0, "vote", [customerAddress, 1000]);
+            BlockchainTool.callContract(voteAddress, distributeAddress, 0, "vote", [customerAddress, 2000]);
+            BlockchainTool.callContract(voteAddress, distributeAddress, 0, "vote", [customerAddress, 10000]);
+            BlockchainTool.callContract(voteAddress, distributeAddress, 0, "vote", [customerAddress, 10000]);
         }
 
 
@@ -442,7 +447,7 @@
 
             natBalanceTest();
 
-            // voteDistributeTest();
+            voteDistributeTest();
             voteTest();
         }
 
