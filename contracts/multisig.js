@@ -185,14 +185,25 @@ MultiSig.prototype = {
         this._blacklist = addrList;
     },
 
-    // for distribute.js
-    // const STATE_WORK = 0;
-    // const STATE_PAUSED = 1;
-    setDistStatus: function (distributeStatus) {
+    closeContracts: function () {
         this._verifyCosigner();
-        let distributeContract = this._config.natConfig.distribute;
-        let contractObj = new Blockchain.Contract(distributeContract);
-        contractObj.call("updateStatus", distributeStatus);
+        // const STATE_WORK = 0;
+        // const STATE_PAUSED = 1;
+        new Blockchain.Contract(this._config.natConfig.distribute).call("updateStatus", 1);
+        new Blockchain.Contract(this._config.natConfig.pledgeProxy).call("closePledge");
+    },
+
+    openContracts: function () {
+        this._verifyCosigner();
+        // const STATE_WORK = 0;
+        // const STATE_PAUSED = 1;
+        new Blockchain.Contract(this._config.natConfig.distribute).call("updateStatus", 0);
+        new Blockchain.Contract(this._config.natConfig.pledgeProxy).call("openPledge");
+    },
+
+    transferFund: function (newAddr) {
+        this._verifyCosigner();
+        new Blockchain.Contract(this._config.natConfig.pledgeProxy).call("transferFund", newAddr);
     },
 
     // Get coSigner
