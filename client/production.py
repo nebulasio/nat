@@ -1,6 +1,6 @@
 ## Account
 ### Admin
-ADMIN_ACCOUNT = 'n1H2Yb5Q6ZfKvs61htVSV4b1U2gr2GA9vo6'
+ADMIN_ACCOUNT = 'n1a1D6x3k14YZ5PdCKjPfak2PiMFzXErFkN'
 
 ### emergency accounts
 EMERGENCY_ACCOUNT_A = 'n1Lcnr1qP5AnW1XH7prswLS91Ks1cTe6fr9'

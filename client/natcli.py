@@ -2,6 +2,7 @@
 import sys
 import json
 import time
+import getpass
 
 # 3rd party
 from nebpysdk.src.account.Account import Account
@@ -12,11 +13,8 @@ from nebpysdk.src.core.TransactionCallPayload import TransactionCallPayload
 from nebpysdk.src.core.TransactionDeployPayload import TransactionDeployPayload 
 from nebpysdk.src.client.Neb import Neb 
 
-neb = Neb("https://testnet.nebulas.io")
-account_addr = "n1H2Yb5Q6ZfKvs61htVSV4b1U2gr2GA9vo6"
-to_addr = "n1QWYSv5MJfvEBA4A8PGVrGdstdXzEkQ8Ju"
+import settings
 
-# Chain settings
 chain_id = 1001
 gas_price = 20000000000
 gas_limit = 200000
@@ -30,19 +28,21 @@ def get_account(keystore_filepath):
         keystore = None 
         with open(keystore_filepath, 'r') as fp:
             keystore = fp.read()
-            print(keystore)
 
         if keystore is None:
             print ("Invalid keystore file") 
 
-        print("Password:", end = "")
-        password = input()
-        
+        password = getpass.getpass('Password(passphrase):')
         from_account = Account.from_key(keystore, bytes(password.encode()))
     except:
         print("Invalid keystore or password, please retry!")
         return None
     return from_account
+
+
+def get_account_addr(from_account):
+    from_addr = from_account.get_address_obj()
+    return from_addr.string()
 
 
 def get_nonce(from_account): 
@@ -52,102 +52,59 @@ def get_nonce(from_account):
     nonce = int(resp_json["result"]["nonce"]) 
     return nonce
 
+def deploy_all(neb, from_account):
+    multisig_addr = deploy_multisig(from_account)
+    print(multisig_addr)
 
-def send_transaction(from_account, to_addr, value):
-    # PayloadType
-    payload_type = Transaction.PayloadType("binary")
-    # payload
-    payload = TransactionBinaryPayload("").to_bytes()
+
+def deploy_nat(from_account, multisig_addr):
+    args = [[settings.NAT_NAME, settings.NAT_SYMBOL, settings.NAT_DECIMALS, multisig_addr]]
+
+
+def deploy_multisig(from_account):
+    to_addr = Address.parse_from_string(get_account_addr(from_account))
     nonce = get_nonce(from_account) + 1
-
-    # binary transaction example
-    tx = Transaction(chain_id, from_account, to_addr, 0, nonce + 1, payload_type, payload, gas_price, gas_limit)
-    tx.calculate_hash()
-    tx.sign_hash()
-    print(neb.api.sendRawTransaction(tx.to_proto()).text)
-
-
-def call_contract(from_account, contract_addr):
-    nonce = get_nonce(from_account) + 1
-    contract = {"function":"getCosigners","args":"[]"}
-    estimate_gas = neb.api.estimateGas(account_addr, contract_addr, "0", nonce, str(gas_limit), str(gas_price), contract).text
-    print("estimate gas:", estimate_gas)
-    ret = neb.api.call(account_addr, contract_addr, "0", nonce, str(gas_limit), str(gas_price), contract).text
-    print(json.loads(ret))
- 
-
-def make_contract_trx(from_account, contract_addr):
-    to_addr = Address.parse_from_string(contract_addr)
-    nonce = get_nonce(from_account)
-    func = "getCosigners"
-    arg = ''
-    payload = TransactionCallPayload(func, arg).to_bytes()
-    payload_type = Transaction.PayloadType("call")
-    tx = Transaction(chain_id, from_account, to_addr, 0, nonce + 1, payload_type, payload, gas_price, gas_limit)
-    tx.calculate_hash()
-    tx.sign_hash()
-    result = neb.api.sendRawTransaction(tx.to_proto()).text
-    print(result)
-
-def deploy_contract(from_account, contract_filepath):
-    nonce = get_nonce(from_account)
     source_code = ""
-    with open(contract_filepath, 'r') as fp:
+    with open(settings.MUTISIG_JS, 'r') as fp:
         source_code = fp.read()
-    source_type = "js" # "ts"
-    args = '[["n1H2Yb5Q6ZfKvs61htVSV4b1U2gr2GA9vo6", "n1QWYSv5MJfvEBA4A8PGVrGdstdXzEkQ8Ju"]]'
-    contract = {
-        "source": source_code,
-        "sourceType": source_type, # "ts"
-        "args": args,
-    }
-    
-    '''
-    # deploy test
-    estimate_gas = neb.api.estimateGas(account_addr, account_addr, "0", nonce, str(gas_limit), str(gas_price), contract).text
-    ret = neb.api.call(account_addr, account_addr, "0", nonce, str(gas_limit), str(gas_price), contract).text
-    print(json.loads(ret))
-    '''
-
+    source_type = "js"
+    args = '[["%s"]]' % settings.ADMIN_ACCOUNT
     payload_type = Transaction.PayloadType("deploy")
     payload = TransactionDeployPayload(source_type, source_code, args).to_bytes()
-    nonce = get_nonce(from_account) + 1
-    to_addr = Address.parse_from_string(account_addr)
-
-    # Deploy Contract
     tx = Transaction(chain_id, from_account, to_addr, 0, nonce, payload_type, payload, gas_price, gas_limit)
     tx.calculate_hash()
     tx.sign_hash()
-    print(neb.api.sendRawTransaction(tx.to_proto()).text)
+    resp = json.loads(neb.api.sendRawTransaction(tx.to_proto()).text)
+    return resp['result']['contract_address']
 
-
+'''
+    natcli mainnet ks.json deployall
+'''
 if __name__ == "__main__":
-    # Get account status 
-    keystore_filepath = None
+    # Confirm chain id
     if len(sys.argv) > 1:
-        keystore_filepath = sys.argv[1]
+        if sys.argv[1] == "mainnet":
+            chain_id = 1        
+
+    if chain_id == 1:
+        neb = Neb("https://mainnet.nebulas.io")
+    else:
+        neb = Neb("https://testnet.nebulas.io")
+
+    # load keystore
+    keystore_filepath = None
+    if len(sys.argv) > 2:
+        keystore_filepath = sys.argv[2]
+    else:
+        print ("[ERROR] No keystore file found!")
+        sys.exit()
 
     from_account = None
     if keystore_filepath:
         from_account = get_account(keystore_filepath)
 
     if from_account is None:
-        print("Can not load the keystore")
+        print("[ERROR] Account is not loaded")
+        sys.exit()
 
-    '''
-    # Send a normal transaction
-    amount = 0
-    to_addr = Address.parse_from_string("n1QWYSv5MJfvEBA4A8PGVrGdstdXzEkQ8Ju")
-    send_transaction(from_account, to_addr, amount)
-
-    # Call smart contract 
-    contract_addr = "n1zBkFAYg1bfSYcH67tEWjQBskphMUqBX6H"
-    make_contract_trx(from_account, contract_addr)
-
-    contract_addr = "n1prgFsbucU74KXdV6LdFLo1XM9co5ozadx"
-    call_contract(from_account, contract_addr)
-
-    # Deploy smart contract
-    contract_filepath = "../contracts/multisig.js" 
-    deploy_contract(from_account, contract_filepath)
-    '''
+    deploy_all(neb, from_account)
