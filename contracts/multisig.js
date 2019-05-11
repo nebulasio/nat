@@ -12,7 +12,7 @@ function MultiSig() {
     {
         multiSig: addr, // multisig address
         distribute: addr, // distribute.js address
-        distributeVoteTaxAddr: addr, // distribute Vote Tax to a particular address 
+        distributeVoteTaxAddr: addr, // distribute Vote Tax to a particular address
         distributeManager: addr, // distribute.js manager(can be empty)
         pledgeProxy: addr, // pledge proxy address
         pledgeProxyManager: addr, //pledge proxy fund manager(can be empty)
@@ -32,6 +32,27 @@ function MultiSig() {
     }
     */
     this._canEmptyConfig = ["distributeManager", "pledgeProxyManager"];
+    this._allConfigNames = [
+        "multiSig",
+        "distribute",
+        "distributeVoteTaxAddrv",
+        "distributeManager",
+        "pledgeProxy",
+        "pledgeProxyManager",
+        "pledge",
+        "nrData",
+        "nrDataManager",
+        "natNRC20",
+        "vote"
+    ];
+    this._allContractNames = [
+        "distribute",
+        "pledge_proxy",
+        "pledge",
+        "nr_data",
+        "nat_nrc20",
+        "vote"
+    ];
     LocalContractStorage.defineProperties(this, {
         _coSigners: null, // List of coSigner Addr
         _config: null, // all the smart contract configration
@@ -64,52 +85,95 @@ MultiSig.prototype = {
         }
     },
 
-    // verify config
-    _verifyConfig: function (config) {
-        let natConfig = config.natConfig;
-        for (let conf in natConfig) {
-            let contractAddr = natConfig[conf];
-            if (conf in this._canEmptyConfig || contractAddr !== null) {
-                this._verifyAddress(contractAddr);
+    _verifyProperties: function (obj, propertyNames) {
+        for (let i = 0; i < propertyNames.length; ++i) {
+            if (!obj[propertyNames[i]]) {
+                throw (propertyNames[i] + " not found.");
             }
         }
+    },
 
-        let contractList = config.contractList;
-        for (let conf in contractList) {
-            this._verifyAddress(contractList[conf]);
+    _verifyConfigItem: function (name, value) {
+        if (name !== "vote") {
+            this._verifyAddress(value);
+        } else {
+            for (let j = 0; j < value.length; ++j) {
+                this._verifyAddress(value[j]);
+            }
+        }
+    },
+
+    // verify config
+    _verifyConfig: function (config) {
+        this._verifyProperties(config, ["natConfig", "contractList"]);
+        this._verifyProperties(config.natConfig, this._allConfigNames);
+        this._verifyProperties(config.contractList, this._allContractNames);
+
+        for (let n in config.natConfig) {
+            let v = config.natConfig[n];
+            if (!v && this._canEmptyConfig.indexOf(n) >= 0) {
+                continue;
+            }
+            this._verifyConfigItem(n, v);
+        }
+
+        for (let n in config.contractList) {
+            this._verifyConfigItem(n, config.contractList[n]);
+        }
+
+        let e = config.natConfig.vote.length === config.contractList.vote.length;
+        if (e) {
+            for (let i = 0; i < config.natConfig.vote.length; ++i) {
+                let v = config.natConfig.vote[i];
+                if (config.contractList.vote.indexOf(v) < 0) {
+                    e = false;
+                    break;
+                }
+            }
+        }
+        if (!e) {
+            throw ("The vote of natConfig and the vote of the contractList are not the same.");
         }
     },
 
     // Get config address
-    getConfig: function() {
+    getConfig: function () {
         this._verifyCosigner();
         return this._config;
     },
 
     // Set Config
-    setConfig: function(config) {
+    setConfig: function (config) {
         this._verifyCosigner();
         this._verifyConfig(config);
         // update the config to other smart contract
         let natConfig = config.natConfig;
         let contractList = config.contractList;
 
-        for (contractName in contractList) {
-            let contractObj = new Blockchain.Contract(contractList[contractName]);
-            contractObj.call("setConfig", natConfig);
-        } 
+        for (let contractName in contractList) {
+            let v = contractList[contractName];
+            if (contractName !== "vote") {
+                let contractObj = new Blockchain.Contract(v);
+                contractObj.call("setConfig", natConfig);
+            } else {
+                for (let i = 0; i < v.length; ++i) {
+                    let c = new Blockchain.Contract(v[i]);
+                    c.call("setConfig", natConfig);
+                }
+            }
+        }
         // update current config
         this._config = config;
     },
 
     // for distribute.js
-    getBlacklist: function() {
+    getBlacklist: function () {
         this._verifyCosigner();
         return this._blacklist;
     },
 
     // for distribute.js
-    setBlacklist: function(addrList) {
+    setBlacklist: function (addrList) {
         this._verifyCosigner();
         for (let i = 0; i < addrList.length; ++i) {
             this._verifyAddress(addrList[i]);
@@ -118,32 +182,32 @@ MultiSig.prototype = {
         let distributeContract = this._config.natConfig.distribute;
         let contractObj = new Blockchain.Contract(distributeContract);
         contractObj.call("setBlacklist", addrList);
-        this._blacklist = addrList; 
+        this._blacklist = addrList;
     },
 
     // for distribute.js
     // const STATE_WORK = 0;
     // const STATE_PAUSED = 1;
-    setDistStatus: function(distributeStatus) {
+    setDistStatus: function (distributeStatus) {
         this._verifyCosigner();
         let distributeContract = this._config.natConfig.distribute;
         let contractObj = new Blockchain.Contract(distributeContract);
         contractObj.call("updateStatus", distributeStatus);
     },
 
-    // Get coSigner 
-    getCosigners: function() {
+    // Get coSigner
+    getCosigners: function () {
         this._verifyCosigner();
         return this._coSigners
     },
 
     // Set coSigner
-    setCosigners: function(coSigners) {
-        // Check whether it is from cosigner 
+    setCosigners: function (coSigners) {
+        // Check whether it is from cosigner
         this._verifyCosigner();
         for (let i = 0; i < coSigners.length; ++i) {
             this._verifyAddress(coSigner[i]);
-        } 
+        }
         this._coSigners = coSigners;
     },
 };

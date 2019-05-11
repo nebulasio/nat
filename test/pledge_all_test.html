@@ -11,8 +11,10 @@
     <script type="text/javascript" src="../contracts/distribute.js"></script>
     <script type="text/javascript" src="../contracts/pledge.js"></script>
     <script type="text/javascript" src="../contracts/nr_data.js"></script>
+    <script type="text/javascript" src="../contracts/vote.js"></script>
 
-    <script type="text/javascript" src="old_pledge.js"></script>
+    <script type="text/javascript" src="contract/old_pledge.js"></script>
+    <script type="text/javascript" src="contract/vote_data.js"></script>
 
     <script type="text/javascript">
         localStorage.clear();
@@ -28,6 +30,9 @@
         let nrDataAddress = "n1keX3piVEzAc14MthT25Cg6hFFSw76Msja";
         let nrDataManager = "n1NznNCpYvuWdXBBbj1CSZn8huAPkQHM9t2";
         let voteAddress = "n1LJuxRULaTUNHGjGQSfnBNjSixqXyvuPU4";
+
+        let voteDataAddress = "n1QEEJaV3aix7qa4xsJo5JEV3Dph6oiHNMe";
+        let voteManager = "n1ZBCsMrSxuLfWoWg91JctDWZmKEo8se3tK";
 
         let multiSignAddress = "n1Z6MhSZa321SnpiKfUWiybQSG3GCmRHunv";
         let customerAddress = "n1YPMjEDMrZhroKmB1xDBhadygwWHC4zTwm";
@@ -52,7 +57,7 @@
                 nrData: nrDataAddress,
                 nrDataManager: nrDataManager,
                 natNRC20: natAddress,
-                vote: voteAddress,
+                vote: [voteAddress]
             },
             contractList: {
                 distribute: distributeAddress, // distribute.js
@@ -60,7 +65,7 @@
                 pledge: pledgeAddress, // pledge.js
                 nr_data: nrDataAddress, // nr_data.js
                 nat_nrc20: natAddress, // nat_nrc20.js
-                //vote: voteAddress,    // vote.js
+                vote: [voteAddress]
             }
         };
 
@@ -71,6 +76,7 @@
         }
 
         function log(space, data) {
+            data = "" + data;
             let array = data.split("\n");
             let prefix = "";
             for (let i = 0; i < space; ++i) {
@@ -98,8 +104,9 @@
             BlockchainTool.registerContract(natAddress, NATToken);
             BlockchainTool.registerContract(nrDataAddress, NrDataSource);
             BlockchainTool.registerContract(multiSignAddress, MultiSig);
-            //BlockchainTool.registerContract(voteAddress, Vote);
+            BlockchainTool.registerContract(voteAddress, Vote);
 
+            BlockchainTool.registerContract(voteDataAddress, VoteData);
             BlockchainTool.registerContract(prevPledgeAddress, OldPledge);
         }
 
@@ -121,6 +128,9 @@
 
             // Prev Pledge
             BlockchainTool.callContract(customerAddress, prevPledgeAddress, 0, "init", [[multiSignAddress]]);
+
+            // Vote
+            BlockchainTool.callContract(customerAddress, voteAddress, 0, "init", [multiSignAddress, [voteManager]]);
         }
 
 
@@ -129,10 +139,11 @@
         function updateConfigTest() {
             // Multisig
             BlockchainTool.callContract(coSignerAddress[0], multiSignAddress, 0, "setConfig", [multiSigConfig]);
-
             // Get config
             let config = BlockchainTool.callContract(coSignerAddress[1], multiSignAddress, 0, "getConfig", []);
-            console.log(config);
+            console.log(JSON.stringify(config));
+
+            BlockchainTool.callContract(voteManager, voteAddress, 0, "setDataSources", [[voteDataAddress]]);
         }
 
         function multisigTest() {
@@ -340,6 +351,32 @@
         }
 
 
+        // Vote --------------------------------------------------------------------------------------------------------
+
+        function vote(dataSource, hash, value, weight) {
+            log(0, "*** vote dataSource: " + dataSource + " hash:" + hash + " value:" + value + " weight:" + weight);
+            // try {
+                BlockchainTool.callContract(customerAddress, voteAddress, 0, "vote", [dataSource, hash, value, weight]);
+            // } catch (e) {
+            //     log(0, e);
+            // }
+        }
+
+        function printVotes(dataSource, hash) {
+            log(0, "-------------------------------------------\nVotes");
+            log(0, "getVoteResultWithDataSource:" + dataSource + " hash:" + hash);
+            let r = BlockchainTool.callContract(customerAddress, voteAddress, 0, "getVoteResult", [dataSource, hash]);
+            log(0, "result:" + JSON.stringify(r));
+
+        }
+
+        function voteTest() {
+            log(0, "-------------------------------------------\nVote Test");
+            vote(voteDataAddress, "test_hash", "yes", 1);
+            printVotes(voteDataAddress, "test_hash");
+        }
+
+
         // NAT ---------------------------------------------------------------------------------------------------------
 
         function getNatBalance(address) {
@@ -405,7 +442,8 @@
 
             natBalanceTest();
 
-            voteDistributeTest();
+            // voteDistributeTest();
+            voteTest();
         }
 
         main();

@@ -78,7 +78,7 @@ function AddressDataManager(voteDataManager, address, hash) {
     this._voteDataManager = voteDataManager;
     this._address = address;
     this._hash = hash;
-    this._dataKey = "ad_" + this._voteDataManager._datasource + "_" + hash;
+    this._dataKey = "ad_" + this._voteDataManager._datasource + "_" + hash + "_" + address;
 }
 
 AddressDataManager.prototype = {
@@ -163,6 +163,7 @@ function Vote(storage) {
     this._contractName = "Vote";
     LocalContractStorage.defineProperties(this, {
         _config: null,
+        _voteManagers: null,
         _dataSources: null,
     });
     LocalContractStorage.defineMapProperties(this, {
@@ -192,6 +193,12 @@ Vote.prototype = {
         return this.__distributeContract;
     },
 
+    _verifyAddress: function (address) {
+        if (Blockchain.verifyAddress(address) === 0) {
+            throw ("Address error");
+        }
+    },
+
     _verifyFromMultisig: function () {
         if (this._config.multiSig !== Blockchain.transaction.from) {
             throw ("Permission Denied!");
@@ -199,14 +206,13 @@ Vote.prototype = {
     },
 
     _verifyFromManagers: function () {
-        if (!this._config.voteManagers || this._config.voteManagers.indexOf(Blockchain.transaction.from) < 0) {
+        if (!this._voteManagers || this._voteManagers.indexOf(Blockchain.transaction.from) < 0) {
             throw ("Permission Denied!");
         }
     },
 
     _verifyDataSource: function (dataSource) {
-        let dataSources = this._config.voteDataAddresses;
-        if (dataSources.indexOf(dataSource) < 0) {
+        if (this._dataSources.indexOf(dataSource) < 0) {
             throw ("data source error.");
         }
     },
@@ -215,7 +221,7 @@ Vote.prototype = {
         if (data.options.indexOf(value) < 0) {
             throw ("vote value error.");
         }
-        if (this._balanceOf(Blockcbain.transaction.from).lt(weight)) {
+        if (this._balanceOf(Blockchain.transaction.from).lt(weight)) {
             throw ("Insufficient Nat balance");
         }
     },
@@ -237,7 +243,7 @@ Vote.prototype = {
         return r;
     },
 
-    _vote: function (voteDataManager, hash, value, weight) {
+    _vote: function (voteDataManager, data, hash, value, weight) {
         let r = voteDataManager.getResult(hash);
         if (!r) {
             r = this._defaultResult(data);
@@ -255,12 +261,19 @@ Vote.prototype = {
     },
 
     _balanceOf: function (address) {
-        new BigNumber(this._natContract.call("balanceOf", address));
+        return new BigNumber(this._natContract.call("balanceOf", address));
     },
 
-    init: function (multiSig) {
+    init: function (multiSig, voteManagers) {
         this._verifyAddress(multiSig);
+        if (voteManagers.length === 0) {
+            throw ("Need at least one administrator.");
+        }
+        for (let i = 0; i < voteManagers.length; ++i) {
+            this._verifyAddress(voteManagers[i]);
+        }
         this._config = {multiSig: multiSig};
+        this._voteManagers = voteManagers;
     },
 
     getConfig: function () {
@@ -271,7 +284,6 @@ Vote.prototype = {
         this._verifyFromMultisig();
         this._config = {
             multiSig: config.multiSig,
-            voteManagers: config.voteManagers,
             natNRC20: config.natNRC20,
             distribute: config.distribute
         };
@@ -283,6 +295,9 @@ Vote.prototype = {
 
     setDataSources: function (dataSources) {
         this._verifyFromManagers();
+        for (let i = 0; i < dataSources; ++i) {
+            this._verifyAddress(dataSources[i]);
+        }
         this._dataSources = dataSources;
     },
 
@@ -292,7 +307,7 @@ Vote.prototype = {
         let data = this._getData(dataSource, hash);
         weight = new BigNumber(weight);
         this._verifyVote(data, value, weight);
-        this._vote(vm, value, weight);
+        this._vote(vm, data, hash, value, weight);
     },
 
     getHashIndexes: function (dataSource) {
@@ -328,3 +343,5 @@ Vote.prototype = {
         return new VoteDataManager(this._storage, dataSource).getAddresses(hash, index);
     },
 };
+
+module.exports = Vote;
