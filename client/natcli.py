@@ -26,7 +26,6 @@ def get_account(keystore_filepath):
     '''
     {'result': {'balance': '100997303344999906', 'nonce': '88', 'type': 87, 'height': '1757816', 'pending': '7'}}
     '''
-
     try:
         keystore = None 
         with open(keystore_filepath, 'r') as fp:
