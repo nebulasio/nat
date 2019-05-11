@@ -355,25 +355,49 @@
 
         function vote(dataSource, hash, value, weight) {
             log(0, "*** vote dataSource: " + dataSource + " hash:" + hash + " value:" + value + " weight:" + weight);
-            // try {
+            try {
                 BlockchainTool.callContract(customerAddress, voteAddress, 0, "vote", [dataSource, hash, value, weight]);
-            // } catch (e) {
-            //     log(0, e);
-            // }
+            } catch (e) {
+                log(0, e);
+            }
         }
 
-        function printVotes(dataSource, hash) {
+        function printVotes(dataSource) {
             log(0, "-------------------------------------------\nVotes");
-            log(0, "getVoteResultWithDataSource:" + dataSource + " hash:" + hash);
-            let r = BlockchainTool.callContract(customerAddress, voteAddress, 0, "getVoteResult", [dataSource, hash]);
-            log(0, "result:" + JSON.stringify(r));
+            let indexes = BlockchainTool.callContract(customerAddress, voteAddress, 0, "getHashIndexes", [dataSource]);
+            log(0, "getHashIndexes, result: " + JSON.stringify(indexes));
+            for (let i = 0; i < indexes.length; ++i) {
+                let index = indexes[i];
+                let hashes = BlockchainTool.callContract(customerAddress, voteAddress, 0, "getHashes", [dataSource, index.i]);
+                log(2, "getHashesWithIndex: " + JSON.stringify(index) + "\nresult:" + JSON.stringify(hashes));
+                for (let j = 0; j < hashes.length; ++j) {
+                    let hash = hashes[j];
 
+                    let r = BlockchainTool.callContract(customerAddress, voteAddress, 0, "getVoteResult", [dataSource, hash]);
+                    log(2, "getVoteResultWithHash: " + hash + "\nresult:" + JSON.stringify(r));
+
+                    let aIndexes = BlockchainTool.callContract(customerAddress, voteAddress, 0, "getVoteAddressIndexes", [dataSource, hash]);
+                    log(2, "getVoteAddressIndexes result:" + JSON.stringify(aIndexes));
+                    for (let k = 0; k < aIndexes.length; ++k) {
+                        let aIndex = aIndexes[k];
+                        let as = BlockchainTool.callContract(customerAddress, voteAddress, 0, "getVoteAddresses", [dataSource, hash, aIndex.i]);
+                        log(4, "getVoteAddressesWithIndex: " + JSON.stringify(aIndex) + "\nresult:" + JSON.stringify(as));
+                        for (let n = 0; n < as.length; ++n) {
+                            let a = as[n];
+                            let ar = BlockchainTool.callContract(customerAddress, voteAddress, 0, "getVoteResultByAddress", [dataSource, hash, a]);
+                            log(4, "getVoteResultByAddress: " + a + "\nresult:" + JSON.stringify(ar));
+                        }
+                    }
+                }
+            }
         }
 
         function voteTest() {
             log(0, "-------------------------------------------\nVote Test");
-            vote(voteDataAddress, "test_hash", "yes", 1);
-            printVotes(voteDataAddress, "test_hash");
+            vote(voteDataAddress, "test_hash", "yes", 1000000000000);
+            vote(voteDataAddress, "test_hash", "no", 1000000000000);
+            vote(voteDataAddress, "test_hash", "haha", 1000000000000);
+            printVotes(voteDataAddress);
         }
 
 

@@ -91,9 +91,9 @@ AddressDataManager.prototype = {
         return r;
     },
 
-    addVoteValue: function (value, weight) {
+    addVoteValue: function (value, weight, distribute) {
         let r = this.getResult();
-        r.push({v: value, w: weight});
+        r.push({v: value, w: weight, d: distribute});
         this._storage.put(this._dataKey, r);
         return r;
     },
@@ -131,9 +131,9 @@ VoteDataManager.prototype = {
         return this._addressList(hash).getPageData(index);
     },
 
-    saveAddressVote: function (address, hash, value, weight) {
+    saveAddressVote: function (address, hash, value, weight, distribute) {
         let m = new AddressDataManager(this, address, hash);
-        let r = m.addVoteValue(value, weight);
+        let r = m.addVoteValue(value, weight, distribute);
         if (r.length === 1) {
             this._addressList(hash).add(address);
         }
@@ -249,6 +249,7 @@ Vote.prototype = {
             r = this._defaultResult(data);
         }
         let w = new BigNumber(weight).div(new BigNumber(10).pow(18));
+        let v = this._distributeContract.call("vote", Blockchain.transaction.from, w);
         let rw = r[value];
         if (!rw) {
             rw = "0";
@@ -256,8 +257,8 @@ Vote.prototype = {
         rw = new BigNumber(rw);
         r[value] = rw.plus(w).toString(10);
         voteDataManager.saveVote(hash, r);
-        voteDataManager.saveAddressVote(Blockchain.transaction.from, hash, value, w);
-        this._distributeContract.call("vote", Blockchain.transaction.from, w);
+        let d = new BigNumber(v).plus(w).toString(10);
+        voteDataManager.saveAddressVote(Blockchain.transaction.from, hash, value, w, d);
     },
 
     _balanceOf: function (address) {
