@@ -45,69 +45,87 @@ def get_account_addr(from_account):
     return from_addr.string()
 
 
-def get_nonce(from_account): 
+def get_nonce(neb, from_account): 
     from_addr = from_account.get_address_obj()
     resp = neb.api.getAccountState(from_addr.string()).text
     resp_json = json.loads(resp)
     nonce = int(resp_json["result"]["nonce"]) 
     return nonce
 
-def wait_new_nonce(nonce):
-    print("Waiting onchain...")
+def wait_new_nonce(neb, nonce):
     time.sleep(15)
     current_nonce = nonce
     while current_nonce == nonce:
         time.sleep(3)
-        nonce = get_nonce(from_account)
+        nonce = get_nonce(neb, from_account)
     current_nonce = nonce
     return current_nonce
 
 def deploy_all(neb, from_account):
+    fp = open("contract_list.txt", "w")
     # multisig
-    args = json.dumps([settings.ADMIN_ACCOUNT])
-    nonce = get_nonce(from_account)
+    args = json.dumps([[settings.ADMIN_ACCOUNT]])
+    nonce = get_nonce(neb, from_account)
     current_nonce = nonce
     multisig_addr = deploy_smartcontract(from_account, settings.MUTISIG_JS, args, nonce + 1)
     print("multisig:", multisig_addr)
+    fp.write("multiSig=%s\n" % multisig_addr)
 
-    nonce = wait_new_nonce(current_nonce)
+    nonce = wait_new_nonce(neb, current_nonce)
     current_nonce = nonce
+
     # NAT
     args = json.dumps([settings.NAT_NAME, settings.NAT_SYMBOL, settings.NAT_DECIMALS, multisig_addr])
     nat_addr = deploy_smartcontract(from_account, settings.NAT_NRC20_JS, args, nonce + 1, multisig_addr)
     print("natjs:", nat_addr)
+    fp.write("natNRC20=%s\n" % nat_addr)
 
-    nonce = wait_new_nonce(current_nonce)
+    nonce = wait_new_nonce(neb, current_nonce)
     current_nonce = nonce
 
     # distribute
     args = json.dumps([settings.PLEDGE_START_HEIGHT, settings.NR_START_HEIGHT, multisig_addr])
     distribute_addr = deploy_smartcontract(from_account, settings.DISTRIBUTE_JS, args, nonce + 1, multisig_addr)
     print("distribute.js:", distribute_addr)
+    fp.write("distribute=%s\n" % distribute_addr)
 
-    nonce = wait_new_nonce(current_nonce)
+    nonce = wait_new_nonce(neb, current_nonce)
     current_nonce = nonce
 
     # pledge proxy
     args = json.dumps([multisig_addr])
     pledge_proxy_addr = deploy_smartcontract(from_account, settings.PLEDGE_PROXY_JS, args, nonce + 1, multisig_addr)
     print("pledge_proxy.js:", pledge_proxy_addr)
+    fp.write("pledgeProxy=%s\n" % pledge_proxy_addr)
 
-    nonce = wait_new_nonce(current_nonce)
+    nonce = wait_new_nonce(neb, current_nonce)
     current_nonce = nonce
 
     # pledge
     args = json.dumps([multisig_addr])
     pledge_addr = deploy_smartcontract(from_account, settings.PLEDGE_JS, args, nonce + 1, multisig_addr)
     print("pledge.js:", pledge_addr)
+    fp.write("pledge=%s\n" % pledge_addr)
 
-    nonce = wait_new_nonce(current_nonce)
+    nonce = wait_new_nonce(neb, current_nonce)
     current_nonce = nonce
 
     # Vote
     args = json.dumps([multisig_addr, settings.VOTE_MANAGERS])
     vote_addr = deploy_smartcontract(from_account, settings.VOTE_JS, args, nonce + 1, multisig_addr)
     print("vote.js:", vote_addr)
+    fp.write("vote=%s\n" % vote_addr)
+
+    nonce = wait_new_nonce(neb, current_nonce)
+    current_nonce = nonce
+
+    # NR data
+    args = json.dumps([multisig_addr])
+    vote_addr = deploy_smartcontract(from_account, settings.NR_DATA_JS, args, nonce + 1, multisig_addr)
+    print("nr_data.js:", vote_addr)
+    fp.write("nrData=%s\n" % vote_addr)
+
+    fp.close()
 
 def deploy_smartcontract(from_account, contract_path, args, nonce, multisig=None):
     to_addr = Address.parse_from_string(get_account_addr(from_account))
@@ -123,23 +141,75 @@ def deploy_smartcontract(from_account, contract_path, args, nonce, multisig=None
     resp = json.loads(neb.api.sendRawTransaction(tx.to_proto()).text)
     return resp['result']['contract_address']
 
+def get_config(list_file):
+    fp = open(list_file, "r")
+    config = {}
+    for line in fp.readlines():
+        k, v = tuple(line.strip().split("=")) 
+        config[k] = v
+    fp.close()
+    return config
 
+def setconfig(neb, from_account, multisig_addr):
+    config = get_config("contract_list.txt")
+    contract_config = {
+        "natConfig":{
+            "multiSig": config["multiSig"],
+            "distribute": config["distribute"],
+            "distributeVoteTaxAddr": settings.distributeVoteTaxAddr,
+            "distributeManager": settings.distributeManager,
+            "pledgeProxy": config["pledgeProxy"],
+            "pledgeProxyManager": settings.pledgeProxyManager,
+            "pledge": config["pledge"],
+            "nrData": config["nrData"],
+            "natNRC20": config["natNRC20"],
+            "vote": config["vote"],
+        },  
+        "contractList": {
+            "distribute": config["distribute"],
+            "pledge_proxy": config["pledgeProxy"],
+            "pledge": config["pledge"],
+            "nr_data": config["nrData"],
+            "nat_nrc20": config["natNRC20"],
+            "vote": config["vote"],
+        }
+    }
+    fp = open ("config.txt", "w")
+    fp.write(json.dumps(contract_config, indent=2))
+    fp.close()
+
+    to_addr = Address.parse_from_string(multisig_addr)
+    nonce = get_nonce(neb, from_account)
+    func = "setConfig"
+    arg = json.dumps([contract_config])
+    payload = TransactionCallPayload(func, arg).to_bytes()
+    payload_type = Transaction.PayloadType("call")
+    tx = Transaction(chain_id, from_account, to_addr, 0, nonce + 1, payload_type, payload, gas_price, gas_limit)
+    tx.calculate_hash()
+    tx.sign_hash()
+    result = neb.api.sendRawTransaction(tx.to_proto()).text
+    print(result)
 
 '''
-    natcli mainnet ks.json deployall
+python natcli mainnet ks.json deployall
+python natcli testnet screte.json setconfig multisig_addr
 '''
 if __name__ == "__main__":
     # Confirm chain id
     if len(sys.argv) > 1:
         if sys.argv[1] == "mainnet":
             chain_id = 1        
-        if ssy.argv[1] == "mariana":
+        if sys.argv[1] == "mariana":
             chain_id = 1111
 
     if chain_id == 1:
         neb = Neb("https://mainnet.nebulas.io")
-    else:
+
+    if chain_id == 1001: 
         neb = Neb("https://testnet.nebulas.io")
+
+    if chain_id == 1111:
+        neb = Neb("https://8.8.8.8:8685")
 
     # load keystore
     keystore_filepath = None
@@ -157,4 +227,11 @@ if __name__ == "__main__":
         print("[ERROR] Account is not loaded")
         sys.exit()
 
-    deploy_all(neb, from_account)
+    if len(sys.argv) > 3:
+        if sys.argv[3] == "deployall":
+            multisig_addr = deploy_all(neb, from_account)
+
+    if len(sys.argv) > 4:
+        if sys.argv[3] == "setconfig":
+            multisig_addr = sys.argv[4]
+            setconfig(neb, from_account, multisig_addr)

@@ -11,7 +11,7 @@ MUTISIG_JS = "../contracts/multisig.js"
 DISTRIBUTE_JS = "../contracts/distribute.js"
 PLEDGE_PROXY_JS = "../contracts/pledge_proxy.js"
 PLEDGE_JS = "../contracts/pledge.js"
-NR_DATA_JS = "../constracts/nr_data.js"
+NR_DATA_JS = "../contracts/nr_data.js"
 NAT_NRC20_JS = "../contracts/nat.js"
 VOTE_JS = "../contracts/vote.js"
 

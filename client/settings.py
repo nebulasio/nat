@@ -11,7 +11,7 @@ MUTISIG_JS = "../contracts/multisig.js"
 DISTRIBUTE_JS = "../contracts/distribute.js"
 PLEDGE_PROXY_JS = "../contracts/pledge_proxy.js"
 PLEDGE_JS = "../contracts/pledge.js"
-NR_DATA_JS = "../constracts/nr_data.js"
+NR_DATA_JS = "../contracts/nr_data.js"
 NAT_NRC20_JS = "../contracts/nat.js"
 VOTE_JS = "../contracts/vote.js"
 
@@ -29,3 +29,8 @@ NR_START_HEIGHT = 62910
 
 # Pledge start height
 PLEDGE_START_HEIGHT = 62910
+
+# setConfig
+distributeVoteTaxAddr = "n1H2Yb5Q6ZfKvs61htVSV4b1U2gr2GA9vo6"
+distributeManager = "n1H2Yb5Q6ZfKvs61htVSV4b1U2gr2GA9vo6"
+pledgeProxyManager = "n1H2Yb5Q6ZfKvs61htVSV4b1U2gr2GA9vo6"
