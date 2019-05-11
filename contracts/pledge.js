@@ -254,7 +254,7 @@ CurrentData.prototype = {
         let p = ps[ps.length - 1];
         p.e = Blockchain.block.height;
         this._storage.put(address, ps);
-        return new BigNumber(p.v).mul(new BigNumber(10).pow(18));
+        return p;
     },
 
     getCurrentPledges: function (address) {
@@ -370,7 +370,8 @@ function Pledge() {
         "_distributes": null,
     });
 
-    this._PREV_PLEDGE = "n1n5Fctkjx2pA7iLX8rgRyCa7VKinGFNe9H";
+    // this._PREV_PLEDGE = "n1n5Fctkjx2pA7iLX8rgRyCa7VKinGFNe9H";
+    this._PREV_PLEDGE = "n1edd4oGmLyjo1P3NFgnHBS7W15JRWg6NHd";
 
     this._statisticData = new StatisticData(this._storage);
     this._currentData = new CurrentData(this._current);
@@ -446,7 +447,9 @@ Pledge.prototype = {
     // for pledge_proxy.js only
     cancelPledge: function (address) {
         this._verifyFromPledgeProxy();
-        return this._currentData.cancelPledge(address);
+        let p = this._currentData.cancelPledge(address);
+        this._historyData.addPledge(address, p);
+        return new BigNumber(p.v).mul(new BigNumber(10).pow(18));
     },
 
     receivePledgeData: function (data) {
@@ -472,11 +475,7 @@ Pledge.prototype = {
     setPledgeResult: function (startBlock, endBlock, data) {
         this._verifyFromDistribute();
         this._currentData.lastBlock = endBlock;
-        let deleted = this._currentData.checkAndDelete();
-        for (let i = 0; i < deleted.length; ++i) {
-            let d = deleted[i];
-            this._historyData.addPledge(d.a, d.p);
-        }
+        this._currentData.checkAndDelete();
 
         for (let i = 0; i < data.length; ++i) {
             let d = data[i];
@@ -493,8 +492,15 @@ Pledge.prototype = {
         return this._statisticData._addressList.getPageData(index);
     },
 
-    getCurrentPledges: function (address) {
-        return this._currentData.getCurrentPledges(address);
+    getCurrentPledge: function (address) {
+        let ps = this._currentData.getCurrentPledges(address);
+        for (let i = 0; i < ps.length; ++i) {
+            let p = ps[i];
+            if (!p.e) {
+                return p;
+            }
+        }
+        return null;
     },
 
     getHistoryPledgeIndexes: function (address) {

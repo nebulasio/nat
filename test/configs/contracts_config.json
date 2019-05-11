@@ -1,9 +1,23 @@
 {
-  "multiSig": "多签合约地址",
-  "distribute": "Distribute合约地址",
-  "distributeManager": "Distribute合约管理员地址(可为空)",
-  "pledgeProxy": "质押代理合约地址",
-  "pledgeProxyManager": "质押代理合约管理员地址(可为空)",
-  "pledge": "质押合约地址",
-  "nrData": "nr数据合约地址"
+  "natConfig": {
+    "multiSig": "n1un6hY9tTPH6w9NvuTujEyQnuauoqD18n4",
+    "distribute": "n1kTUHmSc1tUxJb3pxZy1VcpCbbTRm4mJTj",
+    "distributeVoteTaxAddrv": "n1aoqR2V8LBTDwV4XuzJvZE5evZTCMpBDxr",
+    "distributeManager": "n1aoqR2V8LBTDwV4XuzJvZE5evZTCMpBDxr",
+    "pledgeProxy": "n1pTCatUKL6AxELmsywX6BxrRLaQ9NyLe4e",
+    "pledgeProxyManager": "n1aoqR2V8LBTDwV4XuzJvZE5evZTCMpBDxr",
+    "pledge": "n1jmHpc6rRG5xhkAxpwiSdt1w9xp6iwUA28",
+    "nrData": "n1yHwesn72Z4AMALE8BmX4BMS3chDgY2R36",
+    "nrDataManager": "n1aoqR2V8LBTDwV4XuzJvZE5evZTCMpBDxr",
+    "natNRC20": "n1uQFKK1sKCFGBvdcTUWMwNoKA5HniWkWdd",
+    "vote": ["n1rRBpcVKiFPKRPw3gaaDuC14N3QKVdc67J"]
+  },
+  "contractList": {
+    "distribute": "n1kTUHmSc1tUxJb3pxZy1VcpCbbTRm4mJTj",
+    "pledge_proxy": "n1pTCatUKL6AxELmsywX6BxrRLaQ9NyLe4e",
+    "pledge": "n1jmHpc6rRG5xhkAxpwiSdt1w9xp6iwUA28",
+    "nr_data": "n1yHwesn72Z4AMALE8BmX4BMS3chDgY2R36",
+    "nat_nrc20": "n1uQFKK1sKCFGBvdcTUWMwNoKA5HniWkWdd",
+    "vote": ["n1rRBpcVKiFPKRPw3gaaDuC14N3QKVdc67J"]
+  }
 }

@@ -253,8 +253,8 @@
 
         function printAddressPledgeData(address) {
             log(2, "****Address: " + address);
-            let r = BlockchainTool.callContract(customerAddress, proxyAddress, 0, "getCurrentPledges", [address]);
-            log(2, "getCurrentPledges:\n" + JSON.stringify(r));
+            let r = BlockchainTool.callContract(customerAddress, proxyAddress, 0, "getCurrentPledge", [address]);
+            log(2, "getCurrentPledge:\n" + JSON.stringify(r));
 
             let indexes = BlockchainTool.callContract(customerAddress, proxyAddress, 0, "getHistoryPledgeIndexes", [address]);
             log(2, "getHistoryPledgeIndexes:\n" + JSON.stringify(indexes));
@@ -435,7 +435,7 @@
 
             pledgeAllTest();
 
-            BlockchainTool.blockHeight = 201;
+            // BlockchainTool.blockHeight = 201;
             distributeTest();
 
             getPledgeDataTest();

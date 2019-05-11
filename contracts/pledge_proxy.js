@@ -165,50 +165,42 @@ PledgeProxy.prototype = {
 
     // proxy redirect to pledge.js
     getAddressIndexes: function () {
-        let result = this.pledgeContract.call('getAddressIndexes');
-        return result != null ? result : "No data found";
+        return this.pledgeContract.call('getAddressIndexes');
     },
 
     // proxy redirect to pledge.js
     getAddresses: function (index) {
-        let result = this.pledgeContract.call('getAddresses', index);
-        return result != null ? result : "No data found";
+        return this.pledgeContract.call('getAddresses', index);
     },
 
     // proxy redirect to pledge.js
-    getCurrentPledges: function (address) {
-        let result = this.pledgeContract.call('getCurrentPledges', address);
-        return result != null ? result : "No data found";
+    getCurrentPledge: function (address) {
+        return this.pledgeContract.call('getCurrentPledge', address);
     },
 
     // proxy redirect to pledge.js
     getHistoryPledgeIndexes: function (address) {
-        let result = this.pledgeContract.call('getHistoryPledgeIndexes', address);
-        return result != null ? result : "No data found";
+        return this.pledgeContract.call('getHistoryPledgeIndexes', address);
     },
 
     // proxy redirect to pledge.js
     getHistoryPledges: function (address, index) {
-        let result = this.pledgeContract.call('getHistoryPledges', address, index);
-        return result != null ? result : "No data found";
+        return this.pledgeContract.call('getHistoryPledges', address, index);
     },
 
     // proxy redirect to pledge.js
     getTotalDistribute: function (address) {
-        let result = this.pledgeContract.call('getTotalDistribute', address);
-        return result != null ? result : "No data found";
+        return this.pledgeContract.call('getTotalDistribute', address);
     },
 
     // proxy redirect to pledge.js
     getDistributeIndexes: function (address) {
-        let result = this.pledgeContract.call('getDistributeIndexes', address);
-        return result != null ? result : "No data found";
+        return this.pledgeContract.call('getDistributeIndexes', address);
     },
 
     // proxy redirect to pledge.js
     getDistributes: function (address, index) {
-        let result = this.pledgeContract.call('getDistributes', address, index);
-        return result != null ? result : "No data found";
+        return this.pledgeContract.call('getDistributes', address, index);
     },
 };
 
