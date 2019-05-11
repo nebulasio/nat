@@ -26,6 +26,10 @@ VOTE_MANAGERS = ["n1QWYSv5MJfvEBA4A8PGVrGdstdXzEkQ8Ju"]
 
 # NR Start Height
 NR_START_HEIGHT = 2307000 
- 
 # Pledge start height
 PLEDGE_START_HEIGHT = 2309051 
+
+# setConfig
+distributeVoteTaxAddr = "n1H2Yb5Q6ZfKvs61htVSV4b1U2gr2GA9vo6"
+distributeManager = "n1H2Yb5Q6ZfKvs61htVSV4b1U2gr2GA9vo6"
+pledgeProxyManager = "n1H2Yb5Q6ZfKvs61htVSV4b1U2gr2GA9vo6"
