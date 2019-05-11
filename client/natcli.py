@@ -52,23 +52,48 @@ def get_nonce(from_account):
     nonce = int(resp_json["result"]["nonce"]) 
     return nonce
 
+def wait_nonce(nonce):
+    print("Waiting onchain...")
+    time.sleep(15)
+    current_nonce = nonce
+    while current_nonce == nonce:
+        time.sleep(3)
+        nonce = get_nonce(from_account)
+    current_nonce = nonce
+    return current_nonce
+
 def deploy_all(neb, from_account):
-    multisig_addr = deploy_multisig(from_account)
-    print(multisig_addr)
+    # multisig
+    args = '[["%s"]]' % settings.ADMIN_ACCOUNT
+    nonce = get_nonce(from_account)
+    current_nonce = nonce
+    multisig_addr = deploy_smartcontract(from_account, settings.MUTISIG_JS, args, nonce + 1)
+    print("multisig:", multisig_addr)
 
+    nonce = wait_nonce(current_nonce)
+    current_nonce = nonce
+    # NAT
+    args = '["%s", "%s", "%s", "%s"]' % (settings.NAT_NAME, settings.NAT_SYMBOL, settings.NAT_DECIMALS, multisig_addr)
+    nat_addr = deploy_smartcontract(from_account, settings.NAT_NRC20_JS, args, nonce + 1, multisig_addr)
+    print("natjs:", nat_addr)
 
-def deploy_nat(from_account, multisig_addr):
-    args = [[settings.NAT_NAME, settings.NAT_SYMBOL, settings.NAT_DECIMALS, multisig_addr]]
+    '''
+    args = ''
+    deploy_smartcontract(from_account, settings.DISTRIBUTE_JS, args, nonce + 1, multisig_addr)
+    args = ''
+    deploy_smartcontract(from_account, settings.PLEDGE_PROXY_JS, args, nonce + 1, multisig_addr)
+    args = ''
+    deploy_smartcontract(from_account, settings.PLEDGE_JS, args, nonce + 1, multisig_addr)
+    args = ''
+    deploy_smartcontract(from_account, settings.VOTE_JS, args, nonce + 1, multisig_addr)
+    '''
 
-
-def deploy_multisig(from_account):
+def deploy_smartcontract(from_account, contract_path, args, nonce, multisig=None):
     to_addr = Address.parse_from_string(get_account_addr(from_account))
-    nonce = get_nonce(from_account) + 1
     source_code = ""
-    with open(settings.MUTISIG_JS, 'r') as fp:
+    with open(contract_path, 'r') as fp:
         source_code = fp.read()
     source_type = "js"
-    args = '[["%s"]]' % settings.ADMIN_ACCOUNT
     payload_type = Transaction.PayloadType("deploy")
     payload = TransactionDeployPayload(source_type, source_code, args).to_bytes()
     tx = Transaction(chain_id, from_account, to_addr, 0, nonce, payload_type, payload, gas_price, gas_limit)
@@ -76,6 +101,8 @@ def deploy_multisig(from_account):
     tx.sign_hash()
     resp = json.loads(neb.api.sendRawTransaction(tx.to_proto()).text)
     return resp['result']['contract_address']
+
+
 
 '''
     natcli mainnet ks.json deployall

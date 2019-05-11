@@ -13,9 +13,10 @@ PLEDGE_PROXY_JS = "../contracts/pledge_proxy.js"
 PLEDGE_JS = "../contracts/pledge.js"
 NR_DATA_JS = "../constracts/nr_data.js"
 NAT_NRC20_JS = "../contracts/nat.js"
+VOTE_JS = "../contracts/vote.js"
 
 ## Smart Deploy args 
 ### nat.js
 NAT_NAME = "NATToken"
 NAT_SYMBOL = "NAT"
-DECIMALS = 18
+NAT_DECIMALS = 18
