@@ -319,6 +319,14 @@ Distribute.prototype = {
 
         let data = this._vote.calculate(this, address, value);
         this._produceNat(data);
+        let nat = "0";
+        for (let key in data) {
+            if (data[key].addr === address) {
+                nat = data[key].nat;
+                break;
+            }
+        }
+        return nat;
     }
 };
 
