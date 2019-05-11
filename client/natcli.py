@@ -52,7 +52,7 @@ def get_nonce(from_account):
     nonce = int(resp_json["result"]["nonce"]) 
     return nonce
 
-def wait_nonce(nonce):
+def wait_new_nonce(nonce):
     print("Waiting onchain...")
     time.sleep(15)
     current_nonce = nonce
@@ -64,29 +64,50 @@ def wait_nonce(nonce):
 
 def deploy_all(neb, from_account):
     # multisig
-    args = '[["%s"]]' % settings.ADMIN_ACCOUNT
+    args = json.dumps([settings.ADMIN_ACCOUNT])
     nonce = get_nonce(from_account)
     current_nonce = nonce
     multisig_addr = deploy_smartcontract(from_account, settings.MUTISIG_JS, args, nonce + 1)
     print("multisig:", multisig_addr)
 
-    nonce = wait_nonce(current_nonce)
+    nonce = wait_new_nonce(current_nonce)
     current_nonce = nonce
     # NAT
-    args = '["%s", "%s", "%s", "%s"]' % (settings.NAT_NAME, settings.NAT_SYMBOL, settings.NAT_DECIMALS, multisig_addr)
+    args = json.dumps([settings.NAT_NAME, settings.NAT_SYMBOL, settings.NAT_DECIMALS, multisig_addr])
     nat_addr = deploy_smartcontract(from_account, settings.NAT_NRC20_JS, args, nonce + 1, multisig_addr)
     print("natjs:", nat_addr)
 
-    '''
-    args = ''
-    deploy_smartcontract(from_account, settings.DISTRIBUTE_JS, args, nonce + 1, multisig_addr)
-    args = ''
-    deploy_smartcontract(from_account, settings.PLEDGE_PROXY_JS, args, nonce + 1, multisig_addr)
-    args = ''
-    deploy_smartcontract(from_account, settings.PLEDGE_JS, args, nonce + 1, multisig_addr)
-    args = ''
-    deploy_smartcontract(from_account, settings.VOTE_JS, args, nonce + 1, multisig_addr)
-    '''
+    nonce = wait_new_nonce(current_nonce)
+    current_nonce = nonce
+
+    # distribute
+    args = json.dumps([settings.PLEDGE_START_HEIGHT, settings.NR_START_HEIGHT, multisig_addr])
+    distribute_addr = deploy_smartcontract(from_account, settings.DISTRIBUTE_JS, args, nonce + 1, multisig_addr)
+    print("distribute.js:", distribute_addr)
+
+    nonce = wait_new_nonce(current_nonce)
+    current_nonce = nonce
+
+    # pledge proxy
+    args = json.dumps([multisig_addr])
+    pledge_proxy_addr = deploy_smartcontract(from_account, settings.PLEDGE_PROXY_JS, args, nonce + 1, multisig_addr)
+    print("pledge_proxy.js:", pledge_proxy_addr)
+
+    nonce = wait_new_nonce(current_nonce)
+    current_nonce = nonce
+
+    # pledge
+    args = json.dumps([multisig_addr])
+    pledge_addr = deploy_smartcontract(from_account, settings.PLEDGE_JS, args, nonce + 1, multisig_addr)
+    print("pledge.js:", pledge_addr)
+
+    nonce = wait_new_nonce(current_nonce)
+    current_nonce = nonce
+
+    # Vote
+    args = json.dumps([multisig_addr, settings.VOTE_MANAGERS])
+    vote_addr = deploy_smartcontract(from_account, settings.VOTE_JS, args, nonce + 1, multisig_addr)
+    print("vote.js:", vote_addr)
 
 def deploy_smartcontract(from_account, contract_path, args, nonce, multisig=None):
     to_addr = Address.parse_from_string(get_account_addr(from_account))
@@ -112,6 +133,8 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         if sys.argv[1] == "mainnet":
             chain_id = 1        
+        if ssy.argv[1] == "mariana":
+            chain_id = 1111
 
     if chain_id == 1:
         neb = Neb("https://mainnet.nebulas.io")
