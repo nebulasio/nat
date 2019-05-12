@@ -34,12 +34,12 @@ DPledge.prototype = {
         }
 
         let data = new Array();
+        let y = new BigNumber(0.997).pow(this._pledge_period); 
         for (let key in pledgeData.data) {
             let item = pledgeData.data[key];
             // 5 * 12.663 * x / (1 + sqrt(200/x)) * 0.997^i
             let gx = new BigNumber(12.663).times(item.value);
             let zx = new BigNumber(200).div(item.value).sqrt().plus(1).pow(-1);
-            let y = new BigNumber(0.997).pow(this._pledge_period);
             let value = new BigNumber(5).times(gx).times(zx).times(y);
             item.nat = value.toString(10);
             data.push(item);
@@ -88,9 +88,11 @@ DNR.prototype = {
         }
 
         let data = new Array();
+        let y = new BigNumber(0.997).pow(this._nr_period);
         for (let key in nrData.data) {
             let item = nrData.data[key];
-            let value = this._calculateNAT(item.score);
+            let value = new BigNumber(12.663).times(score);
+            value = value.times(y);
             item.nat = value.toString(10);
             data.push(item);
         }

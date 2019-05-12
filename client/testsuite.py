@@ -199,7 +199,7 @@ if __name__ == "__main__":
             old_pledge(neb, old_pledge_addr)
 
         if sys.argv[1] == "pledge":
-            pledge_proxy_addr = "n22utPZyiN5k2RUStXfKKwHCZzgWHzdH77N"
+            pledge_proxy_addr = sys.argv[2]
             pledge(neb, pledge_proxy_addr)
 
         if sys.argv[1] == "vote":
