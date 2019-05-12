@@ -89,6 +89,7 @@ PledgeDataList.prototype = {
             }
             let d = tempPageData.data;
             d.push(obj);
+            p.l += 1;
         }
         if (tempPageData) {
             this._storage.put(this._dataKey(tempPageData.index), tempPageData.data);
