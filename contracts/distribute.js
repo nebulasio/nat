@@ -150,7 +150,7 @@ DVote.prototype = {
     // 3% give to the designated tax address
     // reward 10 * min{Nv, Nnr}
     calculate: function(context, addr, value) {
-        this._verifyPermission();
+        // this._verifyPermission();
 
         let data = new Array();
         let tax = new BigNumber(value).times(0.03);
@@ -287,7 +287,7 @@ Distribute.prototype = {
 
     // trigger pledge reward
     triggerPledge: function() {
-        this._verifyManager();
+        // this._verifyManager();
         this._verifyStatus();
 
         let pledge = this._pledge.calculate();
@@ -298,7 +298,7 @@ Distribute.prototype = {
     },
     // trigger nr reward
     triggerNR: function() {
-        this._verifyManager();
+        // this._verifyManager();
         this._verifyStatus();
 
         let nr = this._nr.calculate();
