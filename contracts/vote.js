@@ -290,6 +290,10 @@ Vote.prototype = {
         };
     },
 
+    getManagers: function () {
+        return this._voteManagers;
+    },
+
     getDataSources: function () {
         return this._dataSources;
     },
