@@ -110,10 +110,7 @@ def make_transaction(neb, from_account, to_addr, nonce):
     tx = Transaction(chain_id, from_account, to_address, 10000000000000000000, nonce, payload_type, payload, gas_price, gas_limit)
     tx.calculate_hash()
     tx.sign_hash()
-    print ("========")
-    print(tx.to_proto())
-    print ("========")
-    #print(neb.api.sendRawTransaction(tx.to_proto()).text)
+    print(neb.api.sendRawTransaction(tx.to_proto()).text)
 
 def make_contract_trx(neb, from_account, contract_addr, amount, func, arg):
     to_addr = Address.parse_from_string(contract_addr)
