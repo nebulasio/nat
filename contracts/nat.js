@@ -124,9 +124,9 @@ NATToken.prototype = {
 
     produce: function(data) {
         // permission check
-        // if (this._distribute !== Blockchain.transaction.from) {
-        //     throw new Error("Permission Denied for distribute!");
-        // }
+        if (this._distribute !== Blockchain.transaction.from) {
+            throw new Error("Permission Denied for distribute!");
+        }
 
         if (!(data instanceof Array)) {
             throw new Error("Data format error.")
