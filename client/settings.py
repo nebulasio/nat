@@ -32,6 +32,6 @@ PLEDGE_START_HEIGHT = 70750
 
 # setConfig
 distributeVoteTaxAddr = "n1aoqR2V8LBTDwV4XuzJvZE5evZTCMpBDxr"
-distributeManager = "n1aoqR2V8LBTDwV4XuzJvZE5evZTCMpBDxr"
+distributeManager = "n1cGVLmyWwTBoWRgQj42urPKFjShSebANVb"
 pledgeProxyManager = "n1aoqR2V8LBTDwV4XuzJvZE5evZTCMpBDxr"
-nrDataManager = "n1aoqR2V8LBTDwV4XuzJvZE5evZTCMpBDxr"
+nrDataManager = "n1cGVLmyWwTBoWRgQj42urPKFjShSebANVb"
