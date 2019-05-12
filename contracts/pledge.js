@@ -282,21 +282,33 @@ CurrentData.prototype = {
         this._storage.put(this._keyLastBlock, block);
     },
 
-    checkAndDelete: function () {
-        let as = [];
-        let indexes = Array.from(this._addressList.getPageIndexes());
+    _containsAddress: function (distributeData, address) {
+        if (!distributeData || distributeData.length === 0) {
+            return true;
+        }
+        for (let i = 0; i < distributeData.length; ++i) {
+            if (distributeData[i].addr === address) {
+                return true;
+            }
+        }
+        return false;
+    },
+
+    checkAndDelete: function (data) {
+        let r = [];
+        let indexes = this._addressList.getPageIndexes();
         for (let i = 0; i < indexes.length; ++i) {
             let index = indexes[i];
-            let as = Array.from(this._addressList.getPageData(index.i));
+            let as = this._addressList.getPageData(index.i);
             for (let j = 0; j < as.length; ++j) {
                 let a = as[j];
-                if (this._checkAndDelete(a)) {
-                    as.push(a);
+                if (this._containsAddress(data, a) && this._checkAndDelete(a)) {
+                    r.push(a);
                 }
             }
         }
-        if (as.length > 0) {
-            this._addressList.delAll(address);
+        if (r.length > 0) {
+            this._addressList.delAll(r);
         }
     },
 
@@ -577,7 +589,7 @@ Pledge.prototype = {
     setPledgeResult: function (startBlock, endBlock, data) {
         this._verifyFromDistribute();
         this._currentData.lastBlock = endBlock;
-        this._currentData.checkAndDelete();
+        this._currentData.checkAndDelete(data);
 
         for (let i = 0; i < data.length; ++i) {
             let d = data[i];
