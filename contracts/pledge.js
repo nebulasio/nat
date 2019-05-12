@@ -480,8 +480,8 @@ function Pledge() {
         "_distributes": null,
     });
 
-    // this._PREV_PLEDGE = "n1n5Fctkjx2pA7iLX8rgRyCa7VKinGFNe9H";
-    this._PREV_PLEDGE = "n1h6LuEhL6PJGnM2N8UAhkT3TGHfDmmxvsJ";
+    // this._PREV_PLEDGE = "n1n5Fctkjx2pA7iLX8rgRyCa7VKinGFNe9H"
+    this._PREV_PLEDGE = "n1pyS2fAyBGXDpu1PDdXcCm6hpERiHGG5Lj"
 
     this._statisticData = new StatisticData(this._storage);
     this._currentData = new CurrentData(this._current);

@@ -76,12 +76,15 @@ def create_new_account_keystore(password):
     keystore = account.to_key(password)
     return keystore, account_addr
 
-def create_n_account(num):
-    fp = open("pledge_list.txt", "w")
+def create_n_account(num, filepath):
+    fp = open(filepath, "w")
     account_list = {}
     for i in range(num):
-        priv, addr = create_new_account_privatekey()
-        fp.write("%s:%s\n" % (addr, priv))
+        while True:
+            priv, addr = create_new_account_privatekey()
+            if len(priv) == 64:
+                fp.write("%s:%s\n" % (addr, priv))
+                break
     fp.close()
 
 def send_token(neb, bank_account, account_file):
@@ -175,7 +178,8 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         if sys.argv[1] == "createaccount":
             num = int(sys.argv[2])
-            create_n_account(num)
+            filepath = sys.argv[3]
+            create_n_account(num, filepath)
 
         if sys.argv[1] == "sendtoken":
             filepath = sys.argv[2]
@@ -191,7 +195,7 @@ if __name__ == "__main__":
             check_balance(neb, target_addr)
 
         if sys.argv[1] == "oldpledge":
-            old_pledge_addr = "n1h6LuEhL6PJGnM2N8UAhkT3TGHfDmmxvsJ"
+            old_pledge_addr = "n1pyS2fAyBGXDpu1PDdXcCm6hpERiHGG5Lj"
             old_pledge(neb, old_pledge_addr)
 
         if sys.argv[1] == "pledge":
