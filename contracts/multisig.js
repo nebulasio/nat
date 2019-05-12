@@ -35,7 +35,7 @@ function MultiSig() {
     this._allConfigNames = [
         "multiSig",
         "distribute",
-        "distributeVoteTaxAddrv",
+        "distributeVoteTaxAddr",
         "distributeManager",
         "pledgeProxy",
         "pledgeProxyManager",

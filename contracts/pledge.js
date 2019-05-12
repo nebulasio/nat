@@ -371,7 +371,7 @@ function Pledge() {
     });
 
     // this._PREV_PLEDGE = "n1n5Fctkjx2pA7iLX8rgRyCa7VKinGFNe9H";
-    this._PREV_PLEDGE = "n1edd4oGmLyjo1P3NFgnHBS7W15JRWg6NHd";
+    this._PREV_PLEDGE = "n1qHoadH9cTyGFhebbmNQ6HupN2fU6PZPvF";
 
     this._statisticData = new StatisticData(this._storage);
     this._currentData = new CurrentData(this._current);
