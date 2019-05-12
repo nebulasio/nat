@@ -170,9 +170,16 @@ DataReceiver.prototype = {
     _getNrData: function (data) {
         let r = [];
         for (let i = 0; i < data.length; ++i) {
+            let score = "0";
+            try {
+                score = Blockchain.getLatestNebulasRank(data[i]);
+            } catch {
+                // if the address nr not found, give a default value "0"
+                score = "0";
+            }
             r.push({
                 addr: data[i],
-                score: Blockchain.getLatestNebulasRank(data[i])
+                score: score
             });
         }
         return r;
