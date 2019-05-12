@@ -1,10 +1,6 @@
 ## Account
 ### Admin
-ADMIN_ACCOUNT = 'n1H2Yb5Q6ZfKvs61htVSV4b1U2gr2GA9vo6'
-
-### emergency accounts
-EMERGENCY_ACCOUNT_A = 'n1Lcnr1qP5AnW1XH7prswLS91Ks1cTe6fr9'
-EMERGENCY_ACCOUNT_B = 'n1awBN6NJR9zkNL1c63BAEMVBarnu2PCt4f'
+ADMIN_ACCOUNT = 'n1U3D5fwnwace4ZTGhh2KMwtcMigDbNTw1V'
 
 ## Smart contract file path
 MUTISIG_JS = "../contracts/multisig.js"
@@ -22,16 +18,15 @@ NAT_SYMBOL = "NAT"
 NAT_DECIMALS = 18
 
 ### vote.js
-VOTE_MANAGERS = ["n1QWYSv5MJfvEBA4A8PGVrGdstdXzEkQ8Ju"]
+VOTE_MANAGERS = ["n1U3D5fwnwace4ZTGhh2KMwtcMigDbNTw1V"]
 
 # NR Start Height
-NR_START_HEIGHT = 62910
-
+NR_START_HEIGHT = 2307000
 # Pledge start height
-PLEDGE_START_HEIGHT = 62910
+PLEDGE_START_HEIGHT = 2309051
 
 # setConfig
-distributeVoteTaxAddr = "n1aoqR2V8LBTDwV4XuzJvZE5evZTCMpBDxr"
-distributeManager = "n1aoqR2V8LBTDwV4XuzJvZE5evZTCMpBDxr"
-pledgeProxyManager = "n1aoqR2V8LBTDwV4XuzJvZE5evZTCMpBDxr"
-nrDataManager = "n1aoqR2V8LBTDwV4XuzJvZE5evZTCMpBDxr"
+distributeVoteTaxAddr = "n1HvNnTCXe1B56mev3ptJCXwvQTHedoPhiW"
+distributeManager = "n1EoNsJNXG1tN3z9rvjwPKoBXbJMqAjmESC"
+pledgeProxyManager = "n1U3D5fwnwace4ZTGhh2KMwtcMigDbNTw1V"
+nrDataManager = "n1EoNsJNXG1tN3z9rvjwPKoBXbJMqAjmESC"
