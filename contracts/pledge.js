@@ -591,10 +591,12 @@ Pledge.prototype = {
         this._currentData.lastBlock = endBlock;
         this._currentData.checkAndDelete(data);
 
-        for (let i = 0; i < data.length; ++i) {
-            let d = data[i];
-            this._statisticData.addNat(d.addr, d.nat);
-            this._distributeData.addDistribute(d.addr, {v: d.value, d: d.nat, s: startBlock, e: endBlock});
+        if (data) {
+            for (let i = 0; i < data.length; ++i) {
+                let d = data[i];
+                this._statisticData.addNat(d.addr, d.nat);
+                this._distributeData.addDistribute(d.addr, {v: d.value, d: d.nat, s: startBlock, e: endBlock});
+            }
         }
     },
 
