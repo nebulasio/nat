@@ -581,7 +581,7 @@ Pledge.prototype = {
 
     // for distribute.js
     getPledge: function (startBlock, endBlock, pageNum) {
-        this._verifyFromDistribute();
+        // this._verifyFromDistribute();
         return this._currentData.getDistributePledges(startBlock, endBlock, pageNum);
     },
 
