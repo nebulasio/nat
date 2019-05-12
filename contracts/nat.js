@@ -157,7 +157,7 @@ NATToken.prototype = {
         Event.Trigger(this.name(), {
             Status: status,
             Produce: {
-                total: total,
+                total: total.toString(10),
                 data: data
             }
         });
