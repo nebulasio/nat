@@ -1,0 +1,27 @@
+{
+  "natConfig": {
+    "multiSig": "n1sx2DUpHoWtsGXrhupuCCxUxeuWkYrqV5k",
+    "distribute": "n1pVSgymGZYjVDHF9739VuVJV2T7RgmyaCT",
+    "distributeVoteTaxAddr": "n1aoqR2V8LBTDwV4XuzJvZE5evZTCMpBDxr",
+    "distributeManager": "n1aoqR2V8LBTDwV4XuzJvZE5evZTCMpBDxr",
+    "pledgeProxy": "n1fdxSVvNqDreyzwZFPvnbaJNq9wNAmBB8Z",
+    "pledgeProxyManager": "n1aoqR2V8LBTDwV4XuzJvZE5evZTCMpBDxr",
+    "pledge": "n1spY7hMayQzCqUw8U4NE67n1vT52fSRkCg",
+    "nrData": "n1me8KMSbvfYMDkaZY5dqkZbNsiUvFeZojq",
+    "nrDataManager": "n1aoqR2V8LBTDwV4XuzJvZE5evZTCMpBDxr",
+    "natNRC20": "n1ukmHPF13rX7YFT5TLLYFfoCgXeh7mZpka",
+    "vote": [
+      "n1yY5oxdbe9Vq6o9XNryx49AEWEHr52L1Ad"
+    ]
+  },
+  "contractList": {
+    "distribute": "n1pVSgymGZYjVDHF9739VuVJV2T7RgmyaCT",
+    "pledge_proxy": "n1fdxSVvNqDreyzwZFPvnbaJNq9wNAmBB8Z",
+    "pledge": "n1spY7hMayQzCqUw8U4NE67n1vT52fSRkCg",
+    "nr_data": "n1me8KMSbvfYMDkaZY5dqkZbNsiUvFeZojq",
+    "nat_nrc20": "n1ukmHPF13rX7YFT5TLLYFfoCgXeh7mZpka",
+    "vote": [
+      "n1yY5oxdbe9Vq6o9XNryx49AEWEHr52L1Ad"
+    ]
+  }
+}

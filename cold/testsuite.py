@@ -94,7 +94,7 @@ def send_token(neb, bank_account, account_file):
         to_addr = line.strip().split(":")[0]
         print(count, to_addr, nonce)
         make_transaction(neb, bank_account, to_addr, nonce)
-        if count % 300 == 0 :
+        if count % 100 == 0 :
             time.sleep(60)
 
 def send_nas(neb, bank_account, target_addr):
@@ -110,7 +110,10 @@ def make_transaction(neb, from_account, to_addr, nonce):
     tx = Transaction(chain_id, from_account, to_address, 10000000000000000000, nonce, payload_type, payload, gas_price, gas_limit)
     tx.calculate_hash()
     tx.sign_hash()
-    print(neb.api.sendRawTransaction(tx.to_proto()).text)
+    print ("========")
+    print(tx.to_proto())
+    print ("========")
+    #print(neb.api.sendRawTransaction(tx.to_proto()).text)
 
 def make_contract_trx(neb, from_account, contract_addr, amount, func, arg):
     to_addr = Address.parse_from_string(contract_addr)
@@ -195,9 +198,9 @@ if __name__ == "__main__":
             old_pledge(neb, old_pledge_addr)
 
         if sys.argv[1] == "pledge":
-            pledge_proxy_addr = "n22utPZyiN5k2RUStXfKKwHCZzgWHzdH77N"
+            pledge_proxy_addr = "n1sc3u12EVjtJxJNHvtYVtAQiJJwd5URrVm"
             pledge(neb, pledge_proxy_addr)
 
         if sys.argv[1] == "vote":
-            vote_addr = "n1osYtVtp64eM3K9zFST2fNafbVwxHyRrdR"
+            vote_addr = "n1uP9W17d4aAH3YB7obuvSKGPryAhLvAnhh"
             vote(neb, vote_addr)
