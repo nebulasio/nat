@@ -203,6 +203,25 @@ def setconfig(neb, from_account, multisig_addr, nonce):
     #print(result)
 
 
+def transfer_fund(neb, from_account, new_pledge_proxy_addr, amount, nonce):
+    amount = amount * 1000000000000000000
+    to_addr = Address.parse_from_string(new_pledge_proxy_addr)
+    func = "acceptFund"
+    arg = "[]"
+    payload = TransactionCallPayload(func, arg).to_bytes()
+    payload_type = Transaction.PayloadType("call")
+    tx = Transaction(chain_id, from_account, to_addr, amount, nonce + 1, payload_type, payload, gas_price, gas_limit * 10)
+    tx.calculate_hash()
+    tx.sign_hash()
+    rawTrx = tx.to_proto()
+    print("===================")
+    print(rawTrx)
+    print("===================")
+    wp = open("8.transfer_fund.txt", "w")
+    wp.write(rawTrx)
+    wp.close()
+
+
 def getconfig(neb, from_account, proxy_addr):
     from_addr = from_account.get_address_obj()
     account_addr = from_addr.string()
@@ -211,18 +230,13 @@ def getconfig(neb, from_account, proxy_addr):
     ret = neb.api.call(account_addr, proxy_addr, "0", nonce + 1, str(gas_limit), str(gas_price), contract).text
     print(json.loads(ret))
 
-'''
-python natcli mainnet ks.json deploymultisig current_nonce
-python natcli mainnet ks.json deployallothers multisig_addr current_nonce
-python natcli testnet screte.json setconfig multisig_addr current_nonce
-python natcli testnet screte.json getconfig proxy_addr 
-'''
 
 if __name__ == "__main__":
-    helper = "python natcli mainnet ks.json deploymultisig current_nonce \n\
-python natcli mainnet ks.json deployallothers multisig_addr current_nonce\n\
-python natcli testnet screte.json setconfig multisig_addr current_nonce \n\
-python natcli testnet screte.json getconfig proxy_addr"
+    helper = "python natcli.py mainnet ks.json deploymultisig current_nonce \n\
+python natcli.py mainnet ks.json deployallothers multisig_addr current_nonce\n\
+python natcli.py testnet screte.json setconfig multisig_addr current_nonce \n\
+python natcli.py mariana ks/n1xxxx.json transferfund new_pledge_proxy_addr amount current_nonce \n\
+python natcli.py testnet screte.json getconfig proxy_addr"
 
     if len(sys.argv) <= 1:
         print(helper)
@@ -278,3 +292,9 @@ python natcli testnet screte.json getconfig proxy_addr"
         if sys.argv[3] == "getconfig":
             proxy_addr = sys.argv[4]
             getconfig(neb, from_account, proxy_addr)
+
+        if sys.argv[3] == "transferfund":
+            new_pledge_proxy_addr = sys.argv[4]
+            amount = int(sys.argv[5])
+            nonce = int(sys.argv[6])
+            transfer_fund(neb, from_account, new_pledge_proxy_addr, amount, nonce)
