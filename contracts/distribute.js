@@ -23,6 +23,12 @@ DPledge.prototype = {
             throw new Error("Pledge period exceeds the current height.");
         }
         let page = this._pledge_page;
+        let section = {
+            period: this._pledge_period,
+            startHeight: start,
+            endHeight: end,
+            page: page
+        };
         let pledgeData = pledge.call("getPledge", start, end, page);
         // if current pledge has no data, update period
         if (pledgeData === null) {
@@ -30,7 +36,7 @@ DPledge.prototype = {
             this._pledge_height = end + 1;
             this._pledge_page = 0;
             pledge.call("setPledgeResult", start, end, null);
-            return {hasNext: false, data: null};
+            return {hasNext: false, section: section, data: null};
         }
 
         let data = new Array();
@@ -45,7 +51,7 @@ DPledge.prototype = {
             data.push(item);
         }
         pledge.call("setPledgeResult", start, end, data);
-        this._trigger_event(this._pledge_period, start, end, page, data);
+        this._trigger_event(section, data);
         if (pledgeData.hasNext) {
             this._pledge_page = page + 1;
         } else {
@@ -53,14 +59,14 @@ DPledge.prototype = {
             this._pledge_height = end + 1;
             this._pledge_page = 0;
         }
-        return {hasNext: pledgeData.hasNext, data: data};
+        return {hasNext: pledgeData.hasNext, section: section, data: data};
     },
-    _trigger_event: function(period, start, end, page, data) {
+    _trigger_event: function(section, data) {
         Event.Trigger("pledge", {
-                period: period,
-                start_height: start,
-                end_height: end,
-                page: page,
+                period: section.period,
+                start_height: section.startHeight,
+                end_height: section.endHeight,
+                page: section.endHeight,
                 data: data
         });
     }
@@ -87,24 +93,28 @@ DNR.prototype = {
             throw new Error("No NR Data Found.");
         }
 
+        let section = nrData.section;
+        section.period = this._nr_period;
+        section.page = page;
+
         let data = new Array();
         let y = new BigNumber(0.997).pow(this._nr_period);
         for (let key in nrData.data) {
             let item = nrData.data[key];
-            let value = new BigNumber(12.663).times(score);
+            let value = new BigNumber(12.663).times(item.score);
             value = value.times(y);
             item.nat = value.toString(10);
             data.push(item);
         }
-        this._trigger_event(this._nr_period, nrData.section, page, data);
+        this._trigger_event(section, data);
         if (nrData.hasNext) {
             this._nr_page = page + 1;
         } else {
             this._nr_period = this._nr_period + 1;
-            this._nr_height = nrData.section.endHeight;
+            this._nr_height = section.endHeight;
             this._nr_page = 0;
         }
-        return {hasNext: nrData.hasNext, data: data};
+        return {hasNext: nrData.hasNext, section: section, data: data};
     },
     // 12.663 * 0.997^i * x
     _calculateNAT: function (score) {
@@ -113,10 +123,10 @@ DNR.prototype = {
         value = value.times(y);
         return value;
     },
-    _trigger_event: function(period, section, page, data) {
+    _trigger_event: function(section, data) {
         Event.Trigger("nr", {
-                period: period,
-                page: page,
+                period: section.period,
+                page: section.page,
                 start_height: section.startHeight,
                 end_height: section.endHeight,
                 data: data
@@ -304,7 +314,7 @@ Distribute.prototype = {
         if (pledge.data !== null && pledge.data.length > 0) {
             this._produceNat(pledge.data);
         }
-        return {needTrigger: pledge.hasNext};
+        return {needTrigger: pledge.hasNext, section: pledge.section};
     },
     // trigger nr reward
     triggerNR: function() {
@@ -315,7 +325,7 @@ Distribute.prototype = {
         if (nr.data !== null && nr.data.length > 0) {
             this._produceNat(nr.data);
         }
-        return {needTrigger: nr.hasNext};
+        return {needTrigger: nr.hasNext, section: nr.section};
     },
     // trigger vote reward
     vote: function(address, value) {
