@@ -2,7 +2,7 @@
   "natConfig": {
     "multiSig": "n1un6hY9tTPH6w9NvuTujEyQnuauoqD18n4",
     "distribute": "n1kTUHmSc1tUxJb3pxZy1VcpCbbTRm4mJTj",
-    "distributeVoteTaxAddrv": "n1aoqR2V8LBTDwV4XuzJvZE5evZTCMpBDxr",
+    "distributeVoteTaxAddr": "n1aoqR2V8LBTDwV4XuzJvZE5evZTCMpBDxr",
     "distributeManager": "n1aoqR2V8LBTDwV4XuzJvZE5evZTCMpBDxr",
     "pledgeProxy": "n1pTCatUKL6AxELmsywX6BxrRLaQ9NyLe4e",
     "pledgeProxyManager": "n1aoqR2V8LBTDwV4XuzJvZE5evZTCMpBDxr",

@@ -20,7 +20,7 @@
         let prevPledgeAddress = "n1n5Fctkjx2pA7iLX8rgRyCa7VKinGFNe9H";
         let proxyAddress = "n1d6YyHs2eL7pE3RKFbxCWcd2ExYx1MAXgF";
         let distributeAddress = "n1cwsE8w4m6cRkr14R5c4hK3Lb9wPsUHhY9";
-        let distributeVoteTaxAddrv = "n1Xz96gDHrrs4ymBgpirav6LbFxZ1p5aRL1";
+        let distributeVoteTaxAddr = "n1Xz96gDHrrs4ymBgpirav6LbFxZ1p5aRL1";
         let distributeManageAddress = "n1Jc4mkpbvLeGFq4LMzAx5f5dK4pKHEUUDb";
         let nrDataAddress = "n1keX3piVEzAc14MthT25Cg6hFFSw76Msja";
         let nrDataManager = "n1NznNCpYvuWdXBBbj1CSZn8huAPkQHM9t2";
@@ -38,7 +38,7 @@
             natConfig: {
                 multiSig: multiSignAddress,
                 distribute: distributeAddress,
-                distributeVoteTaxAddrv: distributeVoteTaxAddrv,
+                distributeVoteTaxAddr: distributeVoteTaxAddr,
                 distributeManager: distributeManageAddress,
                 pledgeProxy: proxyAddress,
                 pledgeProxyManager: proxyManagerAddress,
@@ -221,7 +221,7 @@
             try {
                 BlockchainTool.callContract(customerAddress1, natAddress, 0, "transfer", [pledgeAddress, "100"]);
             } catch (e) {
-                if (e.message != "Address is in blacklist, no transaction is allowed.") {
+                if (e.message != "Address is not allowed for transaction.") {
                     throw e;
                 }
             }
@@ -299,6 +299,21 @@
 
         }
 
+        function NATWithdrawTest() {
+            // 1. permission
+            try {
+                BlockchainTool.callContract(pledgeAddress, natAddress, 0, "withdraw", [customerAddress]);
+            } catch (e) {
+                if (e.message != "Permission Denied!") {
+                    throw e;
+                }
+            }
+
+            // 2. normal
+            BlockchainTool.transfer(null, natAddress, new BigNumber(1000).mul(unit));
+            BlockchainTool.callContract(multiSignAddress, natAddress, 0, "withdraw", [customerAddress]);
+        }
+
         function main() {
             initContext();
             initContractTest();
@@ -309,6 +324,7 @@
             NATTransactionTest();
             NATApproveTest();
 
+            NATWithdrawTest();
         }
 
         main();

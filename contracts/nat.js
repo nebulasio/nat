@@ -308,7 +308,32 @@ NATToken.prototype = {
             }
         }
         return "0";
-    }
+    },
+
+    withdraw: function(addr) {
+        this._verifyPermission();
+        this._verifyAddress(addr);
+
+        let balance = Blockchain.getAccountState(Blockchain.transaction.to).balance;
+        if (new BigNumber(balance).gt(0)) {
+            let result = Blockchain.transfer(addr, balance);
+            this._withdrawEvent(result, Blockchain.transaction.to, addr, balance);
+            if (!result) {
+                throw new Error("Withdraw failed.");
+            }
+        }
+    },
+
+    _withdrawEvent: function (status, from, to, value) {
+        Event.Trigger(this.name(), {
+            Status: status,
+            Withdraw: {
+                from: from,
+                to: to,
+                value: value
+            }
+        });
+    },
 };
 
 module.exports = NATToken;

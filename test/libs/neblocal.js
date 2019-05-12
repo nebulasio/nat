@@ -372,6 +372,7 @@ let Blockchain = {
 
     transfer: function (address, val) {
         BlockchainTool.transfer(Blockchain.transaction.to, address, val);
+        return true;
     },
 
     verifyAddress: function (address) {
