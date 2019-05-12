@@ -1,6 +1,6 @@
 const STATE_WORK = 0;
 const STATE_PAUSED = 1;
-const HEIGHT_INTERVAL = 100; // 40320
+const HEIGHT_INTERVAL = 30; // 40320
 
 function DPledge() {
     LocalContractStorage.defineProperties(this, {

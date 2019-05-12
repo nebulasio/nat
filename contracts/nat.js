@@ -333,7 +333,7 @@ NATToken.prototype = {
                 value: value
             }
         });
-    },
+    }
 };
 
 module.exports = NATToken;
