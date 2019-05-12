@@ -173,9 +173,10 @@ DataReceiver.prototype = {
             let score = "0";
             try {
                 score = Blockchain.getLatestNebulasRank(data[i]);
-            } catch {
+            } catch(e) {
                 // if the address nr not found, give a default value "0"
                 score = "0";
+                console.log("NR not found for address:",data[i]);
             }
             r.push({
                 addr: data[i],
