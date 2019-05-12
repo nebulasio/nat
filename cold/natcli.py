@@ -15,7 +15,7 @@ from nebpysdk.src.client.Neb import Neb
 
 import settings
 
-chain_id = 1111
+chain_id = 1
 gas_price = 20000000000
 gas_limit = 200000
 
