@@ -36,6 +36,10 @@ PledgeDataList.prototype = {
         this._storage.put(this._indexesKey(), this.getPageIndexes());
     },
 
+    _savePageData: function (index, data) {
+        this._storage.put(this._dataKey(index), data);
+    },
+
     getPageIndexes: function () {
         if (!this._pageIndexes) {
             this._pageIndexes = this._storage.get(this._indexesKey());
@@ -52,6 +56,44 @@ PledgeDataList.prototype = {
             r = [];
         }
         return r;
+    },
+
+    addAll: function (data) {
+        let indexes = this.getPageIndexes();
+        let tempPageData = null;
+        for (let i = 0; i < data.length; ++i) {
+            let obj = data[i];
+            let p = null;
+            for (let i = 0; i < indexes.length; ++i) {
+                let index = indexes[i];
+                if (index.l < this._pageSize) {
+                    p = index;
+                    break;
+                }
+            }
+            if (p == null) {
+                let i = 0;
+                if (indexes.length > 0) {
+                    i = indexes[indexes.length - 1].i + 1;
+                }
+                p = {i: i, l: 0};
+                indexes.push(p);
+            }
+
+            if (tempPageData != null && tempPageData.index !== p.i) {
+                this._storage.put(this._dataKey(tempPageData.index), tempPageData.data);
+                tempPageData = null;
+            }
+            if (!tempPageData) {
+                tempPageData = {index: p.i, data: this.getPageData(p.i)};
+            }
+            let d = tempPageData.data;
+            d.push(obj);
+        }
+        if (tempPageData) {
+            this._storage.put(this._dataKey(tempPageData.index), tempPageData.data);
+        }
+        this._saveIndexes();
     },
 
     add: function (obj) {
@@ -102,6 +144,43 @@ PledgeDataList.prototype = {
         }
         return false;
     },
+
+    delAll: function (eles) {
+        let indexes = this.getPageIndexes();
+        if (indexes.length === 0) {
+            return;
+        }
+        let cachePages = {};
+        for (let k = 0; k < eles.length; ++k) {
+            let ele = eles[k];
+            for (let i = 0; i < indexes.length; ++i) {
+                let index = indexes[i];
+                let strIndex = "" + index.i;
+                let p = cachePages[strIndex];
+                if (!p) {
+                    p = {changed: false, data: this.getPageData(index.i)};
+                    cachePages[strIndex] = p;
+                }
+                let newData = [];
+                for (let j = 0; j < p.data.length; ++j) {
+                    if (ele !== p.data[j]) {
+                        newData.push(p.data[j]);
+                    }
+                }
+                if (newData.length !== p.data.length) {
+                    p.changed = true;
+                    p.data = newData;
+                }
+            }
+        }
+        for (let index in cachePages) {
+            let p = cachePages[index];
+            if (p.changed) {
+                this._savePageData(index, p.data);
+            }
+        }
+        this._saveIndexes();
+    }
 };
 
 
@@ -151,7 +230,7 @@ CurrentData.prototype = {
         return null;
     },
 
-    _checkAndDelete: function (address, deleted) {
+    _checkAndDelete: function (address) {
         let ps = this._getPledges(address);
         if (ps.length === 0) {
             return;
@@ -161,16 +240,15 @@ CurrentData.prototype = {
             let p = ps[i];
             if (!this._canDelete(p)) {
                 newPs.push(p);
-            } else {
-                deleted.push({a: address, p: p});
             }
         }
         if (newPs.length > 0 && newPs.length !== ps.length) {
             this._storage.put(address, newPs);
         } else if (newPs.length === 0) {
             this._storage.del(address);
-            this._addressList.del(address);
+            return true;
         }
+        return false;
     },
 
     _getPagePledges: function (pledges, pageNum) {
@@ -204,17 +282,21 @@ CurrentData.prototype = {
     },
 
     checkAndDelete: function () {
-        let deleted = [];
+        let as = [];
         let indexes = Array.from(this._addressList.getPageIndexes());
         for (let i = 0; i < indexes.length; ++i) {
             let index = indexes[i];
             let as = Array.from(this._addressList.getPageData(index.i));
             for (let j = 0; j < as.length; ++j) {
                 let a = as[j];
-                this._checkAndDelete(a, deleted);
+                if (this._checkAndDelete(a)) {
+                    as.push(a);
+                }
             }
         }
-        return deleted;
+        if (as.length > 0) {
+            this._addressList.delAll(address);
+        }
     },
 
     getDistributePledges: function (startBlock, endBlock, pageNum) {
@@ -244,6 +326,13 @@ CurrentData.prototype = {
         }
         ps.push(pledge);
         this._storage.put(address, ps);
+    },
+
+    addAllPledge: function (pledges, addresses) {
+        this._addressList.addAll(addresses);
+        for (let i = 0; i < pledges.length; ++i) {
+            this._storage.put(pledges[i].a, [pledges[i].p]);
+        }
     },
 
     cancelPledge: function (address) {
@@ -332,6 +421,13 @@ function StatisticData(storage) {
 
 StatisticData.prototype = {
 
+    addAllAddress: function (addresses) {
+        this._addressList.addAll(addresses);
+        for (let i = 0; i < addresses.length; ++i) {
+            this._storage.put(addresses[i], {nat: "0"});
+        }
+    },
+
     addAddress: function (address) {
         let d = this._storage.get(address);
         if (!d) {
@@ -342,10 +438,11 @@ StatisticData.prototype = {
 
     addNat: function (address, nat) {
         let d = this._storage.get(address);
-        if (d) {
-            d.nat = new BigNumber(d.nat).plus(new BigNumber(nat)).toString(10);
-            this._storage.put(address, d);
+        if (!d) {
+            d = {nat: "0"};
         }
+        d.nat = new BigNumber(d.nat).plus(new BigNumber(nat)).toString(10);
+        this._storage.put(address, d);
     },
 
     getNat: function (address) {
@@ -371,7 +468,7 @@ function Pledge() {
     });
 
     // this._PREV_PLEDGE = "n1n5Fctkjx2pA7iLX8rgRyCa7VKinGFNe9H";
-    this._PREV_PLEDGE = "n1qHoadH9cTyGFhebbmNQ6HupN2fU6PZPvF";
+    this._PREV_PLEDGE = "n1h6LuEhL6PJGnM2N8UAhkT3TGHfDmmxvsJ";
 
     this._statisticData = new StatisticData(this._storage);
     this._currentData = new CurrentData(this._current);
@@ -454,15 +551,19 @@ Pledge.prototype = {
 
     receivePledgeData: function (data) {
         this._verifyFromPrevPledge();
+        let ps = [];
+        let as = [];
         for (let i = 0; i < data.length; ++i) {
             let a = data[i].a;
             let p = data[i].p;
             if (p.c) {
                 continue;
             }
-            this._currentData.addPledge(a, {s: p.b, v: p.v, e: null});
-            this._statisticData.addAddress(a);
+            ps.push({a: a, p: {s: p.b, v: p.v, e: null}});
+            as.push(a);
         }
+        this._currentData.addAllPledge(ps, as);
+        this._statisticData.addAllAddress(as);
     },
 
     // for distribute.js

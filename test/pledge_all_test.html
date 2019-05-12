@@ -22,7 +22,7 @@
         let natAddress = "n1zUNqeBPvsyrw5zxp9mKcDdLTjuaEL7s39";
 
         let pledgeAddress = "n1F5VUpUfUbnVksQWcQcAvbY9K9dbakAvpN";
-        let prevPledgeAddress = "n1n5Fctkjx2pA7iLX8rgRyCa7VKinGFNe9H";
+        let prevPledgeAddress = "n1h6LuEhL6PJGnM2N8UAhkT3TGHfDmmxvsJ";
         let proxyAddress = "n1d6YyHs2eL7pE3RKFbxCWcd2ExYx1MAXgF";
         let distributeAddress = "n1cwsE8w4m6cRkr14R5c4hK3Lb9wPsUHhY9";
         let distributeVoteTaxAddr = "n1Xz96gDHrrs4ymBgpirav6LbFxZ1p5aRL1";
@@ -294,11 +294,15 @@
         function pledgeAllTest() {
             BlockchainTool.blockHeight = 0;
             prevPledgeExportTest();
+            getPledgeDataTest();
+
+            // BlockchainTool.blockHeight = 101;
+            // cancelPledgeTest();
 
             pledgeTest();
             getPledgeDataTest();
 
-            BlockchainTool.blockHeight = 101;
+            BlockchainTool.blockHeight = 201;
             cancelPledgeTest();
             getPledgeDataTest();
         }
