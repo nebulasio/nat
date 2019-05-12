@@ -24,8 +24,13 @@ DPledge.prototype = {
         }
         let page = this._pledge_page;
         let pledgeData = pledge.call("getPledge", start, end, page);
+        // if current pledge has no data, update period
         if (pledgeData === null) {
-            throw new Error("No Pledge Data Found.");
+            this._pledge_period = this._pledge_period + 1;
+            this._pledge_height = end + 1;
+            this._pledge_page = 0;
+            pledge.call("setPledgeResult", start, end, null);
+            return {hasNext: false, data: null};
         }
 
         let data = new Array();
@@ -40,7 +45,7 @@ DPledge.prototype = {
             data.push(item);
         }
         pledge.call("setPledgeResult", start, end, data);
-        this._trigger_event(start, end, data);
+        this._trigger_event(this._pledge_period, start, end, page, data);
         if (pledgeData.hasNext) {
             this._pledge_page = page + 1;
         } else {
@@ -50,9 +55,9 @@ DPledge.prototype = {
         }
         return {hasNext: pledgeData.hasNext, data: data};
     },
-    _trigger_event: function(start, end, page, data) {
+    _trigger_event: function(period, start, end, page, data) {
         Event.Trigger("pledge", {
-                period: this._pledge_period,
+                period: period,
                 start_height: start,
                 end_height: end,
                 page: page,
@@ -89,7 +94,7 @@ DNR.prototype = {
             item.nat = value.toString(10);
             data.push(item);
         }
-        this._trigger_event(nrData.section, page, data);
+        this._trigger_event(this._nr_period, nrData.section, page, data);
         if (nrData.hasNext) {
             this._nr_page = page + 1;
         } else {
@@ -106,9 +111,9 @@ DNR.prototype = {
         value = value.times(y);
         return value;
     },
-    _trigger_event: function(section, page, data) {
+    _trigger_event: function(period, section, page, data) {
         Event.Trigger("nr", {
-                period: this._nr_period,
+                period: period,
                 page: page,
                 start_height: section.startHeight,
                 end_height: section.endHeight,
@@ -286,7 +291,9 @@ Distribute.prototype = {
         this._verifyStatus();
 
         let pledge = this._pledge.calculate();
-        this._produceNat(pledge.data);
+        if (pledge.data !== null && pledge.data.length > 0) {
+            this._produceNat(pledge.data);
+        }
         return {needTrigger: pledge.hasNext};
     },
     // trigger nr reward
@@ -295,7 +302,9 @@ Distribute.prototype = {
         this._verifyStatus();
 
         let nr = this._nr.calculate();
-        this._produceNat(nr.data);
+        if (nr.data !== null && nr.data.length > 0) {
+            this._produceNat(nr.data);
+        }
         return {needTrigger: nr.hasNext};
     },
     // trigger vote reward
