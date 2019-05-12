@@ -15,7 +15,7 @@ from nebpysdk.src.client.Neb import Neb
 
 import settings
 
-chain_id = 1111
+chain_id = 1
 gas_price = 20000000000
 gas_limit = 200000
 
@@ -147,7 +147,8 @@ def setconfig(neb, from_account, multisig_addr):
             "nrData": config["nrData"],
             "nrDataManager": settings.nrDataManager,
             "natNRC20": config["natNRC20"],
-            "vote": [config["vote"]],
+            #"vote": [config["vote"]],
+            "vote": []
         },  
         "contractList": {
             "distribute": config["distribute"],
@@ -155,7 +156,8 @@ def setconfig(neb, from_account, multisig_addr):
             "pledge": config["pledge"],
             "nr_data": config["nrData"],
             "nat_nrc20": config["natNRC20"],
-            "vote": [config["vote"]],
+            #"vote": [config["vote"]],
+            "vote": [],
         }
     }
 

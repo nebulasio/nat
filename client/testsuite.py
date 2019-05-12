@@ -155,15 +155,27 @@ def pledge(neb, pledge_proxy_addr):
     for from_account in accounts:
         make_contract_trx(neb, from_account, pledge_proxy_addr, amount, func, arg) 
 
+def make_contract_trx_vote(neb, from_account, contract_addr, amount, func, arg):
+    to_addr = Address.parse_from_string(contract_addr)
+    nonce = get_nonce(neb, from_account)
+    payload = TransactionCallPayload(func, arg).to_bytes()
+    payload_type = Transaction.PayloadType("call")
+    gas_limit = 2000000
+    tx = Transaction(chain_id, from_account, to_addr, amount, nonce + 1, payload_type, payload, gas_price, gas_limit)
+    tx.calculate_hash()
+    tx.sign_hash()
+    result = neb.api.sendRawTransaction(tx.to_proto()).text
+    print(result)
+
 
 def vote(neb, vote_addr):
     accounts = get_accounts("pledge_list.txt") 
     func = "vote"
     dataSource = "n1i9SMezxDPe5ocBQU73tE61uDySMMRFp4N"
-    arg = json.dumps([dataSource, "test_hash", "yes", 1000000000000])
+    arg = json.dumps([dataSource, "test_hash", "yes", 5000000000000000000])
     amount = 0
     for from_account in accounts:
-        make_contract_trx(neb, from_account, vote_addr, amount, func, arg) 
+        make_contract_trx_vote(neb, from_account, vote_addr, amount, func, arg) 
 
 '''
     python testsuite.py createaccount 1200 
@@ -203,5 +215,5 @@ if __name__ == "__main__":
             pledge(neb, pledge_proxy_addr)
 
         if sys.argv[1] == "vote":
-            vote_addr = "n1osYtVtp64eM3K9zFST2fNafbVwxHyRrdR"
+            vote_addr = sys.argv[2]
             vote(neb, vote_addr)
