@@ -66,7 +66,7 @@ DPledge.prototype = {
                 period: section.period,
                 start_height: section.startHeight,
                 end_height: section.endHeight,
-                page: section.endHeight,
+                page: section.page,
                 data: data
         });
     }
