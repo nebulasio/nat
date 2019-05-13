@@ -15,6 +15,7 @@
 
     <script type="text/javascript" src="contract/old_pledge.js"></script>
     <script type="text/javascript" src="contract/vote_data.js"></script>
+    <script type="text/javascript" src="contract/receive_test.js"></script>
 
     <script type="text/javascript">
         localStorage.clear();
@@ -44,6 +45,8 @@
         let proxyManagerAddress = "n1XpqPVnskUP1nzRoVZ9pvQ3P6yQJgfG8qc";
         let coSignerAddress = ["n1YkXBfHqaGXBYmi3d3L65ECLLzfRResX5n", "n1b2yNRseEaZmvZqoc2mHEtyiteoKVCnJPY"];
         let blacklist = ["n1XXoWQaucXCNew4cYUhzXzPKAXAQzRPbvt", "n1HYTU3v2zZeMdBPKor3ow1YhoEPNs5EgQ8", "n1NMVvLQxvkH3zkFu53Siz4xsw4kC2Z6g1v"];
+
+        let receiveAddress = "n1GecNYRujrJXpVFRRLkD6vZmmi7wZXvG2t";
 
         let multiSigConfig = {
             natConfig: {
@@ -108,6 +111,7 @@
 
             BlockchainTool.registerContract(voteDataAddress, VoteData);
             BlockchainTool.registerContract(prevPledgeAddress, OldPledge);
+            BlockchainTool.registerContract(receiveAddress, ReceiveTest);
         }
 
         function initContractTest() {
@@ -302,9 +306,9 @@
             pledgeTest();
             getPledgeDataTest();
 
-            BlockchainTool.blockHeight = 201;
-            cancelPledgeTest();
-            getPledgeDataTest();
+            // BlockchainTool.blockHeight = 201;
+            // cancelPledgeTest();
+            // getPledgeDataTest();
         }
 
 
@@ -453,6 +457,16 @@
         }
 
 
+        //
+
+        function transferFund() {
+            log(0, "-------------------------------------------\nTransferFound Test");
+            log(0, "balanceOf Proxy:" + balance(proxyAddress));
+            BlockchainTool.callContract(coSignerAddress[0], multiSignAddress, 0, "transferFund", [receiveAddress]);
+            log(0, "balanceOf Proxy:" + balance(proxyAddress));
+            log(0, "balanceOf ReceiveContract:" + balance(receiveAddress));
+        }
+
         // Main --------------------------------------------------------------------------------------------------------
 
         function main() {
@@ -477,6 +491,8 @@
 
             voteDistributeTest();
             voteTest();
+
+            transferFund();
         }
 
         main();

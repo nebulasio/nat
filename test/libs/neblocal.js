@@ -204,7 +204,7 @@ BlockContract.prototype = {
     call: function () {
         let tx = BlockchainTool._newTransaction(Blockchain.transaction.to, this.address, this.amount);
         BlockchainTool._pushTransaction(tx);
-        BlockchainTool.transfer(Blockchain.transaction.to, this.address, this.amount);
+        BlockchainTool.transfer(tx.from, tx.to, this.amount);
         try {
             let a = Array.from(arguments);
             return this.contract[a[0]].apply(this.contract, a.slice(1, a.length));
