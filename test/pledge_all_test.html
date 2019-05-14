@@ -466,9 +466,9 @@
             let data1 = BlockchainTool.callContract(distributeManageAddress, distributeAddress, 0, "getVoteData", [0, 2]);
             let data2 = BlockchainTool.callContract(distributeManageAddress, distributeAddress, 0, "getVoteData", [0, 100]);
 
-            let voteData = data.data;
-            voteData.push({addr: pledgeAddress, reward: "11", period:2});
-            BlockchainTool.callContract(distributeManageAddress, distributeAddress, 0, "uploadVoteData", [data.data])
+            // let voteData = data.data;
+            // voteData.push({addr: pledgeAddress, reward: "11", period:2});
+            // BlockchainTool.callContract(distributeManageAddress, distributeAddress, 0, "uploadVoteData", [data.data])
         }
 
 
