@@ -125,6 +125,17 @@ def deploy_allothers(neb, from_account, multisig_addr, nonce):
     wp.close()
     fp.close()
 
+
+def deploy_distribute(neb, from_account, multisig_addr, nonce):
+    # distribute
+    wp = open("9.raw_distribute.txt", "w")
+    args = json.dumps([{period:1,page:0,height:settings.PLEDGE_START_HEIGHT},{period:0,page:0,height:settings.NR_START_HEIGHT}, multisig_addr])
+    distribute_addr = deploy_smartcontract(wp, from_account, settings.DISTRIBUTE_JS, args, nonce + 1, multisig_addr)
+    print("distribute.js:", distribute_addr)
+    fp.write("distribute=%s\n" % distribute_addr)
+    wp.close()
+
+
 def deploy_smartcontract(wp, from_account, contract_path, args, nonce, multisig=None):
     to_addr = Address.parse_from_string(get_account_addr(from_account))
     source_code = ""
@@ -234,6 +245,7 @@ def getconfig(neb, from_account, proxy_addr):
 if __name__ == "__main__":
     helper = "python natcli.py mainnet ks.json deploymultisig current_nonce \n\
 python natcli.py mainnet ks.json deployallothers multisig_addr current_nonce\n\
+python natcli.py mainnet ks.json deploydistribute multisig_addr current_nonce\n\
 python natcli.py testnet screte.json setconfig multisig_addr current_nonce \n\
 python natcli.py mariana ks/n1xxxx.json transferfund new_pledge_proxy_addr amount current_nonce \n\
 python natcli.py testnet screte.json getconfig proxy_addr"
@@ -278,6 +290,11 @@ python natcli.py testnet screte.json getconfig proxy_addr"
         if sys.argv[3] == "deploymultisig":
             nonce = int(sys.argv[4])
             multisig_addr = deploy_multisig(neb, from_account, nonce)
+
+        if sys.argv[3] == "distribute":
+            multisig_addr = sys.argv[4]
+            nonce = int(sys.argv[5])
+            deploy_distribute(neb, from_account, multisig_addr, nonce)
 
         if sys.argv[3] == "deployallothers":
             multisig_addr = sys.argv[4]
