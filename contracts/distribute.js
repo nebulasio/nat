@@ -137,14 +137,16 @@ DNR.prototype = {
 function DVote() {
     LocalContractStorage.defineProperties(this, {
         _vote_contracts: null,
-        _vote_tax_addr: null
+        _vote_tax_addr: null,
+        _vote_addr_count: null
     });
 
     // vote nr data record
     // key:addr
     // value: period:value
     LocalContractStorage.defineMapProperties(this, {
-        _vote_nr_data: null
+        _vote_nr_data: null,
+        _vote_nr_addrs: null
     });
 };
 
@@ -170,6 +172,12 @@ DVote.prototype = {
 
         let nrData = this._vote_nr_data.get(addr);
         if (nrData === null || nrData.period !== context._nr._nr_period) {
+            if (nrData === null) {
+                let count = this._vote_addr_count;
+                this._vote_nr_addrs.set(count, addr);
+                this._vote_addr_count = count + 1;
+            }
+
             let score = "0";
             try {
                 score = Blockchain.getLatestNebulasRank(addr);
@@ -213,6 +221,42 @@ DVote.prototype = {
     },
     _trigger_event: function(data) {
         Event.Trigger("vote", data);
+    },
+    upload: function(data) {
+        if (data instanceof Array) {
+            for (let key in data) {
+                const item = data[key];
+                let nrData = this._vote_nr_data.get(item.addr);
+                if (nrData === null) {
+                    let count  = this._vote_addr_count;
+                    this._vote_nr_addrs.set(count,item.addr);
+                    this._vote_addr_count = count + 1;
+                }   
+                nrData = {
+                    period: item.period,
+                    reward: item.reward
+                }
+                this._vote_nr_data.set(item.addr, nrData);
+            }
+        } else {
+            throw new Error("Data format error.");
+        }
+    },
+    getData: function(start, size) {
+        let data = new Array();
+        let count = start + size;
+        let hasNext = true;
+        if (count >= this._vote_addr_count) {
+            hasNext = false;
+            count = this._vote_addr_count;
+        }
+        for (let index = start; index < count; index++) {
+            let addr = this._vote_nr_addrs.get(index);
+            let nrData = this._vote_nr_data.get(addr);
+            nrData.addr = addr;
+            data.push(nrData);
+        }
+        return {hasNext: hasNext, data: data};
     }
 };
 
@@ -232,15 +276,16 @@ function Distribute() {
 };
 
 Distribute.prototype = {
-    init: function (pledgeHeight, nrHeight, multiSig) {
+    init: function (pledgeSection, nrSection, multiSig) {
         this._state = STATE_WORK;
-        this._pledge._pledge_period = 0;
-        this._pledge._pledge_page = 0;
-        this._pledge._pledge_height = pledgeHeight;
-        this._nr._nr_period = 0;
-        this._nr._nr_page = 0;
-        this._nr._nr_height = nrHeight;
+        this._pledge._pledge_period = pledgeSection.period;
+        this._pledge._pledge_page = pledgeSection.page;
+        this._pledge._pledge_height = pledgeSection.height;
+        this._nr._nr_period = nrSection.period;
+        this._nr._nr_page = nrSection.page;
+        this._nr._nr_height = nrSection.height;
         this._vote._vote_contracts = [];
+        this._vote._vote_addr_count = 0;
         this._multiSig = multiSig;
         this._blacklist = [];
     },
@@ -316,6 +361,16 @@ Distribute.prototype = {
         }
         return {needTrigger: pledge.hasNext, section: pledge.section};
     },
+    getPledgeSection: function() {
+        this._verifyManager();
+
+        let section = {
+            period: this._pledge._pledge_period,
+            page: this._pledge._pledge_page,
+            height: this._pledge._pledge_height
+        }
+        return section;
+    },
     // trigger nr reward
     triggerNR: function() {
         this._verifyManager();
@@ -326,6 +381,16 @@ Distribute.prototype = {
             this._produceNat(nr.data);
         }
         return {needTrigger: nr.hasNext, section: nr.section};
+    },
+    getNRSection: function() {
+        this._verifyManager();
+
+        let section = {
+            period: this._nr._nr_period,
+            page: this._nr._nr_page,
+            height: this._nr._nr_height
+        }
+        return section;
     },
     // trigger vote reward
     vote: function(address, value) {
@@ -348,6 +413,17 @@ Distribute.prototype = {
             }
         }
         return nat;
+    },
+    uploadVoteData: function(data) {
+        this._verifyManager();
+
+        this._vote.upload(data);
+    },
+    getVoteData: function(start, size) {
+        this._verifyManager();
+
+        let voteData = this._vote.getData(start, size);
+        return {index: start, hasNext: voteData.hasNext, data: voteData.data};
     }
 };
 

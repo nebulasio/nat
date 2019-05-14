@@ -125,7 +125,7 @@
             BlockchainTool.callContract(customerAddress, proxyAddress, 0, "init", [multiSignAddress]);
 
             // Distribute
-            BlockchainTool.callContract(customerAddress, distributeAddress, 0, "init", [0, 0, multiSignAddress]);
+            BlockchainTool.callContract(customerAddress, distributeAddress, 0, "init", [{period:0, page:0, height: 0}, {period:0, page:0, height:0}, multiSignAddress]);
 
             // NAT
             BlockchainTool.callContract(customerAddress, natAddress, 0, "init", ["NAT", "NAT", 18, multiSignAddress]);
@@ -336,6 +336,9 @@
             } catch (e) {
                 log(0, "error: " + e);
             }
+
+            let data = BlockchainTool.callContract(distributeManageAddress, distributeAddress, 0, "getNRSection", []);
+            console.log("nr section:", data);
         }
 
         function distributeTest() {
@@ -356,6 +359,9 @@
             triggerNR();
             console.log("*** Trigger NR");
             triggerNR();
+
+            let data = BlockchainTool.callContract(distributeManageAddress, distributeAddress, 0, "getPledgeSection", []);
+            console.log("pledge section:", data);
         }
 
 
@@ -454,6 +460,15 @@
             BlockchainTool.callContract(voteAddress, distributeAddress, 0, "vote", [customerAddress, 2000]);
             BlockchainTool.callContract(voteAddress, distributeAddress, 0, "vote", [customerAddress, 10000]);
             BlockchainTool.callContract(voteAddress, distributeAddress, 0, "vote", [customerAddress, 10000]);
+            BlockchainTool.callContract(voteAddress, distributeAddress, 0, "vote", [customerAddress1, 10000]);
+
+            let data = BlockchainTool.callContract(distributeManageAddress, distributeAddress, 0, "getVoteData", [0, 1]);
+            let data1 = BlockchainTool.callContract(distributeManageAddress, distributeAddress, 0, "getVoteData", [0, 2]);
+            let data2 = BlockchainTool.callContract(distributeManageAddress, distributeAddress, 0, "getVoteData", [0, 100]);
+
+            let voteData = data.data;
+            voteData.push({addr: pledgeAddress, reward: "11", period:2});
+            BlockchainTool.callContract(distributeManageAddress, distributeAddress, 0, "uploadVoteData", [data.data])
         }
 
 
