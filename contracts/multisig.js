@@ -180,10 +180,17 @@ MultiSig.prototype = {
         }
         // update to distribute contract
         let distributeContract = this._config.natConfig.distribute;
-        let contractObj = new Blockchain.Contract(distributeContract);
-        contractObj.call("setBlacklist", addrList);
+        let distContractObj = new Blockchain.Contract(distributeContract);
+        distContractObj.call("setBlacklist", addrList);
+
+       // update to NAT contract
+        let natContract = this._config.natConfig.natNRC20;
+        let natContractObj = new Blockchain.Contract(natContract);
+        natContractObj.call("setBlacklist", addrList);
+
         this._blacklist = addrList;
     },
+
 
     closeContracts: function () {
         this._verifyCosigner();

@@ -15,7 +15,7 @@ from nebpysdk.src.client.Neb import Neb
 
 import settings
 
-chain_id = 1
+chain_id = 1111
 gas_price = 20000000000
 gas_limit = 200000
 
@@ -61,6 +61,12 @@ def wait_new_nonce(neb, from_account, nonce):
     current_nonce = nonce
     return current_nonce
 
+def deploy_multisig(neb, from_account):
+   args = json.dumps([[settings.ADMIN_ACCOUNT]])
+   nonce = get_nonce(neb, from_account)
+   multisig_addr = deploy_smartcontract(from_account, settings.MUTISIG_JS, args, nonce + 1)
+   print("multisig:", multisig_addr)
+
 def deploy_all(neb, from_account):
     fp = open("contract_list.txt", "w")
     # multisig
@@ -79,7 +85,7 @@ def deploy_all(neb, from_account):
     fp.write("natNRC20=%s\n" % nat_addr)
 
     # distribute
-    args = json.dumps([settings.PLEDGE_START_HEIGHT, settings.NR_START_HEIGHT, multisig_addr])
+    args = json.dumps([{"period":1,"page":0,"height":settings.PLEDGE_START_HEIGHT},{"period":0,"page":0,"height":settings.NR_START_HEIGHT}, multisig_addr])
     distribute_addr = deploy_smartcontract(from_account, settings.DISTRIBUTE_JS, args, nonce + 3, multisig_addr)
     print("distribute.js:", distribute_addr)
     fp.write("distribute=%s\n" % distribute_addr)
@@ -132,6 +138,23 @@ def get_config(list_file):
         config[k] = v
     fp.close()
     return config
+
+
+def setBlacklist(neb, from_account, multisig_addr):
+    blacklist = settings.blacklist
+    nonce = get_nonce(neb, from_account)
+    to_addr = Address.parse_from_string(multisig_addr)
+    func = "setBlacklist"
+    arg = json.dumps([blacklist])
+    payload = TransactionCallPayload(func, arg).to_bytes()
+    payload_type = Transaction.PayloadType("call")
+    tx = Transaction(chain_id, from_account, to_addr, 0, nonce + 1, payload_type, payload, gas_price, gas_limit * 100)
+    tx.calculate_hash()
+    tx.sign_hash()
+    rawTrx = tx.to_proto()
+    result = neb.api.sendRawTransaction(tx.to_proto()).text
+    print(result)
+
 
 def setconfig(neb, from_account, multisig_addr):
     config = get_config("contract_list.txt")
@@ -230,10 +253,18 @@ if __name__ == "__main__":
         if sys.argv[3] == "deployall":
             multisig_addr = deploy_all(neb, from_account)
 
+        if sys.argv[3] == "deploymultisig":
+            deploy_multisig(neb, from_account)
+
     if len(sys.argv) > 4:
         if sys.argv[3] == "setconfig":
             multisig_addr = sys.argv[4]
             setconfig(neb, from_account, multisig_addr)
+
+        if sys.argv[3] == "setblacklist":
+            multisig_addr = sys.argv[4]
+            setBlacklist(neb, from_account, multisig_addr)
+
         if sys.argv[3] == "getconfig":
             proxy_addr = sys.argv[4]
             getconfig(neb, from_account, proxy_addr)

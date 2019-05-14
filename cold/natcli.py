@@ -86,7 +86,7 @@ def deploy_allothers(neb, from_account, multisig_addr, nonce):
 
     # distribute
     wp = open("2.raw_distribute.txt", "w")
-    args = json.dumps([settings.PLEDGE_START_HEIGHT, settings.NR_START_HEIGHT, multisig_addr])
+    args = json.dumps([{"period":1,"page":0,"height":settings.PLEDGE_START_HEIGHT},{"period":0,"page":0,"height":settings.NR_START_HEIGHT}, multisig_addr])
     distribute_addr = deploy_smartcontract(wp, from_account, settings.DISTRIBUTE_JS, args, nonce + 2, multisig_addr)
     print("distribute.js:", distribute_addr)
     fp.write("distribute=%s\n" % distribute_addr)
@@ -129,10 +129,9 @@ def deploy_allothers(neb, from_account, multisig_addr, nonce):
 def deploy_distribute(neb, from_account, multisig_addr, nonce):
     # distribute
     wp = open("9.raw_distribute.txt", "w")
-    args = json.dumps([{period:1,page:0,height:settings.PLEDGE_START_HEIGHT},{period:0,page:0,height:settings.NR_START_HEIGHT}, multisig_addr])
+    args = json.dumps([{"period":1,"page":0,"height":settings.PLEDGE_START_HEIGHT},{"period":0,"page":0,"height":settings.NR_START_HEIGHT}, multisig_addr])
     distribute_addr = deploy_smartcontract(wp, from_account, settings.DISTRIBUTE_JS, args, nonce + 1, multisig_addr)
     print("distribute.js:", distribute_addr)
-    fp.write("distribute=%s\n" % distribute_addr)
     wp.close()
 
 
@@ -164,6 +163,25 @@ def get_config(list_file):
         config[k] = v
     fp.close()
     return config
+
+def setBlacklist(neb, from_account, multisig_addr, nonce):
+    blacklist = settings.blacklist
+    wp = open("11.setblacklist", "w")
+    to_addr = Address.parse_from_string(multisig_addr)
+    func = "setBlacklist"
+    arg = json.dumps([blacklist])
+    payload = TransactionCallPayload(func, arg).to_bytes()
+    payload_type = Transaction.PayloadType("call")
+    tx = Transaction(chain_id, from_account, to_addr, 0, nonce + 1, payload_type, payload, gas_price, gas_limit * 100)
+    tx.calculate_hash()
+    tx.sign_hash()
+    rawTrx = tx.to_proto()
+    print("===================")
+    print(rawTrx)
+    print("===================")
+    wp.write(rawTrx)
+    wp.close()
+
 
 def setconfig(neb, from_account, multisig_addr, nonce):
     config = get_config("contract_list.txt")
@@ -247,6 +265,7 @@ if __name__ == "__main__":
 python natcli.py mainnet ks.json deployallothers multisig_addr current_nonce\n\
 python natcli.py mainnet ks.json deploydistribute multisig_addr current_nonce\n\
 python natcli.py testnet screte.json setconfig multisig_addr current_nonce \n\
+python natcli.py mainnet screte.json setblacklist multisig_addr current_nonce \n\
 python natcli.py mariana ks/n1xxxx.json transferfund new_pledge_proxy_addr amount current_nonce \n\
 python natcli.py testnet screte.json getconfig proxy_addr"
 
@@ -291,7 +310,7 @@ python natcli.py testnet screte.json getconfig proxy_addr"
             nonce = int(sys.argv[4])
             multisig_addr = deploy_multisig(neb, from_account, nonce)
 
-        if sys.argv[3] == "distribute":
+        if sys.argv[3] == "deploydistribute":
             multisig_addr = sys.argv[4]
             nonce = int(sys.argv[5])
             deploy_distribute(neb, from_account, multisig_addr, nonce)
@@ -306,6 +325,12 @@ python natcli.py testnet screte.json getconfig proxy_addr"
             multisig_addr = sys.argv[4]
             nonce = int(sys.argv[5])
             setconfig(neb, from_account, multisig_addr, nonce)
+
+        if sys.argv[3] == "setblacklist":
+            multisig_addr = sys.argv[4]
+            nonce = int(sys.argv[5])
+            setBlacklist(neb, from_account, multisig_addr, nonce)
+
         if sys.argv[3] == "getconfig":
             proxy_addr = sys.argv[4]
             getconfig(neb, from_account, proxy_addr)
