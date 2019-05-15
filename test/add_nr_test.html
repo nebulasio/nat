@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>NRDataSourceTest</title>
+    <script type="text/javascript" src="libs/nebulas.js"></script>
+    <script type="text/javascript" src="libs/neblocal.js"></script>
+
+    <script type="text/javascript" src="../contracts/add_nr.js"></script>
+    <script type="text/javascript" src="../contracts/nat.js"></script>
+    <script type="text/javascript">
+        localStorage.clear();
+
+        let addNrContractAddress = "n1keX3piVEzAc14MthT25Cg6hFFSw76Msja";
+        let natContractAddress = "n1mpgNi6KKdSzr7i5Ma7JsG5yPY9knf9He7";
+        let distributeAddress = addNrContractAddress;
+
+        let multiSignAddress = "n1Z6MhSZa321SnpiKfUWiybQSG3GCmRHunv";
+
+        let managerAddress = "n1bnDhFr9K2g1EnyKBQ2cLZuhzCpSTCf4jW";
+        let customerAddress = "n1JuGuSaa92L9eZkaL51UHVVeC1u57yTkR8";
+
+        let unit = new BigNumber(10).pow(18);
+
+        function initContext() {
+            BlockchainTool.transfer(null, customerAddress, new BigNumber(1000).mul(unit));
+            BlockchainTool.registerContract(addNrContractAddress, Additional);
+            BlockchainTool.registerContract(natContractAddress, NATToken);
+        }
+
+        function initContract() {
+            BlockchainTool.callContract(customerAddress, natContractAddress, 0, "init", ["NAT", "NAT", 18, multiSignAddress]);
+            BlockchainTool.callContract(customerAddress, addNrContractAddress, 0, "init", [managerAddress]);
+        }
+
+        function initConfig() {
+            BlockchainTool.callContract(multiSignAddress, natContractAddress, 0, "setConfig", [{
+                multiSig: multiSignAddress,
+                distribute: distributeAddress
+            }]);
+        }
+
+        function uploadAndProduceTest() {
+            let data = [{
+                addr: customerAddress,
+                value: "112"
+            }];
+            BlockchainTool.callContract(managerAddress, addNrContractAddress, 0, "upload", [data]);
+            BlockchainTool.callContract(managerAddress, addNrContractAddress, 0, "produce", []);
+
+            let b = BlockchainTool.callContract(managerAddress, natContractAddress, 0, "balanceOf", [customerAddress]);
+            console.log("balance:" + b.toString(10));
+        }
+
+        function main() {
+            initContext();
+            initContract();
+            initConfig();
+            uploadAndProduceTest();
+        }
+
+        main();
+    </script>
+</head>
+<body>
+
+</body>
+</html>
