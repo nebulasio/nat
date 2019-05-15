@@ -371,6 +371,8 @@
             log(0, "*** vote dataSource: " + dataSource + " hash:" + hash + " value:" + value + " weight:" + weight);
             try {
                 BlockchainTool.callContract(customerAddress, voteAddress, 0, "vote", [dataSource, hash, value, weight]);
+                let result = BlockchainTool.callContract(customerAddress, voteAddress, 0, "getVoteResult", [dataSource, hash]);
+                console.log("vote result:", result);
             } catch (e) {
                 log(0, e);
             }
