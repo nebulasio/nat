@@ -74,7 +74,7 @@ Map.prototype = {
     keys: function() {
         let keys = new Array();
         let count = this.size();
-        if (let index = 0; index < count; index++) {
+        for (let index = 0; index < count; index++) {
             let key = this[this.keyProperty].get(index);
             keys.push(key);
         }
