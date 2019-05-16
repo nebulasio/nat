@@ -307,30 +307,34 @@ BigNumber.prototype = {
 
 let LocalContractStorage = {
 
+    defineProperty: function(obj, n, v) {
+        // let v = properties[n];
+        let key = obj._contractName + "_" + n;
+        Object.defineProperty(obj, n, {
+            get: function () {
+                let r = localStorage.getItem(key);
+                if (v && v.parse) {
+                    r = v.parse(localStorage.getItem(key));
+                } else {
+                    r = _defaultParse(localStorage.getItem(key));
+                }
+                return r;
+            },
+            set: function (val) {
+                if (v && v.stringify) {
+                    val = v.stringify(val);
+                } else {
+                    val = _defaultStringify(val);
+                }
+                localStorage.setItem(key, val);
+            },
+            configurable: true
+        });
+    },
+
     defineProperties: function (obj, properties) {
         for (let n in properties) {
-            let v = properties[n];
-            let key = obj._contractName + "_" + n;
-            Object.defineProperty(obj, n, {
-                get: function () {
-                    let r = localStorage.getItem(key);
-                    if (v && v.parse) {
-                        r = v.parse(localStorage.getItem(key));
-                    } else {
-                        r = _defaultParse(localStorage.getItem(key));
-                    }
-                    return r;
-                },
-                set: function (val) {
-                    if (v && v.stringify) {
-                        val = v.stringify(val);
-                    } else {
-                        val = _defaultStringify(val);
-                    }
-                    localStorage.setItem(key, val);
-                },
-                configurable: true
-            });
+            this.defineProperty(obj, n, properties[n]);
         }
     },
 

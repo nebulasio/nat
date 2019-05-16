@@ -9,12 +9,17 @@ function Activity(value) {
     this.content = null;
     this.options = [];
     if (value !== null) {
-        let obj = JSON.parse(value);
-        this.parse(obj);
+        if (this._isString(value)) {
+            value = JSON.parse(value);
+        }
+        this.parse(value);
     }
 };
 
 Activity.prototype = {
+    _isString: function(obj) {
+        return typeof obj === 'string' && obj.constructor === String;
+    },
     parse: function(obj) {
         this.status = obj.status;
         this.content = obj.content;
@@ -138,7 +143,8 @@ CouncilVote.prototype = {
             this._verifyAddress(item.addr);
         }
         data.status = STATUS_INIT;
-        this._activities.set(key, data);
+        act = new Activity(data);
+        this._activities.set(key, act);
     },
     startActivity: function(key) {
         this._verifyPermission();

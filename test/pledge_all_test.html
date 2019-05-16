@@ -16,6 +16,7 @@
     <script type="text/javascript" src="contract/old_pledge.js"></script>
     <script type="text/javascript" src="contract/vote_data.js"></script>
     <script type="text/javascript" src="contract/receive_test.js"></script>
+    <script type="text/javascript" src="contract/council_vote.js"></script>
 
     <script type="text/javascript">
         localStorage.clear();
@@ -33,6 +34,7 @@
         let voteAddress = "n1LJuxRULaTUNHGjGQSfnBNjSixqXyvuPU4";
 
         let voteDataAddress = "n1QEEJaV3aix7qa4xsJo5JEV3Dph6oiHNMe";
+        let councilVoteDataAddress = "n1i4nWK24JzrrgTFDiShzVCkmddnz2mMCG1";
         let voteManager = "n1ZBCsMrSxuLfWoWg91JctDWZmKEo8se3tK";
 
         let multiSignAddress = "n1Z6MhSZa321SnpiKfUWiybQSG3GCmRHunv";
@@ -110,6 +112,7 @@
             BlockchainTool.registerContract(voteAddress, Vote);
 
             BlockchainTool.registerContract(voteDataAddress, VoteData);
+            BlockchainTool.registerContract(councilVoteDataAddress, CouncilVote);
             BlockchainTool.registerContract(prevPledgeAddress, OldPledge);
             BlockchainTool.registerContract(receiveAddress, ReceiveTest);
         }
@@ -135,6 +138,8 @@
 
             // Vote
             BlockchainTool.callContract(customerAddress, voteAddress, 0, "init", [multiSignAddress, [voteManager]]);
+
+            BlockchainTool.callContract(customerAddress, councilVoteDataAddress, 0, "init", [customerAddress, natAddress]);
         }
 
 
@@ -147,7 +152,7 @@
             let config = BlockchainTool.callContract(coSignerAddress[1], multiSignAddress, 0, "getConfig", []);
             console.log(JSON.stringify(config));
 
-            BlockchainTool.callContract(voteManager, voteAddress, 0, "setDataSources", [[voteDataAddress]]);
+            BlockchainTool.callContract(voteManager, voteAddress, 0, "setDataSources", [[voteDataAddress, councilVoteDataAddress]]);
         }
 
         function multisigTest() {
@@ -473,6 +478,31 @@
             // BlockchainTool.callContract(distributeManageAddress, distributeAddress, 0, "uploadVoteData", [data.data])
         }
 
+        function councilVoteTest() {
+            // data format
+            // data = {
+            //     content: "activity title",
+            //     start: 1000,// activity start height
+            //     end: 2000, // activity end height
+            //     options: [{addr: "", option: "alice"},{addr:"", option: "bob"}]
+            // }
+            let act = {
+                content: "test council vote",
+                start: 1,
+                end: 200,
+                options: [
+                    {addr: customerAddress, option: "vote1"},
+                    {addr: customerAddress1, option: "vote2"}
+                ]
+            }
+            let key = "council_vote1";
+            BlockchainTool.callContract(customerAddress, councilVoteDataAddress, 0, "updateActivity", [key, act]);
+            BlockchainTool.callContract(customerAddress, councilVoteDataAddress, 0, "startActivity", [key]);
+            vote(councilVoteDataAddress, key, "vote1", 1000000000000);
+            vote(councilVoteDataAddress, key, "vote2", 1000000000000000);
+            printVotes(councilVoteDataAddress);
+        }
+
 
         //
 
@@ -508,6 +538,8 @@
 
             voteDistributeTest();
             voteTest();
+
+            councilVoteTest();
 
             transferFund();
         }
