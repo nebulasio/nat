@@ -63,10 +63,8 @@ Map.prototype = {
             let count = this.size();
             this[this.keyProperty].set(count+1, key);
             this[this.countProperty] = count + 1;
-            data = value;
-        } else {
-            data.parse(value);
         }
+        data = value;
         this[this.dataProperty].set(key, data);
     },
     size: function() {
@@ -92,7 +90,7 @@ function CouncilVote() {
 
     this._activities = new Map("activity", {
         parse: function (value) {
-            return new Activity(value);
+            return value !== null ? new Activity(value) : null;
         },
         stringify: function (obj) {
             return obj.stringify();
