@@ -163,7 +163,7 @@ MultiSig.prototype = {
     _setSwitches: function (switches) {
         let allowPledge = switches["allowPledge"];
         let allowUploadNRScore = switches["allowUploadNRScore"];
-        new Blockchain.Contract(this._config.natConfig.pledgeProxy).call("setAllowPledge", allowPledge);
+        new Blockchain.Contract(this._config.natConfig.pledgeProxy).call(allowPledge ? "openPledge" : "closePledge");
         new Blockchain.Contract(this._config.natConfig.nrData).call("setAllowUploadNRScore", allowUploadNRScore);
     },
 
