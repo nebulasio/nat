@@ -2,7 +2,8 @@ function Additional() {
     this._contractName = "Additional";
     LocalContractStorage.defineProperties(this, {
         _data: null,
-        _manager: null
+        _manager: null,
+        _config: null
     });
 }
 
@@ -27,7 +28,18 @@ Additional.prototype = {
 
     upload: function (data) {
         this._verifyManager();
+        if (!(data instanceof Array)) {
+            throw ("Data format error.");
+        }
         this._data = data;
+    },
+
+    getConfig: function () {
+        return this._config;
+    },
+
+    setConfig: function (config) {
+        this._config = config;
     },
 
     produce: function () {
