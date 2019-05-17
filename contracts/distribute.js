@@ -116,13 +116,6 @@ DNR.prototype = {
         }
         return {hasNext: nrData.hasNext, section: section, data: data};
     },
-    // 12.663 * 0.997^i * x
-    _calculateNAT: function (score) {
-        let value = new BigNumber(12.663).times(score);
-        let y = new BigNumber(0.997).pow(this._nr_period);
-        value = value.times(y);
-        return value;
-    },
     _trigger_event: function(section, data) {
         Event.Trigger("nr", {
                 period: section.period,
@@ -131,6 +124,14 @@ DNR.prototype = {
                 end_height: section.endHeight,
                 data: data
             });
+    },
+    getNRByAddress: function(addr) {
+        let nr = new Blockchain.Contract(this._nr_contract);
+        let score = nr.call("getNRByAddress", Blockchain.block.height, addr);
+        if (score === null) {
+            throw new Error("NR not found.");
+        }
+        return score;
     }
 };
 
@@ -168,33 +169,33 @@ DVote.prototype = {
 
         let data = new Array();
         let tax = new BigNumber(value).times(0.03);
-        data.push({addr: this._vote_tax_addr, nat:tax.toString(10)});
+        data.push({addr: this._vote_tax_addr, nat: tax.toString(10)});
 
         let nrData = this._vote_nr_data.get(addr);
-        if (nrData === null || nrData.period !== context._nr._nr_period) {
+        let period = context._nr._nr_period;
+        if (period > 0) {
+            period = period - 1;
+        }
+        if (nrData === null || nrData.period !== period) {
             if (nrData === null) {
                 let count = this._vote_addr_count;
                 this._vote_nr_addrs.set(count, addr);
                 this._vote_addr_count = count + 1;
             }
 
-            let score = "0";
-            try {
-                score = Blockchain.getLatestNebulasRank(addr);
-            } catch (e) {
-                // if nr not found, use 0
-                score = "0";
-            }
+            let score = context._nr.getNRByAddress(addr);
             if (new BigNumber(score).gt(0)) {
                 // 12.663 * 0.997^i * x
-                let nrReward = context._nr._calculateNAT(score);
+                let value = new BigNumber(12.663).times(score);
+                let y = new BigNumber(0.997).pow(period);
+                let nrReward = value.times(y);
                 nrData = {
-                    period: context._nr._nr_period,
+                    period: period,
                     reward: nrReward.toString(10)
                 }
             } else {
                 nrData = {
-                    period: context._nr._nr_period,
+                    period: period,
                     reward: "0"
                 }
             }
@@ -212,15 +213,20 @@ DVote.prototype = {
         if (reward.gt(0)) {
             reward = reward.times(10);
         }
+        let  rewardStr = reward.toString(10);
         value = reward.minus(value);
 
         data.push({addr: addr, nat: value.toString(10)});
         // vote reward
-        this._trigger_event(data);
+        this._trigger_event(period, rewardStr, data);
         return data;
     },
-    _trigger_event: function(data) {
-        Event.Trigger("vote", data);
+    _trigger_event: function(period, reward, data) {
+        Event.Trigger("vote", {
+            period: period,
+            reward: reward,
+            data: data
+        });
     },
     upload: function(data) {
         if (data instanceof Array) {
