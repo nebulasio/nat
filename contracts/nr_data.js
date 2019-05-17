@@ -173,10 +173,10 @@ DataReceiver.prototype = {
             let score = "0";
             try {
                 score = Blockchain.getLatestNebulasRank(data[i]);
-            } catch(e) {
+            } catch (e) {
                 // if the address nr not found, give a default value "0"
                 score = "0";
-                console.log("NR not found for address:",data[i]);
+                console.log("NR not found for address:", data[i]);
             }
             r.push({
                 addr: data[i],
@@ -186,11 +186,11 @@ DataReceiver.prototype = {
         return r;
     },
 
-    _saveData: function (data) {
+    _saveData: function (data, isFullData) {
         let indexes = this._indexes;
         indexes.push({startIndex: data.startIndex, length: data.data.length});
         this._indexes = indexes;
-        this._setPageData(data.startIndex, this._getNrData(data.data));
+        this._setPageData(data.startIndex, isFullData ? data.data : this._getNrData(data.data));
     },
 
     _clear: function () {
@@ -220,10 +220,10 @@ DataReceiver.prototype = {
      *     endHeight:500,
      *     count:1001
      *     startIndex:0,
-     *     data:["n1xxx"]
+     *     data:["n1xxx"] | [{"addr":"n1xxx", "score":"123"}]
      * }
      */
-    receive: function (data) {
+    receive: function (data, isFullData) {
         let name = _cycleName(data.startHeight, data.endHeight);
         if (this._name !== name) {
             this._clear();
@@ -233,7 +233,7 @@ DataReceiver.prototype = {
                 count: parseInt(data.count),
             };
         }
-        this._saveData(data);
+        this._saveData(data, isFullData);
         try {
             let c = this._isComplete();
             if (c) {
@@ -253,7 +253,7 @@ DataReceiver.prototype = {
                 error: e
             }
         }
-    }
+    },
 };
 
 
@@ -304,6 +304,20 @@ CycleData.prototype = {
         }
         return this._pageList.getPageData(index);
     },
+
+    getNRByAddress: function (address) {
+        let indexes = this._pageList.getPageIndexes();
+        for (let i = 0; i < indexes.length; ++i) {
+            let index = indexes[i];
+            let data = this._pageList.getPageData(index.i);
+            for (let j = 0; j < data.length; ++j) {
+                if (data[j].addr === address) {
+                    return data[j].score;
+                }
+            }
+        }
+        return "0";
+    }
 };
 
 
@@ -333,15 +347,31 @@ CycleManager.prototype = {
         }
     },
 
-    getCycles: function (block) {
-        let r = [];
+    getPrevCycle: function (block) {
         let indexes = this._pageList.getPageIndexes();
         for (let i = indexes.length - 1; i >= 0; --i) {
             let ds = this._pageList.getPageData(indexes[i].i);
             for (let j = ds.length - 1; j >= 0; --j) {
                 let d = ds[j];
+                if (d.endHeight < block) {
+                    return d
+                }
+            }
+        }
+        return null;
+    },
+
+    getNextCycle: function (block) {
+        let indexes = this._pageList.getPageIndexes();
+        let r = null;
+        for (let i = indexes.length - 1; i >= 0; --i) {
+            let ds = this._pageList.getPageData(indexes[i].i);
+            for (let j = ds.length - 1; j >= 0; --j) {
+                let d = ds[j];
                 if (d.startHeight > block) {
-                    r.push(d);
+                    r = d;
+                } else {
+                    break;
                 }
             }
         }
@@ -361,7 +391,8 @@ CycleManager.prototype = {
 function NrDataSource() {
     this._contractName = "NrDataSource";
     LocalContractStorage.defineProperties(this, {
-        _config: null
+        _config: null,
+        _allowUploadNRScore: null
     });
     LocalContractStorage.defineMapProperty(this, "_storage", null);
     this._receiver = new DataReceiver(this._storage);
@@ -403,6 +434,7 @@ NrDataSource.prototype = {
     init: function (multiSig) {
         this._verifyAddress(multiSig);
         this._config = {multiSig: multiSig};
+        this._allowUploadNRScore = true;
     },
 
     getConfig: function () {
@@ -419,7 +451,27 @@ NrDataSource.prototype = {
 
     upload: function (data) {
         this._verifyFromManager();
-        let r = this._receiver.receive(data);
+        let r = this._receiver.receive(data, false);
+        if (r.error) {
+            return r;
+        }
+        if (r.completed) {
+            this._didReceiveData(r.info, r.data);
+        }
+        return {data: true};
+    },
+
+    setAllowUploadNRScore(allowed) {
+        this._verifyFromMultisig();
+        this._allowUploadNRScore = allowed;
+    },
+
+    uploadNRScore: function (data) {
+        if (!this._allowUploadNRScore) {
+            throw ("Uploading score is not allowed.");
+        }
+        this._verifyFromManager();
+        let r = this._receiver.receive(data, true);
         if (r.error) {
             return r;
         }
@@ -430,15 +482,23 @@ NrDataSource.prototype = {
     },
 
     getNR: function (block, pageIndex) {
-        let cycles = this._cycleManager.getCycles(block);
-        if (cycles.length > 0) {
-            let c = cycles[cycles.length - 1];
+        let c = this._cycleManager.getNextCycle(block);
+        if (c != null) {
             let cd = new CycleData(this._storage, c);
             return {
                 section: c,
                 hasNext: pageIndex < cd.pageCount - 1,
                 data: cd.getPageData(pageIndex)
             }
+        }
+        return null;
+    },
+
+    getNRByAddress: function (block, address) {
+        let c = this._cycleManager.getPrevCycle(block);
+        if (c != null) {
+            let cd = new CycleData(this._storage, c);
+            return cd.getNRByAddress(address);
         }
         return null;
     },

@@ -10,7 +10,13 @@
     "nrData": "n1yHwesn72Z4AMALE8BmX4BMS3chDgY2R36",
     "nrDataManager": "n1aoqR2V8LBTDwV4XuzJvZE5evZTCMpBDxr",
     "natNRC20": "n1uQFKK1sKCFGBvdcTUWMwNoKA5HniWkWdd",
-    "vote": ["n1rRBpcVKiFPKRPw3gaaDuC14N3QKVdc67J"]
+    "vote": [
+      "n1rRBpcVKiFPKRPw3gaaDuC14N3QKVdc67J"
+    ]
+  },
+  "switches": {
+    "allowPledge": true,
+    "allowUploadNRScore": true
   },
   "contractList": {
     "distribute": "n1kTUHmSc1tUxJb3pxZy1VcpCbbTRm4mJTj",
@@ -18,6 +24,8 @@
     "pledge": "n1jmHpc6rRG5xhkAxpwiSdt1w9xp6iwUA28",
     "nr_data": "n1yHwesn72Z4AMALE8BmX4BMS3chDgY2R36",
     "nat_nrc20": "n1uQFKK1sKCFGBvdcTUWMwNoKA5HniWkWdd",
-    "vote": ["n1rRBpcVKiFPKRPw3gaaDuC14N3QKVdc67J"]
+    "vote": [
+      "n1rRBpcVKiFPKRPw3gaaDuC14N3QKVdc67J"
+    ]
   }
 }

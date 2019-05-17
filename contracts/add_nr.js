@@ -32,6 +32,9 @@ Additional.prototype = {
 
     produce: function () {
         this._verifyManager();
+        if (!this._data || this._data.length === 0) {
+            throw ("Data cannot be empty.");
+        }
         let natContract = new Blockchain.Contract("n1mpgNi6KKdSzr7i5Ma7JsG5yPY9knf9He7");
         natContract.call("produce", this._data);
         Event.Trigger("additional", {

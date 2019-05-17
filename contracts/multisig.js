@@ -18,9 +18,14 @@ function MultiSig() {
         pledgeProxyManager: addr, //pledge proxy fund manager(can be empty)
         pledge: addr, //pledge contract address
         nrData: addr, //nr data contract address
+        nrDataManager: addr,
         natNRC20: addr, // NAT NRC 20 contract address
-        vote: addr
-    }
+        vote: [addr]
+    },
+    switches: {
+        allowPledge: true,
+        allowUploadNRScore: true,
+    },
     contractList:
     {
         distribute: addr1, // distribute.js
@@ -28,7 +33,7 @@ function MultiSig() {
         pledge: addr3, // pledge.js
         nr_data: addr4, // nr_data.js
         nat_nrc20: addr5 // nat_nrc20.js
-        vote: addr6,    // vote.js
+        vote: [addr6],    // vote.js
     }
     */
     this._canEmptyConfig = ["distributeManager", "pledgeProxyManager"];
@@ -43,7 +48,7 @@ function MultiSig() {
         "nrData",
         "nrDataManager",
         "natNRC20",
-        "vote"
+        "vote",
     ];
     this._allContractNames = [
         "distribute",
@@ -51,7 +56,11 @@ function MultiSig() {
         "pledge",
         "nr_data",
         "nat_nrc20",
-        "vote"
+        "vote",
+    ];
+    this._switches = [
+        "allowPledge",
+        "allowUploadNRScore"
     ];
     LocalContractStorage.defineProperties(this, {
         _coSigners: null, // List of coSigner Addr
@@ -94,7 +103,7 @@ MultiSig.prototype = {
     },
 
     _verifyConfigItem: function (name, value) {
-        if (name !== "vote") {
+        if ("vote" !== name) {
             this._verifyAddress(value);
         } else {
             for (let j = 0; j < value.length; ++j) {
@@ -105,9 +114,11 @@ MultiSig.prototype = {
 
     // verify config
     _verifyConfig: function (config) {
-        this._verifyProperties(config, ["natConfig", "contractList"]);
+        this._verifyProperties(config, ["natConfig", "contractList", "switches"]);
         this._verifyProperties(config.natConfig, this._allConfigNames);
         this._verifyProperties(config.contractList, this._allContractNames);
+
+        this._verifySwitches(config.switches);
 
         for (let n in config.natConfig) {
             let v = config.natConfig[n];
@@ -136,9 +147,28 @@ MultiSig.prototype = {
         }
     },
 
+    _verifySwitches: function (switches) {
+        for (let i = 0; i < this._switches.length; ++i) {
+            let s = this._switches[i];
+            let v = switches[s];
+            if (v == null) {
+                throw (s + " not found.");
+            }
+            if (typeof v !== "boolean") {
+                throw (s + " is not a boolean type.");
+            }
+        }
+    },
+
+    _setSwitches: function (switches) {
+        let allowPledge = switches["allowPledge"];
+        let allowUploadNRScore = switches["allowUploadNRScore"];
+        new Blockchain.Contract(this._config.natConfig.pledgeProxy).call("setAllowPledge", allowPledge);
+        new Blockchain.Contract(this._config.natConfig.nrData).call("setAllowUploadNRScore", allowUploadNRScore);
+    },
+
     // Get config address
     getConfig: function () {
-        this._verifyCosigner();
         return this._config;
     },
 
@@ -157,13 +187,13 @@ MultiSig.prototype = {
                 contractObj.call("setConfig", natConfig);
             } else {
                 for (let i = 0; i < v.length; ++i) {
-                    let c = new Blockchain.Contract(v[i]);
-                    c.call("setConfig", natConfig);
+                    new Blockchain.Contract(v[i]).call("setConfig", natConfig);
                 }
             }
         }
         // update current config
         this._config = config;
+        this._setSwitches(config.switches);
     },
 
     // for distribute.js
@@ -183,7 +213,7 @@ MultiSig.prototype = {
         let distContractObj = new Blockchain.Contract(distributeContract);
         distContractObj.call("setBlacklist", addrList);
 
-       // update to NAT contract
+        // update to NAT contract
         let natContract = this._config.natConfig.natNRC20;
         let natContractObj = new Blockchain.Contract(natContract);
         natContractObj.call("setBlacklist", addrList);

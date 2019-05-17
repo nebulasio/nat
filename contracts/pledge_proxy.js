@@ -64,20 +64,11 @@ PledgeProxy.prototype = {
         this._config = config;
     },
 
-    // for mlultisig only
-    closePledge: function () {
+    setAllowPledge: function (allowed) {
         if (!this._allowControl()) {
             throw ("permission denied!");
         }
-        this._allowPledge = false;
-    },
-
-    // for multisig only
-    openPledge: function () {
-        if (!this._allowControl()) {
-            throw ("permission denied!");
-        }
-        this._allowPledge = true;
+        this._allowPledge = allowed;
     },
 
     getStatus: function (statusName) {
