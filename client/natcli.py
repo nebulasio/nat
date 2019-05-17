@@ -10,8 +10,8 @@ from nebpysdk.src.core.Address import Address
 from nebpysdk.src.core.Transaction import Transaction
 from nebpysdk.src.core.TransactionBinaryPayload import TransactionBinaryPayload
 from nebpysdk.src.core.TransactionCallPayload import TransactionCallPayload
-from nebpysdk.src.core.TransactionDeployPayload import TransactionDeployPayload 
-from nebpysdk.src.client.Neb import Neb 
+from nebpysdk.src.core.TransactionDeployPayload import TransactionDeployPayload
+from nebpysdk.src.client.Neb import Neb
 
 import settings
 
@@ -25,12 +25,12 @@ def get_account(keystore_filepath):
     {'result': {'balance': '100997303344999906', 'nonce': '88', 'type': 87, 'height': '1757816', 'pending': '7'}}
     '''
     try:
-        keystore = None 
+        keystore = None
         with open(keystore_filepath, 'r') as fp:
             keystore = fp.read()
 
         if keystore is None:
-            print ("Invalid keystore file") 
+            print ("Invalid keystore file")
 
         password = getpass.getpass('Password(passphrase):')
         from_account = Account.from_key(keystore, bytes(password.encode()))
@@ -45,11 +45,11 @@ def get_account_addr(from_account):
     return from_addr.string()
 
 
-def get_nonce(neb, from_account): 
+def get_nonce(neb, from_account):
     from_addr = from_account.get_address_obj()
     resp = neb.api.getAccountState(from_addr.string()).text
     resp_json = json.loads(resp)
-    nonce = int(resp_json["result"]["nonce"]) 
+    nonce = int(resp_json["result"]["nonce"])
     return nonce
 
 def wait_new_nonce(neb, from_account, nonce):
@@ -127,14 +127,14 @@ def deploy_smartcontract(from_account, contract_path, args, nonce, multisig=None
     tx.calculate_hash()
     tx.sign_hash()
     resp = json.loads(neb.api.sendRawTransaction(tx.to_proto()).text)
-    print(resp) 
+    print(resp)
     return resp['result']['contract_address']
 
 def get_config(list_file):
     fp = open(list_file, "r")
     config = {}
     for line in fp.readlines():
-        k, v = tuple(line.strip().split("=")) 
+        k, v = tuple(line.strip().split("="))
         config[k] = v
     fp.close()
     return config
@@ -159,8 +159,8 @@ def uploadNR(neb, from_account, nrdata_path):
     nrdata = getNRData(nrdata_path)
     nonce = get_nonce(neb, from_account)
     to_addr = Address.parse_from_string(multisig_addr)
-    func = "setBlacklist"
-    arg = json.dumps([blacklist])
+    func = "uploadNRScore"
+    arg = json.dumps([nrdata])
     payload = TransactionCallPayload(func, arg).to_bytes()
     payload_type = Transaction.PayloadType("call")
     tx = Transaction(chain_id, from_account, to_addr, 0, nonce + 1, payload_type, payload, gas_price, gas_limit * 100)
@@ -193,7 +193,7 @@ def setconfig(neb, from_account, multisig_addr):
             "natNRC20": config["natNRC20"],
             #"vote": [config["vote"]],
             "vote": []
-        },  
+        },
         "contractList": {
             "distribute": config["distribute"],
             "pledge_proxy": config["pledgeProxy"],
@@ -233,7 +233,7 @@ def getconfig(neb, from_account, proxy_addr):
 '''
 python natcli mainnet ks.json deployall
 python natcli testnet screte.json setconfig multisig_addr
-python natcli testnet screte.json getconfig proxy_addr 
+python natcli testnet screte.json getconfig proxy_addr
 python natcli.py mariana ks.json uploadnr data_path
 
 '''
@@ -242,14 +242,14 @@ if __name__ == "__main__":
     # Confirm chain id
     if len(sys.argv) > 1:
         if sys.argv[1] == "mainnet":
-            chain_id = 1        
+            chain_id = 1
         if sys.argv[1] == "mariana":
             chain_id = 1111
 
     if chain_id == 1:
         neb = Neb("https://mainnet.nebulas.io")
 
-    if chain_id == 1001: 
+    if chain_id == 1001:
         neb = Neb("https://testnet.nebulas.io")
 
     if chain_id == 1111:
