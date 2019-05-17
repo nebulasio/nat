@@ -30,7 +30,7 @@ def get_account(keystore_filepath):
             keystore = fp.read()
 
         if keystore is None:
-            print ("Invalid keystore file")
+            print("Invalid keystore file")
 
         password = getpass.getpass('Password(passphrase):')
         from_account = Account.from_key(keystore, bytes(password.encode()))
@@ -52,6 +52,7 @@ def get_nonce(neb, from_account):
     nonce = int(resp_json["result"]["nonce"])
     return nonce
 
+
 def wait_new_nonce(neb, from_account, nonce):
     time.sleep(15)
     current_nonce = nonce
@@ -61,11 +62,13 @@ def wait_new_nonce(neb, from_account, nonce):
     current_nonce = nonce
     return current_nonce
 
+
 def deploy_multisig(neb, from_account):
-   args = json.dumps([[settings.ADMIN_ACCOUNT]])
-   nonce = get_nonce(neb, from_account)
-   multisig_addr = deploy_smartcontract(from_account, settings.MUTISIG_JS, args, nonce + 1)
-   print("multisig:", multisig_addr)
+    args = json.dumps([[settings.ADMIN_ACCOUNT]])
+    nonce = get_nonce(neb, from_account)
+    multisig_addr = deploy_smartcontract(from_account, settings.MUTISIG_JS, args, nonce + 1)
+    print("multisig:", multisig_addr)
+
 
 def deploy_all(neb, from_account):
     fp = open("contract_list.txt", "w")
@@ -85,7 +88,8 @@ def deploy_all(neb, from_account):
     fp.write("natNRC20=%s\n" % nat_addr)
 
     # distribute
-    args = json.dumps([{"period":1,"page":0,"height":settings.PLEDGE_START_HEIGHT},{"period":0,"page":0,"height":settings.NR_START_HEIGHT}, multisig_addr])
+    args = json.dumps([{"period": 1, "page": 0, "height": settings.PLEDGE_START_HEIGHT},
+                       {"period": 0, "page": 0, "height": settings.NR_START_HEIGHT}, multisig_addr])
     distribute_addr = deploy_smartcontract(from_account, settings.DISTRIBUTE_JS, args, nonce + 3, multisig_addr)
     print("distribute.js:", distribute_addr)
     fp.write("distribute=%s\n" % distribute_addr)
@@ -115,6 +119,7 @@ def deploy_all(neb, from_account):
     fp.write("nrData=%s\n" % vote_addr)
     fp.close()
 
+
 def deploy_smartcontract(from_account, contract_path, args, nonce, multisig=None):
     to_addr = Address.parse_from_string(get_account_addr(from_account))
     source_code = ""
@@ -129,6 +134,7 @@ def deploy_smartcontract(from_account, contract_path, args, nonce, multisig=None
     resp = json.loads(neb.api.sendRawTransaction(tx.to_proto()).text)
     print(resp)
     return resp['result']['contract_address']
+
 
 def get_config(list_file):
     fp = open(list_file, "r")
@@ -155,6 +161,7 @@ def setBlacklist(neb, from_account, multisig_addr):
     result = neb.api.sendRawTransaction(tx.to_proto()).text
     print(result)
 
+
 def uploadNR(neb, from_account, nrdata_path):
     nrdata = getNRData(nrdata_path)
     nonce = get_nonce(neb, from_account)
@@ -166,21 +173,32 @@ def uploadNR(neb, from_account, nrdata_path):
     tx = Transaction(chain_id, from_account, to_addr, 0, nonce + 1, payload_type, payload, gas_price, gas_limit * 100)
     tx.calculate_hash()
     tx.sign_hash()
-    rawTrx = tx.to_proto()
     result = neb.api.sendRawTransaction(tx.to_proto()).text
     print(result)
 
 
 def getNRData(nrdata_path):
-    nrdata = {}
-    # nrdata is the data format the smart contract will accept
-    return nrdata
+    with open(nrdata_path, 'r') as f:
+        data = json.loads(f.read())
+        nrs = []
+        for nr in data['nrs']:
+            nrs.append({
+                'addr': nr['address'],
+                'score': nr['score']
+            })
+        return {
+            'startHeight': data['start_height'],
+            'endHeight': data['end_height'],
+            'count': len(nrs),
+            'startIndex': 0,
+            'data': nrs
+        }
 
 
 def setconfig(neb, from_account, multisig_addr):
     config = get_config("contract_list.txt")
     contract_config = {
-        "natConfig":{
+        "natConfig": {
             "multiSig": config["multiSig"],
             "distribute": config["distribute"],
             "distributeVoteTaxAddr": settings.distributeVoteTaxAddr,
@@ -191,7 +209,7 @@ def setconfig(neb, from_account, multisig_addr):
             "nrData": config["nrData"],
             "nrDataManager": settings.nrDataManager,
             "natNRC20": config["natNRC20"],
-            #"vote": [config["vote"]],
+            # "vote": [config["vote"]],
             "vote": []
         },
         "contractList": {
@@ -200,12 +218,12 @@ def setconfig(neb, from_account, multisig_addr):
             "pledge": config["pledge"],
             "nr_data": config["nrData"],
             "nat_nrc20": config["natNRC20"],
-            #"vote": [config["vote"]],
+            # "vote": [config["vote"]],
             "vote": [],
         }
     }
 
-    fp = open ("config.txt", "w")
+    fp = open("config.txt", "w")
     fp.write(json.dumps(contract_config, indent=2))
     fp.close()
 
@@ -226,9 +244,10 @@ def getconfig(neb, from_account, proxy_addr):
     from_addr = from_account.get_address_obj()
     account_addr = from_addr.string()
     nonce = get_nonce(neb, from_account)
-    contract = {"function":"getConfig","args":"[]"}
+    contract = {"function": "getConfig", "args": "[]"}
     ret = neb.api.call(account_addr, proxy_addr, "0", nonce + 1, str(gas_limit), str(gas_price), contract).text
     print(json.loads(ret))
+
 
 '''
 python natcli mainnet ks.json deployall
@@ -261,7 +280,7 @@ if __name__ == "__main__":
     if len(sys.argv) > 2:
         keystore_filepath = sys.argv[2]
     else:
-        print ("[ERROR] No keystore file found!")
+        print("[ERROR] No keystore file found!")
         sys.exit()
 
     from_account = None
