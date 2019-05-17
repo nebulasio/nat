@@ -25,10 +25,10 @@ NAT_DECIMALS = 18
 VOTE_MANAGERS = ["n1cGVLmyWwTBoWRgQj42urPKFjShSebANVb"]
 
 # NR Start Height
-NR_START_HEIGHT = 71470 
+NR_START_HEIGHT = 98353 
 
 # Pledge start height
-PLEDGE_START_HEIGHT = 71470
+PLEDGE_START_HEIGHT = 98353
 
 # setConfig
 distributeVoteTaxAddr = "n1aoqR2V8LBTDwV4XuzJvZE5evZTCMpBDxr"

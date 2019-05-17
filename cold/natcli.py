@@ -199,6 +199,10 @@ def setconfig(neb, from_account, multisig_addr, nonce):
             "natNRC20": config["natNRC20"],
             "vote": [config["vote"]],
         },  
+        "switches": {
+            "allowPledge": True,
+            "allowUploadNRScore": True
+        },
         "contractList": {
             "distribute": config["distribute"],
             "pledge_proxy": config["pledgeProxy"],

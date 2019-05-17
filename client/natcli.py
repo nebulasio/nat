@@ -165,7 +165,8 @@ def setBlacklist(neb, from_account, multisig_addr):
 def uploadNR(neb, from_account, nrdata_path):
     nrdata = getNRData(nrdata_path)
     nonce = get_nonce(neb, from_account)
-    to_addr = Address.parse_from_string(multisig_addr)
+    config = get_config("contract_list.txt")
+    to_addr = Address.parse_from_string(config["nrData"])
     func = "uploadNRScore"
     arg = json.dumps([nrdata])
     payload = TransactionCallPayload(func, arg).to_bytes()
@@ -209,8 +210,11 @@ def setconfig(neb, from_account, multisig_addr):
             "nrData": config["nrData"],
             "nrDataManager": settings.nrDataManager,
             "natNRC20": config["natNRC20"],
-            # "vote": [config["vote"]],
-            "vote": []
+            "vote": [config["vote"]],
+        },
+        "switches": {
+            "allowPledge": True,
+            "allowUploadNRScore": True
         },
         "contractList": {
             "distribute": config["distribute"],
@@ -218,8 +222,7 @@ def setconfig(neb, from_account, multisig_addr):
             "pledge": config["pledge"],
             "nr_data": config["nrData"],
             "nat_nrc20": config["natNRC20"],
-            # "vote": [config["vote"]],
-            "vote": [],
+            "vote": [config["vote"]],
         }
     }
 
@@ -312,5 +315,5 @@ if __name__ == "__main__":
             getconfig(neb, from_account, proxy_addr)
 
         if sys.argv[3] == "uploadNR":
-            data_path = sys.argv[4]
+            nrdata_path = sys.argv[4]
             uploadNR(neb, from_account, nrdata_path)
