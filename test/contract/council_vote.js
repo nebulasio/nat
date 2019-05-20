@@ -108,6 +108,9 @@ CouncilVote.prototype = {
         this._manager = manager;
         this._natContract = nat;
     },
+    manager: function() {
+        return this._manager;
+    },
     _verifyPermission: function () {
         if (this._manager !== Blockchain.transaction.from) {
             throw new Error("Permission Denied!");
@@ -260,7 +263,7 @@ CouncilVote.prototype = {
     },
 
     _withdrawEvent: function (status, from, to, value) {
-        Event.Trigger(this.name(), {
+        Event.Trigger("CouncilVote", {
             Status: status,
             Withdraw: {
                 from: from,
