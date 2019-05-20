@@ -86,7 +86,7 @@ def deploy_allothers(neb, from_account, multisig_addr, nonce):
 
     # distribute
     wp = open("2.raw_distribute.txt", "w")
-    args = json.dumps([{"period":1,"page":0,"height":settings.PLEDGE_START_HEIGHT},{"period":0,"page":0,"height":settings.NR_START_HEIGHT}, multisig_addr])
+    args = json.dumps([{"period":settings.PLEDGE_PERIOD,"page":0,"height":settings.PLEDGE_START_HEIGHT},{"period":settings.NR_PERIOD,"page":0,"height":settings.NR_START_HEIGHT}, multisig_addr])
     distribute_addr = deploy_smartcontract(wp, from_account, settings.DISTRIBUTE_JS, args, nonce + 2, multisig_addr)
     print("distribute.js:", distribute_addr)
     fp.write("distribute=%s\n" % distribute_addr)
