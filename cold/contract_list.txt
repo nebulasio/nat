@@ -1,0 +1,7 @@
+multiSig=n1mgXkfUKrkJTZRVBJF85oUrqCv5MMdvos9
+natNRC20=
+distribute=n1wNXbzo3Uv3bCDwXtsJfoATTgAoZFoKr9b
+pledgeProxy=
+pledge=
+vote=
+nrData=
