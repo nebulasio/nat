@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Council Test</title>
+    <script type="text/javascript" src="libs/nebulas.js"></script>
+    <script type="text/javascript" src="libs/neblocal.js"></script>
+    <script type="text/javascript" src="../contracts/nat.js"></script>
+    <script type="text/javascript" src="../contracts/multisig.js"></script>
+    <script type="text/javascript" src="../contracts/pledge_proxy.js"></script>
+    <script type="text/javascript" src="../contracts/distribute.js"></script>
+    <script type="text/javascript" src="../contracts/pledge.js"></script>
+    <script type="text/javascript" src="../contracts/nr_data.js"></script>
+    <script type="text/javascript" src="../contracts/vote.js"></script>
+    <script type="text/javascript" src="../contracts/council_vote.js"></script>
+    <script type="text/javascript" src="../contracts/council_pledge.js"></script>
+
+    <script type="text/javascript" src="contract/old_pledge.js"></script>
+    <script type="text/javascript" src="contract/vote_data.js"></script>
+    <script type="text/javascript" src="contract/receive_test.js"></script>
+
+    <script type="text/javascript">
+        localStorage.clear();
+
+        let natAddress = "n1zUNqeBPvsyrw5zxp9mKcDdLTjuaEL7s39";
+
+        let pledgeAddress = "n1F5VUpUfUbnVksQWcQcAvbY9K9dbakAvpN";
+        let prevPledgeAddress = "n1h6LuEhL6PJGnM2N8UAhkT3TGHfDmmxvsJ";
+        let proxyAddress = "n1d6YyHs2eL7pE3RKFbxCWcd2ExYx1MAXgF";
+        let distributeAddress = "n1cwsE8w4m6cRkr14R5c4hK3Lb9wPsUHhY9";
+        let distributeVoteTaxAddr = "n1Xz96gDHrrs4ymBgpirav6LbFxZ1p5aRL1";
+        let distributeManageAddress = "n1Jc4mkpbvLeGFq4LMzAx5f5dK4pKHEUUDb";
+        let nrDataAddress = "n1keX3piVEzAc14MthT25Cg6hFFSw76Msja";
+        let nrDataManager = "n1NznNCpYvuWdXBBbj1CSZn8huAPkQHM9t2";
+        let voteAddress = "n1LJuxRULaTUNHGjGQSfnBNjSixqXyvuPU4";
+
+        let voteDataAddress = "n1QEEJaV3aix7qa4xsJo5JEV3Dph6oiHNMe";
+        let councilVoteDataAddress = "n1i4nWK24JzrrgTFDiShzVCkmddnz2mMCG1";
+        let voteManager = "n1ZBCsMrSxuLfWoWg91JctDWZmKEo8se3tK";
+
+        let councilPledgeAddress = "n1fM9PXeCeK65pMhy8idLQnJ2YjkquW3MDW";
+
+        let multiSignAddress = "n1Z6MhSZa321SnpiKfUWiybQSG3GCmRHunv";
+        let customerAddress = "n1YPMjEDMrZhroKmB1xDBhadygwWHC4zTwm";
+        let customerAddress1 = "n1JuGuSaa92L9eZkaL51UHVVeC1u57yTkR8";
+
+        let oldCustomer = "n1RL8vY6PkCGsFELZhDADrtsV7U43Z7XZFW";
+        let oldCustomer1 = "n1acFcC7GSeBS92cFMKZYxNXoV4bguiNL2o";
+
+        let proxyManagerAddress = "n1XpqPVnskUP1nzRoVZ9pvQ3P6yQJgfG8qc";
+        let coSignerAddress = ["n1YkXBfHqaGXBYmi3d3L65ECLLzfRResX5n", "n1b2yNRseEaZmvZqoc2mHEtyiteoKVCnJPY"];
+        let blacklist = ["n1XXoWQaucXCNew4cYUhzXzPKAXAQzRPbvt", "n1HYTU3v2zZeMdBPKor3ow1YhoEPNs5EgQ8", "n1NMVvLQxvkH3zkFu53Siz4xsw4kC2Z6g1v"];
+
+        let receiveAddress = "n1GecNYRujrJXpVFRRLkD6vZmmi7wZXvG2t";
+
+
+        let t = {
+            startHeight: 1,
+            endHeight: 500,
+            count: 1001,
+            startIndex: 0,
+            data: [{"addr": "n1xxx", "score": "123"}]
+        }
+        let multiSigConfig = {
+            natConfig: {
+                multiSig: multiSignAddress,
+                distribute: distributeAddress,
+                distributeVoteTaxAddr: distributeVoteTaxAddr,
+                distributeManager: distributeManageAddress,
+                pledgeProxy: proxyAddress,
+                pledgeProxyManager: proxyManagerAddress,
+                pledge: pledgeAddress,
+                nrData: nrDataAddress,
+                nrDataManager: nrDataManager,
+                natNRC20: natAddress,
+                vote: [voteAddress]
+            },
+            switches: {
+                allowPledge: true,
+                allowUploadNRScore: true
+            },
+            contractList: {
+                distribute: distributeAddress, // distribute.js
+                pledge_proxy: proxyAddress, // pledge_proxy.js
+                pledge: pledgeAddress, // pledge.js
+                nr_data: nrDataAddress, // nr_data.js
+                nat_nrc20: natAddress, // nat_nrc20.js
+                vote: [voteAddress]
+            }
+        };
+
+        let unit = new BigNumber(10).pow(18);
+
+        function balance(address) {
+            return BlockchainTool.getBalance(address).div(unit).toString(10);
+        }
+
+        function log(space, data) {
+            data = "" + data;
+            let array = data.split("\n");
+            let prefix = "";
+            for (let i = 0; i < space; ++i) {
+                prefix += " ";
+            }
+            for (let i = 0; i < array.length; ++i) {
+                console.log(prefix + array[i]);
+            }
+        }
+
+
+        // Init --------------------------------------------------------------------------------------------------------
+
+        function initContext() {
+            BlockchainTool.transfer(null, customerAddress, new BigNumber(1000000).mul(unit));
+            BlockchainTool.transfer(null, customerAddress1, new BigNumber(1000).mul(unit));
+            BlockchainTool.transfer(null, oldCustomer, new BigNumber(1000).mul(unit));
+            BlockchainTool.transfer(null, oldCustomer1, new BigNumber(1000).mul(unit));
+            BlockchainTool.transfer(null, coSignerAddress[0], new BigNumber(1000).mul(unit));
+            BlockchainTool.transfer(null, coSignerAddress[1], new BigNumber(1000).mul(unit));
+
+            BlockchainTool.registerContract(proxyAddress, PledgeProxy);
+            BlockchainTool.registerContract(distributeAddress, Distribute);
+            BlockchainTool.registerContract(pledgeAddress, Pledge);
+            BlockchainTool.registerContract(natAddress, NATToken);
+            BlockchainTool.registerContract(nrDataAddress, NrDataSource);
+            BlockchainTool.registerContract(multiSignAddress, MultiSig);
+            BlockchainTool.registerContract(voteAddress, Vote);
+
+            BlockchainTool.registerContract(voteDataAddress, VoteData);
+            BlockchainTool.registerContract(councilVoteDataAddress, CouncilVote);
+            BlockchainTool.registerContract(prevPledgeAddress, OldPledge);
+            BlockchainTool.registerContract(receiveAddress, ReceiveTest);
+
+            BlockchainTool.registerContract(councilPledgeAddress, CouncilPledge);
+        }
+
+        function initContractTest() {
+            // multisig
+            BlockchainTool.callContract(customerAddress, multiSignAddress, 0, "init", [coSignerAddress]);
+
+            // Pledge
+            BlockchainTool.callContract(customerAddress, pledgeAddress, 0, "init", [multiSignAddress]);
+
+            // Proxy
+            BlockchainTool.callContract(customerAddress, proxyAddress, 0, "init", [multiSignAddress]);
+
+            // Distribute
+            BlockchainTool.callContract(customerAddress, distributeAddress, 0, "init", [{
+                period: 0,
+                page: 0,
+                height: 0
+            }, {period: 0, page: 0, height: 0}, multiSignAddress]);
+
+            // NAT
+            BlockchainTool.callContract(customerAddress, natAddress, 0, "init", ["NAT", "NAT", 18, multiSignAddress]);
+
+            // Prev Pledge
+            BlockchainTool.callContract(customerAddress, prevPledgeAddress, 0, "init", [[multiSignAddress]]);
+
+            // Vote
+            BlockchainTool.callContract(customerAddress, voteAddress, 0, "init", [multiSignAddress, [voteManager]]);
+
+            BlockchainTool.callContract(customerAddress, councilVoteDataAddress, 0, "init", [multiSignAddress, natAddress, voteAddress]);
+
+            // council pledge
+            BlockchainTool.callContract(customerAddress, councilPledgeAddress, 0, "init", [multiSignAddress]);
+        }
+
+
+        // MultiSig ----------------------------------------------------------------------------------------------------
+
+        function updateConfigTest() {
+            // Multisig
+            BlockchainTool.callContract(coSignerAddress[0], multiSignAddress, 0, "setConfig", [multiSigConfig]);
+            // Get config
+            let config = BlockchainTool.callContract(coSignerAddress[1], multiSignAddress, 0, "getConfig", []);
+            console.log(JSON.stringify(config));
+
+            BlockchainTool.callContract(voteManager, voteAddress, 0, "setDataSources", [[voteDataAddress, councilVoteDataAddress]]);
+        }
+
+        function multisigTest() {
+            // getCosigners
+            let cosigners = BlockchainTool.callContract(coSignerAddress[0], multiSignAddress, 0, "getCosigners", []);
+            console.log("cosigners", cosigners);
+
+            BlockchainTool.callContract(coSignerAddress[0], multiSignAddress, 0, "setBlacklist", [blacklist]);
+            let list = BlockchainTool.callContract(coSignerAddress[0], multiSignAddress, 0, "getBlacklist", []);
+            console.log("blacklist", list);
+        }
+
+        // NrData ------------------------------------------------------------------------------------------------------
+
+        function uploadOnePageNrData(startBlock, endBlock, count, startIndex, addresses) {
+            let data = {
+                startHeight: startBlock,
+                endHeight: endBlock,
+                count: count,
+                startIndex: startIndex,
+                data: addresses
+            };
+            let r = BlockchainTool.callContract(nrDataManager, nrDataAddress, 0, "upload", [data]);
+            log(0, "upload:" + JSON.stringify(data) + "\nresult:" + JSON.stringify(r));
+        }
+
+        function uploadFullNrData(startBlock, endBlock, count, startIndex, datas) {
+            let data = {
+                startHeight: startBlock,
+                endHeight: endBlock,
+                count: count,
+                startIndex: startIndex,
+                data: datas
+            };
+            let r = BlockchainTool.callContract(nrDataManager, nrDataAddress, 0, "uploadNRScore", [data]);
+            log(0, "uploadNRScore:" + JSON.stringify(data) + "\nresult:" + JSON.stringify(r));
+        }
+
+        function uploadNrData() {
+            uploadOnePageNrData(1, 100, 3, 0, [customerAddress, customerAddress1, multiSignAddress]);
+            BlockchainTool.resetNr();
+            uploadOnePageNrData(101, 200, 2, 0, [customerAddress, customerAddress1, multiSignAddress]);
+            uploadOnePageNrData(101, 200, 2, 0, [customerAddress, customerAddress1]);
+        }
+
+        function uploadNrData1() {
+            uploadFullNrData(1, 100, 3, 0, [
+                {addr: customerAddress, score: "1"},
+                {addr: customerAddress1, score: "2"},
+                {addr: multiSignAddress, score: "3"}
+            ]);
+            uploadFullNrData(101, 200, 2, 0, [
+                {addr: customerAddress, score: "11"},
+                {addr: customerAddress1, score: "22"},
+                {addr: multiSignAddress, score: "33"}
+            ]);
+            uploadFullNrData(101, 200, 2, 0, [
+                {addr: customerAddress, score: "111"},
+                {addr: customerAddress1, score: "222"}
+            ]);
+        }
+
+        function getAddressNr(address, block) {
+            log(0, "getNRByAddress:" + address + " block:" + block);
+            let nr = BlockchainTool.callContract(nrDataManager, nrDataAddress, 0, "getNRByAddress", [block, address]);
+            log(0, "result:" + nr);
+        }
+
+        function getCycleNrs(block) {
+            log(0, "getNRWithBlock:" + block);
+            let nr = BlockchainTool.callContract(nrDataManager, nrDataAddress, 0, "getNR", [block]);
+            log(0, "result:" + JSON.stringify(nr));
+        }
+
+        function nrDataTest() {
+            console.log("-------------------------------------------\nNrDataSource Test");
+
+            uploadNrData();
+
+            let indexes = BlockchainTool.callContract(nrDataManager, nrDataAddress, 0, "getCycleIndexes", []);
+            log(0, "getCycleIndexes:\n" + JSON.stringify(indexes));
+            for (let i = 0; i < indexes.length; ++i) {
+                let index = indexes[i];
+                let cycles = BlockchainTool.callContract(nrDataManager, nrDataAddress, 0, "getCycles", [index.i]);
+                log(2, "getCyclesWithIndex:" + JSON.stringify(index) + "\ncycles:\n" + JSON.stringify(cycles));
+                for (let j = 0; j < cycles.length; ++j) {
+                    let c = cycles[j];
+                    let cis = BlockchainTool.callContract(nrDataManager, nrDataAddress, 0, "getNRIndexesWithCycle", [c.startHeight, c.endHeight]);
+                    log(4, "getNRIndexesWithCycle:" + JSON.stringify(c) + "\nindexes:\n" + JSON.stringify(cis));
+                    for (let k = 0; k < cis.length; ++k) {
+                        let nrs = BlockchainTool.callContract(nrDataManager, nrDataAddress, 0, "getNRWithCycle", [c.startHeight, c.endHeight, cis[k].i]);
+                        log(6, "getNRWithCycle:" + JSON.stringify(c) + " index:" + JSON.stringify(cis[k]) + "\nnrs:\n" + JSON.stringify(nrs));
+                    }
+                }
+            }
+            getAddressNr(customerAddress, 100);
+            getAddressNr(customerAddress, 101);
+            getAddressNr(customerAddress, 201);
+
+            getCycleNrs(0);
+            getCycleNrs(100);
+            getCycleNrs(101);
+        }
+
+
+        // Vote --------------------------------------------------------------------------------------------------------
+
+        function vote(dataSource, hash, value, weight) {
+            log(0, "*** vote dataSource: " + dataSource + " hash:" + hash + " value:" + value + " weight:" + weight);
+            try {
+                BlockchainTool.callContract(customerAddress, voteAddress, 0, "vote", [dataSource, hash, value, weight]);
+                let result = BlockchainTool.callContract(customerAddress, voteAddress, 0, "getVoteResult", [dataSource, hash]);
+                console.log("vote result:", result);
+            } catch (e) {
+                log(0, e);
+            }
+        }
+
+        function printVotes(dataSource) {
+            log(0, "-------------------------------------------\nVotes");
+            let indexes = BlockchainTool.callContract(customerAddress, voteAddress, 0, "getHashIndexes", [dataSource]);
+            log(0, "getHashIndexes, result: " + JSON.stringify(indexes));
+            for (let i = 0; i < indexes.length; ++i) {
+                let index = indexes[i];
+                let hashes = BlockchainTool.callContract(customerAddress, voteAddress, 0, "getHashes", [dataSource, index.i]);
+                log(2, "getHashesWithIndex: " + JSON.stringify(index) + "\nresult:" + JSON.stringify(hashes));
+                for (let j = 0; j < hashes.length; ++j) {
+                    let hash = hashes[j];
+
+                    let r = BlockchainTool.callContract(customerAddress, voteAddress, 0, "getVoteResult", [dataSource, hash]);
+                    log(2, "getVoteResultWithHash: " + hash + "\nresult:" + JSON.stringify(r));
+
+                    let aIndexes = BlockchainTool.callContract(customerAddress, voteAddress, 0, "getVoteAddressIndexes", [dataSource, hash]);
+                    log(2, "getVoteAddressIndexes result:" + JSON.stringify(aIndexes));
+                    for (let k = 0; k < aIndexes.length; ++k) {
+                        let aIndex = aIndexes[k];
+                        let as = BlockchainTool.callContract(customerAddress, voteAddress, 0, "getVoteAddresses", [dataSource, hash, aIndex.i]);
+                        log(4, "getVoteAddressesWithIndex: " + JSON.stringify(aIndex) + "\nresult:" + JSON.stringify(as));
+                        for (let n = 0; n < as.length; ++n) {
+                            let a = as[n];
+                            let ar = BlockchainTool.callContract(customerAddress, voteAddress, 0, "getVoteResultByAddress", [dataSource, hash, a]);
+                            log(4, "getVoteResultByAddress: " + a + "\nresult:" + JSON.stringify(ar));
+                        }
+                    }
+                }
+            }
+        }
+
+        function voteTest() {
+            log(0, "-------------------------------------------\nVote Test");
+            vote(voteDataAddress, "test_hash", "yes", 1000000000000);
+            vote(voteDataAddress, "test_hash", "no", 1000000000000);
+            vote(voteDataAddress, "test_hash", "haha", 1000000000000);
+            printVotes(voteDataAddress);
+        }
+
+        // Council vote --------------------------------------------------------------------------------------------------------
+        function councilVoteTest() {
+            // data format
+            // data = {
+            //     content: "activity title",
+            //     start: 1000,// activity start height
+            //     end: 2000, // activity end height
+            //     options: [{addr: "", option: "alice"},{addr:"", option: "bob"}]
+            // }
+            // 1. add activity
+            let act1 = {
+                content: "test council vote",
+                start: 1,
+                end: 200,
+                options: [
+                    {addr: customerAddress, option: "vote1"},
+                    {addr: customerAddress1, option: "vote2"}
+                ]
+            }
+            let key1 = "council_vote1";
+            BlockchainTool.callContract(multiSignAddress, councilVoteDataAddress, 0, "updateActivity", [key1, act1]);
+            BlockchainTool.callContract(multiSignAddress, councilVoteDataAddress, 0, "startActivity", [key1]);
+            let data = BlockchainTool.callContract(customerAddress, councilVoteDataAddress, 0, "getData", [key1]);
+            console.log("council vote:", data);
+
+            // 2. add activity
+            let act2 = {
+                content: "test council vote2",
+                start: 1,
+                end: 200,
+                options: [
+                    {addr: customerAddress, option: "vote3"},
+                    {addr: customerAddress1, option: "vote4"}
+                ]
+            }
+            let key2 = "council_vote2";
+            BlockchainTool.callContract(multiSignAddress, councilVoteDataAddress, 0, "updateActivity", [key2, act2]);
+            BlockchainTool.callContract(multiSignAddress, councilVoteDataAddress, 0, "startActivity", [key2]);
+            data = BlockchainTool.callContract(customerAddress, councilVoteDataAddress, 0, "getData", [key2]);
+            console.log("council vote:", data);
+
+            BlockchainTool.callContract(distributeAddress, natAddress, 0, "produce", [[{addr: customerAddress, value:"1000000000000"}]]);
+            BlockchainTool.callContract(distributeAddress, natAddress, 0, "produce", [[{addr: customerAddress, value:"1"}]]);
+            vote(councilVoteDataAddress, key1, "vote1", 1000000000000);
+            vote(councilVoteDataAddress, key2, "vote3", 1000000000000000);
+            printVotes(councilVoteDataAddress);
+
+            // 3. permission
+            try {
+                BlockchainTool.callContract(customerAddress, councilVoteDataAddress, 0, "reward", [key1, 10000]);
+            } catch (e) {
+                if (e.message != "Permission Denied!") {
+                    throw e;
+                }
+            }
+
+            // 4. reward
+            BlockchainTool.callContract(distributeAddress, natAddress, 0, "produce", [[{addr: councilVoteDataAddress, value:"1000000000000"}]]);
+            BlockchainTool.callContract(multiSignAddress, councilVoteDataAddress, 0, "reward", [key1, 10000]);
+            
+            // 5. reward again
+            try {
+                BlockchainTool.callContract(customerAddress, councilVoteDataAddress, 0, "reward", [key1, 10000]);
+            } catch (e) {
+                if (e.message != "Permission Denied!") {
+                    throw e;
+                }
+            }
+
+            // 6. get data list
+            data = BlockchainTool.callContract(customerAddress, councilVoteDataAddress, 0, "getDataList", []);
+            console.log("data list:", JSON.stringify(data));
+
+            // 7. reward permission
+            try {
+                BlockchainTool.callContract(customerAddress, councilVoteDataAddress, 0, "withdraw", [customerAddress]);
+            } catch (e) {
+                if (e.message != "Permission Denied!") {
+                    throw e;
+                }
+            }
+
+            // 8. reward
+            BlockchainTool.transfer(null, councilVoteDataAddress, new BigNumber(1000000).mul(unit));
+            BlockchainTool.callContract(multiSignAddress, councilVoteDataAddress, 0, "withdraw", [customerAddress]);
+        }
+
+        function councilPledgeTest() {
+            // 1. addCandidates
+            let candidate1 = "hitters-xu";
+            let candidate2 = "aero-wang";
+            let candidates = [candidate1, candidate2];
+            BlockchainTool.callContract(multiSignAddress, councilPledgeAddress, 0, "addCandidates", [candidates]);
+
+            // 2. addCandidates permission denied
+            try {
+                BlockchainTool.callContract(customerAddress, councilPledgeAddress, 0, "addCandidates", [candidates]);
+            } catch (e) {
+                if (e.message != "Permission Denied!") {
+                    throw e;
+                }
+            }
+
+            // 3. addCandidates again
+            try {
+                BlockchainTool.callContract(multiSignAddress, councilPledgeAddress, 0, "addCandidates", [candidates]);
+            } catch (e) {
+                if (e.message != "Candidate hash been added.") {
+                    throw e;
+                }
+            }
+
+            // 4. pledge
+            BlockchainTool.callContract(customerAddress, councilPledgeAddress, "100000000000000000000000", "pledge", [candidate1]);
+            BlockchainTool.callContract(customerAddress1, councilPledgeAddress, "1000", "pledge", [candidate1]);
+            BlockchainTool.callContract(customerAddress, councilPledgeAddress, "1000", "pledge", [candidate2]);
+
+            // 5. pledge again
+            try {
+                BlockchainTool.callContract(customerAddress, councilPledgeAddress, 1, "pledge", [candidate1]);
+            } catch (e) {
+                if (e.message != "Candidate has been Pledged.") {
+                    throw e;
+                }
+            }
+
+            // 6. get pledge data
+            let data = BlockchainTool.callContract(customerAddress, councilPledgeAddress, 0, "getPledge", [customerAddress]);
+            console.log("council pledge:", data);
+            data = BlockchainTool.callContract(customerAddress, councilPledgeAddress, 0, "getPledgeAddresses", []);
+            console.log("council pledge address:", data);
+            data = BlockchainTool.callContract(customerAddress, councilPledgeAddress, 0, "getCandidatePledges", []);
+            console.log("council candidate pledge:", data);
+            data = BlockchainTool.callContract(customerAddress, councilPledgeAddress, 0, "getCandidateData", [candidate1]);
+            console.log("council candidate data:", data);
+
+            // 7. cancel pledge 
+            BlockchainTool.callContract(customerAddress, councilPledgeAddress, 0, "cancelPledge", [candidate2]);
+
+            // 8. cancel pledge again
+            try {
+                BlockchainTool.callContract(customerAddress, councilPledgeAddress, 0, "cancelPledge", [candidate2]);
+            } catch (e) {
+                if (e.message != "Candidate has not been Pledged.") {
+                    throw e;
+                }
+            }
+
+            // 9. after cancel pledge
+            console.log("after cancel pledge----------------------------------");
+            data = BlockchainTool.callContract(customerAddress, councilPledgeAddress, 0, "getPledge", [customerAddress]);
+            console.log("council pledge:", data);
+            data = BlockchainTool.callContract(customerAddress, councilPledgeAddress, 0, "getPledgeAddresses", []);
+            console.log("council pledge address:", data);
+            data = BlockchainTool.callContract(customerAddress, councilPledgeAddress, 0, "getCandidatePledges", []);
+            console.log("council candidate pledge:", data);
+            data = BlockchainTool.callContract(customerAddress, councilPledgeAddress, 0, "getCandidateData", [candidate1]);
+            console.log("council candidate data:", data);
+
+            // 10. liquidation permission
+            try {
+                BlockchainTool.callContract(customerAddress, councilPledgeAddress, 0, "addCandidates", [candidates]);
+            } catch (e) {
+                if (e.message != "Permission Denied!") {
+                    throw e;
+                }
+            }
+
+            // 11. liquidation
+            BlockchainTool.callContract(multiSignAddress, councilPledgeAddress, 0, "liquidation", []);
+
+            // 11. cancel pledge again
+            try {
+                BlockchainTool.callContract(multiSignAddress, councilPledgeAddress, 0, "liquidation", []);
+            } catch (e) {
+                if (e.message != "Council pledge not work.") {
+                    throw e;
+                }
+            }
+        }
+
+        // Main --------------------------------------------------------------------------------------------------------
+
+        function main() {
+            initContext();
+            initContractTest();
+            updateConfigTest();
+            multisigTest();
+
+            nrDataTest();
+
+            BlockchainTool.blockHeight = 201;
+
+            councilVoteTest();
+
+            councilPledgeTest();
+        }
+
+        main();
+    </script>
+</head>
+
+<body>
+</body>
+</html>

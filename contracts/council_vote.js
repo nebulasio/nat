@@ -4,12 +4,21 @@ const STATUS_INIT = 0;
 const STATUS_START = 1;
 const STATUS_STOP = 2;
 
+const _cVoteUtils = {
+    isString: function(obj) {
+        return typeof obj === 'string' && obj.constructor === String;
+    },
+    isNull: function (v) {
+        return v === null || typeof v === "undefined";
+    }
+};
+
 function Activity(value) {
     this.status = 0;
     this.content = null;
     this.options = [];
-    if (value !== null) {
-        if (this._isString(value)) {
+    if (!_cVoteUtils.isNull(value)) {
+        if (_cVoteUtils.isString(value)) {
             value = JSON.parse(value);
         }
         this.parse(value);
@@ -17,9 +26,6 @@ function Activity(value) {
 };
 
 Activity.prototype = {
-    _isString: function(obj) {
-        return typeof obj === 'string' && obj.constructor === String;
-    },
     parse: function(obj) {
         this.status = obj.status;
         this.content = obj.content;
@@ -61,7 +67,7 @@ Map.prototype = {
         let data = this.get(key);
         if (data === null) {
             let count = this.size();
-            this[this.keyProperty].set(count+1, key);
+            this[this.keyProperty].set(count, key);
             this[this.countProperty] = count + 1;
         }
         data = value;
@@ -98,15 +104,25 @@ function CouncilVote() {
     });
     LocalContractStorage.defineProperties(this, {
         _manager: null,
-        _natContract: null
+        _natContract: null,
+        _voteContract: null
     });
 }
 
 CouncilVote.prototype = {
 
-    init: function (manager, nat) {
+    init: function (manager, nat, vote) {
         this._manager = manager;
         this._natContract = nat;
+        this._voteContract = vote;
+    },
+    manager: function() {
+        return this._manager;
+    },
+    setManager: function(manager) {
+        this._verifyPermission();
+
+        this._manager = manager;
     },
     _verifyPermission: function () {
         if (this._manager !== Blockchain.transaction.from) {
@@ -205,20 +221,20 @@ CouncilVote.prototype = {
         let nat = new Blockchain.Contract(this._natContract);
         return nat.call("balanceOf", address);
     },
-    reward: function(contract, key, value) {
+    reward: function(key, value) {
         this._verifyPermission();
 
         let act = this._activities.get(key);
         if (act === null) {
             throw new Error("Vote activity not found.");
         }
-        let height = Blockchain.block.height;
-        if (height < act.end) {
-            throw new Error("reward must after the activity end.");
+        if (act.status !== STATUS_START) {
+            throw new Error("Vote activity not start.");
         }
+
         let balance = this._balanceOf(Blockchain.transaction.to);
         if (new BigNumber(balance).gte(value)) {
-            let vote = new Blockchain.Contract(contract);
+            let vote = new Blockchain.Contract(this._voteContract);
             let result = vote.call("getVoteResult", Blockchain.transaction.to, key);
             let total = new BigNumber(0);
             for (let key in result.result) {
@@ -235,15 +251,17 @@ CouncilVote.prototype = {
                 if (addr === null) {
                     throw new Error("Optoion not found.");
                 }
-                // value = percent/total*value
-                value = new BigNumber(result.result[option]).div(total).times(value);
-                value = new BigNumber(10).pow(18).times(value).floor();
+                // reward = percent/total*value
+                let reward = new BigNumber(result.result[option]).div(total).times(value).floor();
                 let nat = new Blockchain.Contract(this._natContract);
-                nat.call("transfer", addr, value);
+                nat.call("transfer", addr, reward.toString(10));
             }
         } else {
             throw new Error("Insufficient NAT balance.")
         }
+
+        act.status = STATUS_STOP;
+        this._activities.set(key, act);
     },
     withdraw: function(addr) {
         this._verifyPermission();
@@ -252,7 +270,7 @@ CouncilVote.prototype = {
         let balance = Blockchain.getAccountState(Blockchain.transaction.to).balance;
         if (new BigNumber(balance).gt(0)) {
             let result = Blockchain.transfer(addr, balance);
-            this._withdrawEvent(result, Blockchain.transaction.to, addr, balance);
+            this._withdrawEvent(result, Blockchain.transaction.to, addr, balance.toString(10));
             if (!result) {
                 throw new Error("Withdraw failed.");
             }
@@ -260,7 +278,7 @@ CouncilVote.prototype = {
     },
 
     _withdrawEvent: function (status, from, to, value) {
-        Event.Trigger(this.name(), {
+        Event.Trigger("CouncilVote", {
             Status: status,
             Withdraw: {
                 from: from,

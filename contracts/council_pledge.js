@@ -3,11 +3,16 @@
 const STATUS_CANCELED = 0;
 const STATUS_PLEDGED = 1;
 
-const STATE_WORK = 0;
-const STATE_PAUSED = 1;
+const STATE_PLEDGE_WORK = 0;
+const STATE_PLEDGE_FINISH = 1;
 
-let _isString = function(obj) {
-    return typeof obj === 'string' && obj.constructor === String;
+const _cPledgeUtils = {
+    isString: function(obj) {
+        return typeof obj === 'string' && obj.constructor === String;
+    },
+    isNull: function (v) {
+        return v === null || typeof v === "undefined";
+    }
 };
 
 // data format:
@@ -23,8 +28,8 @@ let _isString = function(obj) {
 // }
 function CPledge(value) {
     this.pledges = {};
-    if (value !== null) {
-        if (_isString(value)) {
+    if (!_cPledgeUtils.isNull(value)) {
+        if (_cPledgeUtils.isString(value)) {
             value = JSON.parse(value);
         }
         this.parse(value);
@@ -56,8 +61,8 @@ CPledge.prototype = {
 function CPledgeList(value) {
     this.total = new BigNumber(0);
     this.addrs = new Array();
-    if (value !== null) {
-        if (_isString(value)) {
+    if (!_cPledgeUtils.isNull(value)) {
+        if (_cPledgeUtils.isString(value)) {
             value = JSON.parse(value);
         }
         this.parse(value);
@@ -119,7 +124,7 @@ Map.prototype = {
         let data = this.get(key);
         if (data === null) {
             let count = this.size();
-            this[this.keyProperty].set(count+1, key);
+            this[this.keyProperty].set(count, key);
             this[this.countProperty] = count + 1;
         }
         data = value;
@@ -174,7 +179,7 @@ function CouncilPledge() {
 CouncilPledge.prototype = {
     init: function(manager) {
         this._manager = manager;
-        this._state = STATE_WORK;
+        this._state = STATE_PLEDGE_WORK;
     },
     name: function() {
         return this._contractName;
@@ -188,8 +193,8 @@ CouncilPledge.prototype = {
         }
     },
     _verifyStatus: function() {
-        if (this._state === STATE_PAUSED) {
-            throw new Error("Council pledge paused.");
+        if (this._state !== STATE_PLEDGE_WORK) {
+            throw new Error("Council pledge not work.");
         }
     },
     _verifyAddress: function (address) {
@@ -229,22 +234,26 @@ CouncilPledge.prototype = {
     pledge: function(candidate) {
         this._verifyStatus();
 
+        let value = Blockchain.transaction.value;
+        if (!value.gt(0)) {
+            throw new Error("Pledge value must bigger than 0.");
+        }
+
         let list = this._verifyCandidate(candidate);
 
         let addr = Blockchain.transaction.from;
-        let value = Blockchain.transaction.value;
 
         let pledge = this._pledges.get(addr);
         if (pledge === null) {
             pledge = new CPledge();
         }
         let data = pledge.get(candidate);
-        if (data !== null && data.status === STATUS_PLEDGED) {
+        if (!_cPledgeUtils.isNull(data) && data.status === STATUS_PLEDGED) {
             throw new Error("Candidate has been Pledged.")
         }
 
         data = {
-            value: value,
+            value: value.toString(10),
             status: STATUS_PLEDGED
         };
         pledge.set(candidate, data);
@@ -268,31 +277,28 @@ CouncilPledge.prototype = {
 
         let list = this._verifyCandidate(candidate);
 
+        let addr = Blockchain.transaction.from;
         let pledge = this._pledges.get(addr);
         if (pledge === null) {
             throw new Error("Pledge data not found.");
         }
-
-        let addr = Blockchain.transaction.from;
-        let value = Blockchain.transaction.value;
-
         let data = pledge.get(candidate);
-        if (data !== null && data.status !== STATUS_PLEDGED) {
+        if (_cPledgeUtils.isNull(data) || data.status !== STATUS_PLEDGED) {
             throw new Error("Candidate has not been Pledged.")
         }
 
         data = {
-            value: value,
+            value: data.value,
             status: STATUS_CANCELED
         };
         pledge.set(candidate, data);
         this._pledges.set(addr, pledge);
 
-        list.cancelPledge(addr, value);
+        list.cancelPledge(addr, data.value);
         this._pledgeList.set(candidate, list);
 
         // cancel pledge transfer
-        let result = Blockchain.transfer(addr, value);
+        let result = Blockchain.transfer(addr, data.value);
         this._cancelPledgeEvent(addr, result, data);
         if (!result) {
             throw new Error("Cancel pledge transfer failed.");
@@ -308,7 +314,8 @@ CouncilPledge.prototype = {
         });
     },
     getPledge: function(addr) {
-        return this._pledges.get(addr);
+        let pledge = this._pledges.get(addr);
+        return pledge.stringify();
     },
     // get pledge addresses
     // return: [addr1,addr2...]
@@ -332,7 +339,8 @@ CouncilPledge.prototype = {
         return pledges;
     },
     getCandidateData: function(candidate) {
-        return this._pledgeList.get(candidate);
+        let list = this._pledgeList.get(candidate);
+        return list.stringify();
     },
     // finish the pledge
     // if candidate pledge value > 100000 NAS, pledge success
@@ -341,24 +349,27 @@ CouncilPledge.prototype = {
         this._verifyPermission();
         this._verifyStatus();
 
-        const limit = new BigNumber(10).pow(18).pow(5);
+        // liquidation limit is 100000 NAS
+        const limit = new BigNumber(10).pow(18).times(100000);
         let candidates = this._pledgeList.keys();
         let pledgeList = new Array();
         let withdrawList = new Array();
         for (let idx in candidates) {
             let candidate = candidates[idx];
             let candidateItem = this._pledgeList.get(candidate);
-            if (candidateItem.total.gt(limit)) {
+            if (candidateItem.total.gte(limit)) {
                 for (let addrkey in candidateItem.addrs) {
                     let addr = candidateItem.addrs[addrkey];
                     let pledge = this._pledges.get(addr);
                     let data = pledge.get(candidate);
-                    let event = {
-                        candidate: candidate,
-                        addr: addr,
-                        value: data.value
-                    };
-                    pledgeList.push(event);
+                    if (data.status === STATUS_PLEDGED) {
+                        let event = {
+                            candidate: candidate,
+                            addr: addr,
+                            value: data.value
+                        };
+                        pledgeList.push(event);
+                    }
                 }
             } else {
                 //withdraw pledge
@@ -367,17 +378,19 @@ CouncilPledge.prototype = {
                     let pledge = this._pledges.get(addr);
                     let data = pledge.get(candidate);
                     if (data !== null) {
-                        // transfer
-                        let result = Blockchain.transfer(addr, data.value);
-                        if (!result) {
-                            throw new Error("Liquidation pledge transfer failed.");
+                        if (data.status === STATUS_PLEDGED) {
+                            // transfer
+                            let result = Blockchain.transfer(addr, data.value);
+                            if (!result) {
+                                throw new Error("Liquidation pledge transfer failed.");
+                            }
+                            let event = {
+                                candidate: candidate,
+                                addr: addr,
+                                value: data.value
+                            };
+                            withdrawList.push(event);
                         }
-                        let event = {
-                            candidate: candidate,
-                            addr: addr,
-                            value: data.value
-                        };
-                        withdrawList.push(event);
                     } else {
                         throw new Error("liquidation failed with addr:"+addr +",candidate:"+candidate);
                     }
@@ -385,14 +398,14 @@ CouncilPledge.prototype = {
                     pledge.set(candidate, data);
                     this._pledges.set(addr, pledge);
 
-                    candidateItem.cancelPledge(addr, value);
+                    candidateItem.cancelPledge(addr, data.value);
                 }
             }
             this._pledgeList.set(candidate, candidateItem);
         }
 
         this._liquidationEvent(pledgeList, withdrawList);
-        this._state = STATE_PAUSED;
+        this._state = STATE_PLEDGE_FINISH;
     },
     _liquidationEvent: function(pledges, withdraws) {
         Event.Trigger(this.name(), {
