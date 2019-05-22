@@ -187,6 +187,11 @@ CouncilPledge.prototype = {
     manager: function() {
         return this._manager;
     },
+    setManager: function(manager) {
+        this._verifyPermission();
+
+        this._manager = manager;
+    },
     _verifyPermission: function () {
         if (this._manager !== Blockchain.transaction.from) {
             throw new Error("Permission Denied!");

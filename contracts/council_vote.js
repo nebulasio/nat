@@ -46,6 +46,14 @@ Activity.prototype = {
             options: this.options
         }
         return JSON.stringify(obj);
+    },
+    addOption: function(obj) {
+        for (let key in this.options) {
+            if (this.options[key].option === obj.option) {
+                throw new Error("Option has already added:"+obj.option);
+            }
+        }
+        this.options.push(obj);
     }
 };
 
@@ -158,6 +166,22 @@ CouncilVote.prototype = {
         }
         data.status = STATUS_INIT;
         act = new Activity(data);
+        this._activities.set(key, act);
+    },
+    addOptions: function(key, options) {
+        this._verifyPermission();
+
+        let act = this._activities.get(key);
+        if (act === null) {
+            throw new Error("Activity not found.");
+        }
+
+        for (let key in options) {
+            let item = options[key];
+            // verify option address
+            this._verifyAddress(item.addr);
+            act.addOption(item);
+        }
         this._activities.set(key, act);
     },
     startActivity: function(key) {

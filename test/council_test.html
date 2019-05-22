@@ -380,6 +380,26 @@
             vote(councilVoteDataAddress, key2, "vote3", 1000000000000000);
             printVotes(councilVoteDataAddress);
 
+            // add option
+            let options = [{addr: customerAddress, option: "vote5"}, {addr: customerAddress, option: "vote6"}];
+            BlockchainTool.callContract(multiSignAddress, councilVoteDataAddress, 0, "addOptions", [key1, options]);
+            try {
+                BlockchainTool.callContract(customerAddress, councilVoteDataAddress, 0, "addOptions", [key1, options]);
+            } catch (e) {
+                if (e.message != "Permission Denied!") {
+                    throw e;
+                }
+            }
+            try {
+                BlockchainTool.callContract(multiSignAddress, councilVoteDataAddress, 0, "addOptions", [key1, options]);
+            } catch (e) {
+                if (e.message != "Option has already added:vote5") {
+                    throw e;
+                }
+            }
+            data = BlockchainTool.callContract(customerAddress, councilVoteDataAddress, 0, "getData", [key1]);
+            console.log("council vote:", data);
+
             // 3. permission
             try {
                 BlockchainTool.callContract(customerAddress, councilVoteDataAddress, 0, "reward", [key1, 10000]);
