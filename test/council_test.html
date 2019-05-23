@@ -335,6 +335,8 @@
 
         // Council vote --------------------------------------------------------------------------------------------------------
         function councilVoteTest() {
+
+            console.log("council vote test----------------------------------");
             // data format
             // data = {
             //     content: "activity title",
@@ -345,8 +347,7 @@
             // 1. add activity
             let act1 = {
                 content: "test council vote",
-                start: 1,
-                end: 200,
+                type: 2,
                 options: [
                     {addr: customerAddress, option: "vote1"},
                     {addr: customerAddress1, option: "vote2"}
@@ -361,11 +362,9 @@
             // 2. add activity
             let act2 = {
                 content: "test council vote2",
-                start: 1,
-                end: 200,
                 options: [
-                    {addr: customerAddress, option: "vote3"},
-                    {addr: customerAddress1, option: "vote4"}
+                    {option: "vote3"},
+                    {option: "vote4"}
                 ]
             }
             let key2 = "council_vote2";
@@ -383,6 +382,9 @@
             // add option
             let options = [{addr: customerAddress, option: "vote5"}, {addr: customerAddress, option: "vote6"}];
             BlockchainTool.callContract(multiSignAddress, councilVoteDataAddress, 0, "addOptions", [key1, options]);
+
+            let options2 = [{addr: customerAddress, option: "vote5"}, {option: "vote6"}];
+            BlockchainTool.callContract(multiSignAddress, councilVoteDataAddress, 0, "addOptions", [key2, options2]);
             try {
                 BlockchainTool.callContract(customerAddress, councilVoteDataAddress, 0, "addOptions", [key1, options]);
             } catch (e) {
@@ -413,7 +415,7 @@
             BlockchainTool.callContract(distributeAddress, natAddress, 0, "produce", [[{addr: councilVoteDataAddress, value:"1000000000000"}]]);
             BlockchainTool.callContract(multiSignAddress, councilVoteDataAddress, 0, "reward", [key1, 10000]);
             
-            // 5. reward again
+            // 5. reward Permission
             try {
                 BlockchainTool.callContract(customerAddress, councilVoteDataAddress, 0, "reward", [key1, 10000]);
             } catch (e) {
@@ -426,7 +428,7 @@
             data = BlockchainTool.callContract(customerAddress, councilVoteDataAddress, 0, "getDataList", []);
             console.log("data list:", JSON.stringify(data));
 
-            // 7. reward permission
+            // 7. withdraw permission
             try {
                 BlockchainTool.callContract(customerAddress, councilVoteDataAddress, 0, "withdraw", [customerAddress]);
             } catch (e) {
@@ -435,12 +437,15 @@
                 }
             }
 
-            // 8. reward
+            // 8. withdraw
             BlockchainTool.transfer(null, councilVoteDataAddress, new BigNumber(1000000).mul(unit));
             BlockchainTool.callContract(multiSignAddress, councilVoteDataAddress, 0, "withdraw", [customerAddress]);
+
+            console.log("council vote test end----------------------------------");
         }
 
         function councilPledgeTest() {
+            console.log("council pledge test start----------------------------------");
             // 1. addCandidates
             let candidate1 = "hitters-xu";
             let candidate2 = "aero-wang";
