@@ -1,6 +1,7 @@
 const STATE_WORK = 0;
 const STATE_PAUSED = 1;
 const HEIGHT_INTERVAL = 40320; // 30
+const PAGE_SIZE = 200;
 
 function DPledge() {
     LocalContractStorage.defineProperties(this, {
@@ -270,10 +271,12 @@ function Distribute() {
     this._contractName = "Distribute";
     LocalContractStorage.defineProperties(this, {
         _state: null,
-        _nat_contract: null,
-        _multiSig: null,
-        _distributeManager: null,
+        _config: null,
         _blacklist: null
+    });
+
+    LocalContractStorage.defineMapProperties(this, {
+        _natProducePages: null
     });
 
     this._pledge = new DPledge();
@@ -292,17 +295,25 @@ Distribute.prototype = {
         this._nr._nr_height = nrSection.height;
         this._vote._vote_contracts = [];
         this._vote._vote_addr_count = 0;
-        this._multiSig = multiSig;
+
+        let config = {multiSig: multiSig};
+        this._config = config;
         this._blacklist = [];
     },
     _verifyPermission: function () {
-        if (this._multiSig !== Blockchain.transaction.from) {
+        if (this._config.multiSig !== Blockchain.transaction.from) {
             throw new Error("Permission Denied!");
         }
     },
     _verifyManager: function () {
-        if (this._distributeManager !== Blockchain.transaction.from) {
+        if (this._config.distributeManager !== Blockchain.transaction.from) {
             throw new Error("Distribute Manager Permission Denied!");
+        }
+    },
+    _verifyNATProducer: function (producer) {
+        this._verifyAddress(producer);
+        if (this._config.natProducers.indexOf(producer) < 0) {
+            throw new Error("NAT Producer Permission Denied!");
         }
     },
     _verifyStatus: function() {
@@ -321,7 +332,7 @@ Distribute.prototype = {
         }
     },
     _produceNat: function(data) {
-        let nat = new Blockchain.Contract(this._nat_contract);
+        let nat = new Blockchain.Contract(this._config.natNRC20);
         let natData = new Array();
         for (let key in data) {
             let item = data[key];
@@ -331,7 +342,7 @@ Distribute.prototype = {
         nat.call("produce", natData);
     },
     _balanceOf: function(address) {
-        let nat = new Blockchain.Contract(this._nat_contract);
+        let nat = new Blockchain.Contract(this._config.natNRC20);
         return nat.call("balanceOf", address);
     },
     // for mulisig.js
@@ -342,14 +353,13 @@ Distribute.prototype = {
     setConfig: function(natConfig) {
         this._verifyPermission();
         this._config = natConfig;
-        this._distributeManager = natConfig.distributeManager;
-        this._multiSig = natConfig.multiSig;
-        this._nat_contract = natConfig.natNRC20;
         this._pledge.update_contract(natConfig.pledge);
         this._vote.update_contract(natConfig.vote, natConfig.distributeVoteTaxAddr);
         this._nr.update_contract(natConfig.nrData);
     },
-
+    getConfig: function () {
+        return this._config;
+    },
     // update blacklist
     setBlacklist: function(addrList) {
         this._verifyPermission();
@@ -397,6 +407,24 @@ Distribute.prototype = {
             height: this._nr._nr_height
         }
         return section;
+    },
+    triggerNAT: function(datasource) {
+        this._verifyManager();
+        this._verifyStatus();
+        this._verifyNATProducer(datasource);
+
+        let producePage = this._natProducePages.get(datasource);
+        if (producePage === null) {
+            producePage = 0;
+        }
+        let producer = new Blockchain.Contract(datasource);
+        let result = producer.call("getNATData", producePage, PAGE_SIZE);
+        this._produceNat(result.data);
+
+        producePage = result.hasNext ? producePage + 1 : 0;
+        this._natProducePages.set(datasource, producePage);
+
+        return {datasource: datasource, needTrigger: result.hasNext, section: result.section};
     },
     // trigger vote reward
     vote: function(address, value) {

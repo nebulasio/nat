@@ -163,7 +163,7 @@
             BlockchainTool.callContract(customerAddress, councilVoteDataAddress, 0, "init", [multiSignAddress, natAddress, voteAddress]);
 
             // council pledge
-            BlockchainTool.callContract(customerAddress, councilPledgeAddress, 0, "init", [multiSignAddress]);
+            BlockchainTool.callContract(customerAddress, councilPledgeAddress, 0, "init", [multiSignAddress, 0, 1]);
         }
 
 
@@ -537,6 +537,37 @@
                     throw e;
                 }
             }
+
+            data = BlockchainTool.callContract(customerAddress, councilPledgeAddress, 0, "getNATSection", []);
+            console.log("council nat section:", data);
+
+            // 12. getNATData height not reach
+            try {
+                BlockchainTool.callContract(multiSignAddress, councilPledgeAddress, 0, "getNATData", [0, 200]);
+            } catch (e) {
+                if (e.message != "Pledge period exceeds the current height.") {
+                    throw e;
+                }
+            }
+
+            // 13. getNATData
+            BlockchainTool.blockHeight = 40321;
+            data = BlockchainTool.callContract(multiSignAddress, councilPledgeAddress, 0, "getNATData", [0, 1]);
+            console.log("council nat trigger:", data);
+            data = BlockchainTool.callContract(multiSignAddress, councilPledgeAddress, 0, "getNATData", [1, 1]);
+            console.log("council nat trigger:", data);
+            try {
+                BlockchainTool.callContract(multiSignAddress, councilPledgeAddress, 0, "getNATData", [0, 200]);
+            } catch (e) {
+                if (e.message != "Pledge period exceeds the current height.") {
+                    throw e;
+                }
+            }
+
+            // 14. distribute call
+            BlockchainTool.blockHeight = 80642;
+            data = BlockchainTool.callContract(distributeManageAddress, distributeAddress, 0, "triggerNAT", [councilPledgeAddress]);
+            console.log("council nat trigger:", data);
         }
 
         // Main --------------------------------------------------------------------------------------------------------
@@ -549,7 +580,7 @@
 
             nrDataTest();
 
-            BlockchainTool.blockHeight = 201;
+            BlockchainTool.blockHeight = 1;
 
             councilVoteTest();
 

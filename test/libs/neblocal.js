@@ -169,6 +169,7 @@ let BlockchainTool = {
     },
 
     set blockHeight(height) {
+        this._blockHeight = height;
         localStorage.setItem("__block", height + "");
     },
 

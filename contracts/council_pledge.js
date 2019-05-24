@@ -6,6 +6,8 @@ const STATUS_PLEDGED = 1;
 const STATE_PLEDGE_WORK = 0;
 const STATE_PLEDGE_FINISH = 1;
 
+const PLEDGE_HEIGHT_INTERVAL = 40320; // 30
+
 const _cPledgeUtils = {
     isString: function(obj) {
         return typeof obj === 'string' && obj.constructor === String;
@@ -50,6 +52,13 @@ CPledge.prototype = {
     },
     set: function(candidate, data) {
         this.pledges[candidate] = data;
+    },
+    keys: function() {
+        let keys = new Array();
+        for (let key in this.pledges) {
+            keys.push(key);
+        }
+        return keys;
     }
 };
 
@@ -172,14 +181,18 @@ function CouncilPledge() {
 
     LocalContractStorage.defineProperties(this, {
         _manager: null,
-        _state: null
+        _state: null,
+        _pledgePeriod: null,
+        _pledgeStartHeight: null
     });
 };
 
 CouncilPledge.prototype = {
-    init: function(manager) {
+    init: function(manager, period, height) {
         this._manager = manager;
         this._state = STATE_PLEDGE_WORK;
+        this._pledgePeriod = period;
+        this._pledgeStartHeight = height;
     },
     name: function() {
         return this._contractName;
@@ -258,6 +271,7 @@ CouncilPledge.prototype = {
         }
 
         data = {
+            height: Blockchain.block.height,
             value: value.toString(10),
             status: STATUS_PLEDGED
         };
@@ -293,6 +307,7 @@ CouncilPledge.prototype = {
         }
 
         data = {
+            height: Blockchain.block.height,
             value: data.value,
             status: STATUS_CANCELED
         };
@@ -320,7 +335,11 @@ CouncilPledge.prototype = {
     },
     getPledge: function(addr) {
         let pledge = this._pledges.get(addr);
-        return pledge.stringify();
+        if (!_cPledgeUtils.isNull(pledge)) {
+            return pledge.pledges;
+        } else {
+            return null;
+        }
     },
     // get pledge addresses
     // return: [addr1,addr2...]
@@ -345,7 +364,67 @@ CouncilPledge.prototype = {
     },
     getCandidateData: function(candidate) {
         let list = this._pledgeList.get(candidate);
-        return list.stringify();
+        if (!_cPledgeUtils.isNull(list)) {
+            return list;
+        } else {
+            return null;
+        }
+    },
+    getNATData: function(page, pageSize) {
+        if (this._pledgeStartHeight + PLEDGE_HEIGHT_INTERVAL > Blockchain.block.height) {
+            throw new Error("Pledge period exceeds the current height.");
+        }
+
+        let startHeight = this._pledgeStartHeight;
+        let addrs = this._pledges.keys();
+        let start = page * pageSize;
+        let count = this._pledges.size();
+        let end = count > start + pageSize ? start + pageSize : count;
+        let hasNext = end < count;
+        let period = this._pledgePeriod;
+        let results = new Array();
+        let y = new BigNumber(0.997).pow(period); 
+        for (let index = start; index < end; index++) {
+            let addr = addrs[index];
+            let item = this._pledges.get(addr);
+            let candidates = item.keys();
+            let total = new BigNumber(0);
+            for (let idx in candidates) {
+                let data = item.get(candidates[idx]);
+                if (data.status === STATUS_PLEDGED && data.height <= startHeight) {
+                    total = total.plus(data.value);
+                }
+            }
+            if (total.gt(0)) {
+                let amount = total.div(new BigNumber(10).pow(18));
+                // 5 * 12.663 * x / (1 + sqrt(200/x)) * 0.997^i
+                let gx = new BigNumber(12.663).times(amount);
+                let zx = new BigNumber(200).div(amount).sqrt().plus(1).pow(-1);
+                let value = new BigNumber(5).times(gx).times(zx).times(y);
+                let result = {
+                    addr: addr,
+                    nat: value.toString(10)
+                };
+                results.push(result);
+            }
+        }
+        let section = {
+            period: this._pledgePeriod,
+            startHeight: startHeight,
+            endHeight: startHeight + PLEDGE_HEIGHT_INTERVAL,
+            page: page
+        };
+        if (!hasNext) {
+            this._pledgePeriod = period + 1;
+            this._pledgeStartHeight = startHeight + PLEDGE_HEIGHT_INTERVAL;
+        }
+        return {hasNext: hasNext, section: section, data: results};
+    },
+    getNATSection: function() {
+        return {
+            period: this._pledgePeriod,
+            startHeight: this._pledgeStartHeight
+        };
     },
     // finish the pledge
     // if candidate pledge value > 100000 NAS, pledge success
@@ -399,6 +478,7 @@ CouncilPledge.prototype = {
                     } else {
                         throw new Error("liquidation failed with addr:"+addr +",candidate:"+candidate);
                     }
+                    data.height = Blockchain.block.height;
                     data.status = STATUS_CANCELED;
                     pledge.set(candidate, data);
                     this._pledges.set(addr, pledge);
