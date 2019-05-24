@@ -13,6 +13,7 @@ function MultiSig() {
         multiSig: addr, // multisig address
         distribute: addr, // distribute.js address
         distributeVoteTaxAddr: addr, // distribute Vote Tax to a particular address
+        natProducers: [addr1, addr2], // allow trigger to get data from a particular producer (it is a list)
         distributeManager: addr, // distribute.js manager(can be empty)
         pledgeProxy: addr, // pledge proxy address
         pledgeProxyManager: addr, //pledge proxy fund manager(can be empty)

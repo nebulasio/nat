@@ -202,6 +202,7 @@ def setconfig(neb, from_account, multisig_addr):
         "natConfig": {
             "multiSig": config["multiSig"],
             "distribute": config["distribute"],
+            "natProducers": config.get("natProducer", []),
             "distributeVoteTaxAddr": settings.distributeVoteTaxAddr,
             "distributeManager": settings.distributeManager,
             "pledgeProxy": config["pledgeProxy"],

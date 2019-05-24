@@ -5,3 +5,4 @@ pledgeProxy=n1hDThV54x2UJnATS1HDj2ipkC5tvNUWW5C
 pledge=n1e2MGELNE5qDqzUgYtkRvFZD4GTbnvtr7D
 vote=n1fM9PXeCeK65pMhy8idLQnJ2YjkquW3MDW
 nrData=n1gzhh4UKpGzFoHWMEht5tXJRe57Jd6ScCd
+natProducer=[]
