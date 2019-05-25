@@ -294,6 +294,10 @@ CouncilPledge.prototype = {
     cancelPledge: function(candidate) {
         this._verifyStatus();
 
+        if (Blockchain.transaction.value.gt(0)) {
+            throw new Error("Cancel pledge value can not bigger than 0.");
+        }
+
         let list = this._verifyCandidate(candidate);
 
         let addr = Blockchain.transaction.from;
