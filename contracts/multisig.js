@@ -104,12 +104,12 @@ MultiSig.prototype = {
     },
 
     _verifyConfigItem: function (name, value) {
-        if ("vote" !== name) {
-            this._verifyAddress(value);
-        } else {
+        if (value instanceof Array) {
             for (let j = 0; j < value.length; ++j) {
                 this._verifyAddress(value[j]);
             }
+        } else {
+            this._verifyAddress(value);
         }
     },
 

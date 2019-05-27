@@ -12,11 +12,12 @@
     <script type="text/javascript" src="../contracts/pledge.js"></script>
     <script type="text/javascript" src="../contracts/nr_data.js"></script>
     <script type="text/javascript" src="../contracts/vote.js"></script>
+    <script type="text/javascript" src="../contracts/council_vote.js"></script>
+    <script type="text/javascript" src="../contracts/council_pledge.js"></script>
 
     <script type="text/javascript" src="contract/old_pledge.js"></script>
     <script type="text/javascript" src="contract/vote_data.js"></script>
     <script type="text/javascript" src="contract/receive_test.js"></script>
-    <script type="text/javascript" src="contract/council_vote.js"></script>
 
     <script type="text/javascript">
         localStorage.clear();
@@ -36,6 +37,8 @@
         let voteDataAddress = "n1QEEJaV3aix7qa4xsJo5JEV3Dph6oiHNMe";
         let councilVoteDataAddress = "n1i4nWK24JzrrgTFDiShzVCkmddnz2mMCG1";
         let voteManager = "n1ZBCsMrSxuLfWoWg91JctDWZmKEo8se3tK";
+
+        let councilPledgeAddress = "n1tMNV3U1XEaBM58FziGZNC5webMek7nssA";
 
         let multiSignAddress = "n1Z6MhSZa321SnpiKfUWiybQSG3GCmRHunv";
         let customerAddress = "n1YPMjEDMrZhroKmB1xDBhadygwWHC4zTwm";
@@ -70,6 +73,7 @@
                 nrData: nrDataAddress,
                 nrDataManager: nrDataManager,
                 natNRC20: natAddress,
+                natProducers: [councilPledgeAddress],
                 vote: [voteAddress]
             },
             switches: {
@@ -127,6 +131,8 @@
             BlockchainTool.registerContract(councilVoteDataAddress, CouncilVote);
             BlockchainTool.registerContract(prevPledgeAddress, OldPledge);
             BlockchainTool.registerContract(receiveAddress, ReceiveTest);
+
+            BlockchainTool.registerContract(councilPledgeAddress, CouncilPledge);
         }
 
         function initContractTest() {
@@ -156,6 +162,8 @@
             BlockchainTool.callContract(customerAddress, voteAddress, 0, "init", [multiSignAddress, [voteManager]]);
 
             BlockchainTool.callContract(customerAddress, councilVoteDataAddress, 0, "init", [customerAddress, natAddress]);
+
+            BlockchainTool.callContract(customerAddress, councilPledgeAddress, 0, "init", [customerAddress, 0, 1]);
         }
 
 
@@ -393,6 +401,8 @@
             } catch (e) {
                 log(0, "error: " + e);
             }
+            let data = BlockchainTool.callContract(distributeManageAddress, distributeAddress, 0, "getPledgeSection", []);
+            console.log("nr section:", data);
         }
 
         function triggerNR() {
@@ -410,9 +420,27 @@
             console.log("nr section:", data);
         }
 
+        function triggerNATProduce() {
+            try {
+                let r = BlockchainTool.callContract(distributeManageAddress, distributeAddress, 0, "triggerNAT", [councilPledgeAddress]);
+                console.log(JSON.stringify(r));
+                if (r.needTrigger) {
+                    triggerNATProduce();
+                }
+            } catch (e) {
+                log(0, "error: " + e);
+            }
+
+            let data = BlockchainTool.callContract(distributeManageAddress, distributeAddress, 0, "getNATPage", [councilPledgeAddress]);
+            console.log("nat section:", data);
+        }
+
         function distributeTest() {
             console.log("-------------------------------------------\nDistribute Test");
 
+            let data = BlockchainTool.callContract(distributeManageAddress, distributeAddress, 0, "getConfig", []);
+            console.log("pledge config:", data);
+
             console.log("*** Trigger Pledge");
             triggerPledge();
             console.log("*** Trigger Pledge");
@@ -429,7 +457,10 @@
             console.log("*** Trigger NR");
             triggerNR();
 
-            let data = BlockchainTool.callContract(distributeManageAddress, distributeAddress, 0, "getPledgeSection", []);
+            console.log("*** Trigger NAT produce");
+            triggerNATProduce();
+
+            data = BlockchainTool.callContract(distributeManageAddress, distributeAddress, 0, "getPledgeSection", []);
             console.log("pledge section:", data);
         }
 

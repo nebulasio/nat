@@ -332,14 +332,16 @@ Distribute.prototype = {
         }
     },
     _produceNat: function(data) {
-        let nat = new Blockchain.Contract(this._config.natNRC20);
-        let natData = new Array();
-        for (let key in data) {
-            let item = data[key];
-            let value = new BigNumber(10).pow(18).times(item.nat).floor();
-            natData.push({addr: item.addr, value: value.toString(10)});
+        if (data !== null && data instanceof Array && data.length > 0) {
+            let nat = new Blockchain.Contract(this._config.natNRC20);
+            let natData = new Array();
+            for (let key in data) {
+                let item = data[key];
+                let value = new BigNumber(10).pow(18).times(item.nat).floor();
+                natData.push({addr: item.addr, value: value.toString(10)});
+            }
+            nat.call("produce", natData);
         }
-        nat.call("produce", natData);
     },
     _balanceOf: function(address) {
         let nat = new Blockchain.Contract(this._config.natNRC20);
@@ -372,9 +374,7 @@ Distribute.prototype = {
         this._verifyStatus();
 
         let pledge = this._pledge.calculate();
-        if (pledge.data !== null && pledge.data.length > 0) {
-            this._produceNat(pledge.data);
-        }
+        this._produceNat(pledge.data);
         return {needTrigger: pledge.hasNext, section: pledge.section};
     },
     getPledgeSection: function() {
@@ -393,9 +393,7 @@ Distribute.prototype = {
         this._verifyStatus();
 
         let nr = this._nr.calculate();
-        if (nr.data !== null && nr.data.length > 0) {
-            this._produceNat(nr.data);
-        }
+        this._produceNat(nr.data);
         return {needTrigger: nr.hasNext, section: nr.section};
     },
     getNRSection: function() {
@@ -413,10 +411,7 @@ Distribute.prototype = {
         this._verifyStatus();
         this._verifyNATProducer(datasource);
 
-        let producePage = this._natProducePages.get(datasource);
-        if (producePage === null) {
-            producePage = 0;
-        }
+        let producePage = this._getNATPage(datasource);
         let producer = new Blockchain.Contract(datasource);
         let result = producer.call("getNATData", producePage, PAGE_SIZE);
         this._produceNat(result.data);
@@ -425,6 +420,19 @@ Distribute.prototype = {
         this._natProducePages.set(datasource, producePage);
 
         return {datasource: datasource, needTrigger: result.hasNext, section: result.section};
+    },
+    _getNATPage: function(datasource) {
+        let producePage = this._natProducePages.get(datasource);
+        if (producePage === null) {
+            producePage = 0;
+        }
+        return producePage;
+    },
+    getNATPage: function(datasource) {
+        this._verifyManager();
+        this._verifyNATProducer(datasource);
+
+        return this._getNATPage(datasource);
     },
     // trigger vote reward
     vote: function(address, value) {
