@@ -10,8 +10,8 @@ from nebpysdk.src.core.Address import Address
 from nebpysdk.src.core.Transaction import Transaction
 from nebpysdk.src.core.TransactionBinaryPayload import TransactionBinaryPayload
 from nebpysdk.src.core.TransactionCallPayload import TransactionCallPayload
-from nebpysdk.src.core.TransactionDeployPayload import TransactionDeployPayload 
-from nebpysdk.src.client.Neb import Neb 
+from nebpysdk.src.core.TransactionDeployPayload import TransactionDeployPayload
+from nebpysdk.src.client.Neb import Neb
 
 import settings
 
@@ -25,12 +25,12 @@ def get_account(keystore_filepath):
     {'result': {'balance': '100997303344999906', 'nonce': '88', 'type': 87, 'height': '1757816', 'pending': '7'}}
     '''
     try:
-        keystore = None 
+        keystore = None
         with open(keystore_filepath, 'r') as fp:
             keystore = fp.read()
 
         if keystore is None:
-            print ("Invalid keystore file") 
+            print ("Invalid keystore file")
 
         password = getpass.getpass('Password(passphrase):')
         from_account = Account.from_key(keystore, bytes(password.encode()))
@@ -45,11 +45,11 @@ def get_account_addr(from_account):
     return from_addr.string()
 
 
-def get_nonce(neb, from_account): 
+def get_nonce(neb, from_account):
     from_addr = from_account.get_address_obj()
     resp = neb.api.getAccountState(from_addr.string()).text
     resp_json = json.loads(resp)
-    nonce = int(resp_json["result"]["nonce"]) 
+    nonce = int(resp_json["result"]["nonce"])
     return nonce
 
 def check_balance(neb, target_addr):
@@ -100,10 +100,12 @@ def send_token(neb, bank_account, account_file):
         if count % 300 == 0 :
             time.sleep(60)
 
+
 def send_nas(neb, bank_account, target_addr):
     nonce = get_nonce(neb, bank_account) + 1
     make_transaction(neb, bank_account, target_addr, nonce)
-        
+
+
 def make_transaction(neb, from_account, to_addr, nonce):
     to_address = to_addr = Address.parse_from_string(to_addr)
     payload_type = Transaction.PayloadType("binary")
@@ -140,20 +142,20 @@ def get_accounts(filepath):
     return accounts
 
 def old_pledge(neb, old_pledge_addr):
-    accounts = get_accounts("old_pledge.txt") 
+    accounts = get_accounts("old_pledge.txt")
     func = "pledge"
     arg = "[]"
     amount = 1000000000000000000 # 1 NAS
     for from_account in accounts:
-        make_contract_trx(neb, from_account, old_pledge_addr, amount, func, arg) 
+        make_contract_trx(neb, from_account, old_pledge_addr, amount, func, arg)
 
 def pledge(neb, pledge_proxy_addr):
-    accounts = get_accounts("pledge_list.txt") 
+    accounts = get_accounts("pledge_list.txt")
     func = "pledge"
     arg = "[]"
     amount = 6000000000000000000 # 6 NAS
     for from_account in accounts:
-        make_contract_trx(neb, from_account, pledge_proxy_addr, amount, func, arg) 
+        make_contract_trx(neb, from_account, pledge_proxy_addr, amount, func, arg)
 
 def make_contract_trx_vote(neb, from_account, contract_addr, amount, func, arg):
     to_addr = Address.parse_from_string(contract_addr)
@@ -169,16 +171,16 @@ def make_contract_trx_vote(neb, from_account, contract_addr, amount, func, arg):
 
 
 def vote(neb, vote_addr):
-    accounts = get_accounts("pledge_list.txt") 
+    accounts = get_accounts("pledge_list.txt")
     func = "vote"
     dataSource = "n1i9SMezxDPe5ocBQU73tE61uDySMMRFp4N"
     arg = json.dumps([dataSource, "test_hash", "yes", 5000000000000000000])
     amount = 0
     for from_account in accounts:
-        make_contract_trx_vote(neb, from_account, vote_addr, amount, func, arg) 
+        make_contract_trx_vote(neb, from_account, vote_addr, amount, func, arg)
 
 '''
-    python testsuite.py createaccount 1200 
+    python testsuite.py createaccount 1200
     python testsuite.py sendtoken
 '''
 if __name__ == "__main__":

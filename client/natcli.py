@@ -224,6 +224,7 @@ def setconfig(neb, from_account, multisig_addr):
             "nr_data": config["nrData"],
             "nat_nrc20": config["natNRC20"],
             "vote": [config["vote"]],
+            "coucil_pledge": config["coucil_pledge"],
         }
     }
 

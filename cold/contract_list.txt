@@ -5,3 +5,4 @@ pledgeProxy=
 pledge=
 vote=
 nrData=
+coucil_pledge=

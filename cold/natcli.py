@@ -10,8 +10,8 @@ from nebpysdk.src.core.Address import Address
 from nebpysdk.src.core.Transaction import Transaction
 from nebpysdk.src.core.TransactionBinaryPayload import TransactionBinaryPayload
 from nebpysdk.src.core.TransactionCallPayload import TransactionCallPayload
-from nebpysdk.src.core.TransactionDeployPayload import TransactionDeployPayload 
-from nebpysdk.src.client.Neb import Neb 
+from nebpysdk.src.core.TransactionDeployPayload import TransactionDeployPayload
+from nebpysdk.src.client.Neb import Neb
 
 import settings
 
@@ -25,12 +25,12 @@ def get_account(keystore_filepath):
     {'result': {'balance': '100997303344999906', 'nonce': '88', 'type': 87, 'height': '1757816', 'pending': '7'}}
     '''
     try:
-        keystore = None 
+        keystore = None
         with open(keystore_filepath, 'r') as fp:
             keystore = fp.read()
 
         if keystore is None:
-            print ("Invalid keystore file") 
+            print ("Invalid keystore file")
 
         password = getpass.getpass('Password(passphrase):')
         from_account = Account.from_key(keystore, bytes(password.encode()))
@@ -45,11 +45,11 @@ def get_account_addr(from_account):
     return from_addr.string()
 
 
-def get_nonce(neb, from_account): 
+def get_nonce(neb, from_account):
     from_addr = from_account.get_address_obj()
     resp = neb.api.getAccountState(from_addr.string()).text
     resp_json = json.loads(resp)
-    nonce = int(resp_json["result"]["nonce"]) 
+    nonce = int(resp_json["result"]["nonce"])
     return nonce
 
 def wait_new_nonce(neb, from_account, nonce):
@@ -198,7 +198,7 @@ def setconfig(neb, from_account, multisig_addr, nonce):
             "nrDataManager": settings.nrDataManager,
             "natNRC20": config["natNRC20"],
             "vote": [config["vote"]],
-        },  
+        },
         "switches": {
             "allowPledge": True,
             "allowUploadNRScore": True
@@ -210,6 +210,7 @@ def setconfig(neb, from_account, multisig_addr, nonce):
             "nr_data": config["nrData"],
             "nat_nrc20": config["natNRC20"],
             "vote": [config["vote"]],
+            "coucil_pledge": config["coucil_pledge"],
         }
     }
 

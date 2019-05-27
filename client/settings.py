@@ -14,6 +14,7 @@ PLEDGE_JS = "../contracts/pledge.js"
 NR_DATA_JS = "../contracts/nr_data.js"
 NAT_NRC20_JS = "../contracts/nat.js"
 VOTE_JS = "../contracts/vote.js"
+#COUNCIL_PLEDGE = "council_pledge.js"
 
 ## Smart Deploy args 
 ### nat.js
