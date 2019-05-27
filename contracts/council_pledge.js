@@ -230,7 +230,7 @@ CouncilPledge.prototype = {
     },
     _verifyDistributeManager: function () {
         if (this._config.distributeManager !== Blockchain.transaction.from) {
-            throw new Error("Distribute Manager Permission Denied!");
+            throw new Error("Manager Permission Denied!");
         }
     },
     _verifyStatus: function() {

@@ -24,6 +24,8 @@
 
         let natAddress = "n1zUNqeBPvsyrw5zxp9mKcDdLTjuaEL7s39";
 
+        let adminAddress = "n1GecNYRujrJXpVFRRLkD6vZmmi7wZXvG2t";
+
         let pledgeAddress = "n1F5VUpUfUbnVksQWcQcAvbY9K9dbakAvpN";
         let prevPledgeAddress = "n1h6LuEhL6PJGnM2N8UAhkT3TGHfDmmxvsJ";
         let proxyAddress = "n1d6YyHs2eL7pE3RKFbxCWcd2ExYx1MAXgF";
@@ -86,7 +88,8 @@
                 pledge: pledgeAddress, // pledge.js
                 nr_data: nrDataAddress, // nr_data.js
                 nat_nrc20: natAddress, // nat_nrc20.js
-                vote: [voteAddress]
+                vote: [voteAddress],
+                coucil_pledge: councilPledgeAddress
             }
         };
 
@@ -161,9 +164,9 @@
             // Vote
             BlockchainTool.callContract(customerAddress, voteAddress, 0, "init", [multiSignAddress, [voteManager]]);
 
-            BlockchainTool.callContract(customerAddress, councilVoteDataAddress, 0, "init", [customerAddress, natAddress]);
+            BlockchainTool.callContract(customerAddress, councilVoteDataAddress, 0, "init", [adminAddress, distributeManageAddress, natAddress, voteAddress]);
 
-            BlockchainTool.callContract(customerAddress, councilPledgeAddress, 0, "init", [customerAddress, 0, 1]);
+            BlockchainTool.callContract(customerAddress, councilPledgeAddress, 0, "init", [adminAddress, multiSignAddress, 0, 1]);
         }
 
 
@@ -591,8 +594,8 @@
                 ]
             }
             let key = "council_vote1";
-            BlockchainTool.callContract(customerAddress, councilVoteDataAddress, 0, "updateActivity", [key, act]);
-            BlockchainTool.callContract(customerAddress, councilVoteDataAddress, 0, "startActivity", [key]);
+            BlockchainTool.callContract(distributeManageAddress, councilVoteDataAddress, 0, "updateActivity", [key, act]);
+            BlockchainTool.callContract(distributeManageAddress, councilVoteDataAddress, 0, "startActivity", [key]);
 
             let act2 = {
                 content: "test council vote2",
@@ -604,8 +607,8 @@
                 ]
             }
             let key2 = "council_vote2";
-            BlockchainTool.callContract(customerAddress, councilVoteDataAddress, 0, "updateActivity", [key2, act2]);
-            BlockchainTool.callContract(customerAddress, councilVoteDataAddress, 0, "startActivity", [key2]);
+            BlockchainTool.callContract(distributeManageAddress, councilVoteDataAddress, 0, "updateActivity", [key2, act2]);
+            BlockchainTool.callContract(distributeManageAddress, councilVoteDataAddress, 0, "startActivity", [key2]);
 
             vote(councilVoteDataAddress, key, "vote1", 1000000000000);
             vote(councilVoteDataAddress, key2, "vote2", 1000000000000000);

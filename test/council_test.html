@@ -88,7 +88,8 @@
                 pledge: pledgeAddress, // pledge.js
                 nr_data: nrDataAddress, // nr_data.js
                 nat_nrc20: natAddress, // nat_nrc20.js
-                vote: [voteAddress]
+                vote: [voteAddress],
+                coucil_pledge: councilPledgeAddress
             }
         };
 
@@ -459,7 +460,7 @@
             try {
                 BlockchainTool.callContract(customerAddress, councilPledgeAddress, 0, "addCandidates", [candidates]);
             } catch (e) {
-                if (e.message != "Permission Denied!") {
+                if (e.message != "Manager Permission Denied!") {
                     throw e;
                 }
             }
@@ -524,7 +525,7 @@
             try {
                 BlockchainTool.callContract(customerAddress, councilPledgeAddress, 0, "liquidation", [candidates]);
             } catch (e) {
-                if (e.message != "Permission Denied!") {
+                if (e.message != "Manager Permission Denied!") {
                     throw e;
                 }
             }
