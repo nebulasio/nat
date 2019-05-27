@@ -73,6 +73,7 @@
                 nrData: nrDataAddress,
                 nrDataManager: nrDataManager,
                 natNRC20: natAddress,
+                natProducers: [councilPledgeAddress],
                 vote: [voteAddress]
             },
             switches: {
@@ -163,7 +164,7 @@
             BlockchainTool.callContract(customerAddress, councilVoteDataAddress, 0, "init", [multiSignAddress, natAddress, voteAddress]);
 
             // council pledge
-            BlockchainTool.callContract(customerAddress, councilPledgeAddress, 0, "init", [multiSignAddress, 0, 1]);
+            BlockchainTool.callContract(customerAddress, councilPledgeAddress, 0, "init", [multiSignAddress, distributeAddress, 0, 1]);
         }
 
 
@@ -543,7 +544,7 @@
 
             // 12. getNATData height not reach
             try {
-                BlockchainTool.callContract(multiSignAddress, councilPledgeAddress, 0, "getNATData", [0, 200]);
+                BlockchainTool.callContract(distributeAddress, councilPledgeAddress, 0, "getNATData", [0, 200]);
             } catch (e) {
                 if (e.message != "Pledge period exceeds the current height.") {
                     throw e;
@@ -552,12 +553,12 @@
 
             // 13. getNATData
             BlockchainTool.blockHeight = 40321;
-            data = BlockchainTool.callContract(multiSignAddress, councilPledgeAddress, 0, "getNATData", [0, 1]);
+            data = BlockchainTool.callContract(distributeAddress, councilPledgeAddress, 0, "getNATData", [0, 1]);
             console.log("council nat trigger:", data);
-            data = BlockchainTool.callContract(multiSignAddress, councilPledgeAddress, 0, "getNATData", [1, 1]);
+            data = BlockchainTool.callContract(distributeAddress, councilPledgeAddress, 0, "getNATData", [1, 1]);
             console.log("council nat trigger:", data);
             try {
-                BlockchainTool.callContract(multiSignAddress, councilPledgeAddress, 0, "getNATData", [0, 200]);
+                BlockchainTool.callContract(distributeAddress, councilPledgeAddress, 0, "getNATData", [0, 200]);
             } catch (e) {
                 if (e.message != "Pledge period exceeds the current height.") {
                     throw e;
@@ -580,7 +581,7 @@
 
             nrDataTest();
 
-            BlockchainTool.blockHeight = 1;
+            BlockchainTool.blockHeight = 201;
 
             councilVoteTest();
 

@@ -322,12 +322,20 @@ CouncilVote.prototype = {
         this._verifyAddress(addr);
 
         let balance = Blockchain.getAccountState(Blockchain.transaction.to).balance;
-        if (new BigNumber(balance).gt(0)) {
+        balance = new BigNumber(balance);
+        if (balance.gt(0)) {
             let result = Blockchain.transfer(addr, balance);
             this._withdrawEvent(result, Blockchain.transaction.to, addr, balance.toString(10));
             if (!result) {
                 throw new Error("Withdraw failed.");
             }
+        }
+
+        let natBalance = this._balanceOf(Blockchain.transaction.to);
+        natBalance = new BigNumber(natBalance);
+        if (natBalance.gt(0)) {
+            let nat = new Blockchain.Contract(this._natContract);
+            nat.call("transfer", addr, natBalance.toString(10));
         }
     },
 

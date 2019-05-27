@@ -180,7 +180,7 @@ function CouncilPledge() {
     });
 
     LocalContractStorage.defineProperties(this, {
-        _manager: null,
+        _config: null,
         _state: null,
         _pledgePeriod: null,
         _pledgeStartHeight: null
@@ -188,8 +188,12 @@ function CouncilPledge() {
 };
 
 CouncilPledge.prototype = {
-    init: function(manager, period, height) {
-        this._manager = manager;
+    init: function(multiSig, distribute, period, height) {
+        let config = {
+            multiSig: multiSig,
+            distribute: distribute
+        }
+        this._config = config;
         this._state = STATE_PLEDGE_WORK;
         this._pledgePeriod = period;
         this._pledgeStartHeight = height;
@@ -197,17 +201,22 @@ CouncilPledge.prototype = {
     name: function() {
         return this._contractName;
     },
-    manager: function() {
-        return this._manager;
+    getConfig: function() {
+        return this._config;
     },
-    setManager: function(manager) {
+    setConfig: function(config) {
         this._verifyPermission();
 
-        this._manager = manager;
+        this._config = config;
     },
     _verifyPermission: function () {
-        if (this._manager !== Blockchain.transaction.from) {
+        if (this._config.multiSig !== Blockchain.transaction.from) {
             throw new Error("Permission Denied!");
+        }
+    },
+    _verifyDistribute: function () {
+        if (this._config.distribute !== Blockchain.transaction.from) {
+            throw new Error("Distribute Permission Denied!");
         }
     },
     _verifyStatus: function() {
@@ -227,10 +236,10 @@ CouncilPledge.prototype = {
         }
         return data;
     },
-    // updateStatus: function(state) {
-    //     this._verifyPermission();
-    //     this._state = state;
-    // },
+    updateStatus: function(state) {
+        this._verifyPermission();
+        this._state = state;
+    },
     addCandidates: function(list) {
         this._verifyPermission();
 
@@ -375,6 +384,8 @@ CouncilPledge.prototype = {
         }
     },
     getNATData: function(page, pageSize) {
+        this._verifyDistribute();
+
         if (this._pledgeStartHeight + PLEDGE_HEIGHT_INTERVAL > Blockchain.block.height) {
             throw new Error("Pledge period exceeds the current height.");
         }
