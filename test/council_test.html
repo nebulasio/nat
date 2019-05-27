@@ -24,6 +24,8 @@
 
         let natAddress = "n1zUNqeBPvsyrw5zxp9mKcDdLTjuaEL7s39";
 
+        let adminAddress = "n1GecNYRujrJXpVFRRLkD6vZmmi7wZXvG2t";
+
         let pledgeAddress = "n1F5VUpUfUbnVksQWcQcAvbY9K9dbakAvpN";
         let prevPledgeAddress = "n1h6LuEhL6PJGnM2N8UAhkT3TGHfDmmxvsJ";
         let proxyAddress = "n1d6YyHs2eL7pE3RKFbxCWcd2ExYx1MAXgF";
@@ -161,10 +163,10 @@
             // Vote
             BlockchainTool.callContract(customerAddress, voteAddress, 0, "init", [multiSignAddress, [voteManager]]);
 
-            BlockchainTool.callContract(customerAddress, councilVoteDataAddress, 0, "init", [multiSignAddress, natAddress, voteAddress]);
+            BlockchainTool.callContract(customerAddress, councilVoteDataAddress, 0, "init", [adminAddress, distributeManageAddress, natAddress, voteAddress]);
 
             // council pledge
-            BlockchainTool.callContract(customerAddress, councilPledgeAddress, 0, "init", [multiSignAddress, distributeAddress, 0, 1]);
+            BlockchainTool.callContract(customerAddress, councilPledgeAddress, 0, "init", [adminAddress, multiSignAddress, 0, 1]);
         }
 
 
@@ -355,8 +357,8 @@
                 ]
             }
             let key1 = "council_vote1";
-            BlockchainTool.callContract(multiSignAddress, councilVoteDataAddress, 0, "updateActivity", [key1, act1]);
-            BlockchainTool.callContract(multiSignAddress, councilVoteDataAddress, 0, "startActivity", [key1]);
+            BlockchainTool.callContract(distributeManageAddress, councilVoteDataAddress, 0, "updateActivity", [key1, act1]);
+            BlockchainTool.callContract(distributeManageAddress, councilVoteDataAddress, 0, "startActivity", [key1]);
             let data = BlockchainTool.callContract(customerAddress, councilVoteDataAddress, 0, "getData", [key1]);
             console.log("council vote:", data);
 
@@ -369,8 +371,8 @@
                 ]
             }
             let key2 = "council_vote2";
-            BlockchainTool.callContract(multiSignAddress, councilVoteDataAddress, 0, "updateActivity", [key2, act2]);
-            BlockchainTool.callContract(multiSignAddress, councilVoteDataAddress, 0, "startActivity", [key2]);
+            BlockchainTool.callContract(distributeManageAddress, councilVoteDataAddress, 0, "updateActivity", [key2, act2]);
+            BlockchainTool.callContract(distributeManageAddress, councilVoteDataAddress, 0, "startActivity", [key2]);
             data = BlockchainTool.callContract(customerAddress, councilVoteDataAddress, 0, "getData", [key2]);
             console.log("council vote:", data);
 
@@ -382,10 +384,10 @@
 
             // add option
             let options = [{addr: customerAddress, option: "vote5"}, {addr: customerAddress, option: "vote6"}];
-            BlockchainTool.callContract(multiSignAddress, councilVoteDataAddress, 0, "addOptions", [key1, options]);
+            BlockchainTool.callContract(distributeManageAddress, councilVoteDataAddress, 0, "addOptions", [key1, options]);
 
             let options2 = [{addr: customerAddress, option: "vote5"}, {option: "vote6"}];
-            BlockchainTool.callContract(multiSignAddress, councilVoteDataAddress, 0, "addOptions", [key2, options2]);
+            BlockchainTool.callContract(distributeManageAddress, councilVoteDataAddress, 0, "addOptions", [key2, options2]);
             try {
                 BlockchainTool.callContract(customerAddress, councilVoteDataAddress, 0, "addOptions", [key1, options]);
             } catch (e) {
@@ -394,7 +396,7 @@
                 }
             }
             try {
-                BlockchainTool.callContract(multiSignAddress, councilVoteDataAddress, 0, "addOptions", [key1, options]);
+                BlockchainTool.callContract(distributeManageAddress, councilVoteDataAddress, 0, "addOptions", [key1, options]);
             } catch (e) {
                 if (e.message != "Option has already added:vote5") {
                     throw e;
@@ -414,7 +416,7 @@
 
             // 4. reward
             BlockchainTool.callContract(distributeAddress, natAddress, 0, "produce", [[{addr: councilVoteDataAddress, value:"1000000000000"}]]);
-            BlockchainTool.callContract(multiSignAddress, councilVoteDataAddress, 0, "reward", [key1, 10000]);
+            BlockchainTool.callContract(distributeManageAddress, councilVoteDataAddress, 0, "reward", [key1, 10000]);
             
             // 5. reward Permission
             try {
@@ -433,14 +435,14 @@
             try {
                 BlockchainTool.callContract(customerAddress, councilVoteDataAddress, 0, "withdraw", [customerAddress]);
             } catch (e) {
-                if (e.message != "Permission Denied!") {
+                if (e.message != "Admin Permission Denied!") {
                     throw e;
                 }
             }
 
             // 8. withdraw
             BlockchainTool.transfer(null, councilVoteDataAddress, new BigNumber(1000000).mul(unit));
-            BlockchainTool.callContract(multiSignAddress, councilVoteDataAddress, 0, "withdraw", [customerAddress]);
+            BlockchainTool.callContract(adminAddress, councilVoteDataAddress, 0, "withdraw", [customerAddress]);
 
             console.log("council vote test end----------------------------------");
         }
@@ -451,7 +453,7 @@
             let candidate1 = "hitters-xu";
             let candidate2 = "aero-wang";
             let candidates = [candidate1, candidate2];
-            BlockchainTool.callContract(multiSignAddress, councilPledgeAddress, 0, "addCandidates", [candidates]);
+            BlockchainTool.callContract(distributeManageAddress, councilPledgeAddress, 0, "addCandidates", [candidates]);
 
             // 2. addCandidates permission denied
             try {
@@ -464,7 +466,7 @@
 
             // 3. addCandidates again
             try {
-                BlockchainTool.callContract(multiSignAddress, councilPledgeAddress, 0, "addCandidates", [candidates]);
+                BlockchainTool.callContract(distributeManageAddress, councilPledgeAddress, 0, "addCandidates", [candidates]);
             } catch (e) {
                 if (e.message != "Candidate hash been added.") {
                     throw e;
@@ -520,7 +522,7 @@
 
             // 10. liquidation permission
             try {
-                BlockchainTool.callContract(customerAddress, councilPledgeAddress, 0, "addCandidates", [candidates]);
+                BlockchainTool.callContract(customerAddress, councilPledgeAddress, 0, "liquidation", [candidates]);
             } catch (e) {
                 if (e.message != "Permission Denied!") {
                     throw e;
@@ -528,11 +530,11 @@
             }
 
             // 11. liquidation
-            BlockchainTool.callContract(multiSignAddress, councilPledgeAddress, 0, "liquidation", []);
+            BlockchainTool.callContract(distributeManageAddress, councilPledgeAddress, 0, "liquidation", []);
 
-            // 11. cancel pledge again
+            // 11. liquidation again
             try {
-                BlockchainTool.callContract(multiSignAddress, councilPledgeAddress, 0, "liquidation", []);
+                BlockchainTool.callContract(distributeManageAddress, councilPledgeAddress, 0, "liquidation", []);
             } catch (e) {
                 if (e.message != "Council pledge not work.") {
                     throw e;

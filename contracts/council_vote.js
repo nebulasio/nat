@@ -115,6 +115,7 @@ function CouncilVote() {
         }
     });
     LocalContractStorage.defineProperties(this, {
+        _admin: null,
         _manager: null,
         _natContract: null,
         _voteContract: null
@@ -123,13 +124,17 @@ function CouncilVote() {
 
 CouncilVote.prototype = {
 
-    init: function (manager, nat, vote) {
+    init: function (admin, manager, nat, vote) {
+        this._admin = admin;
         this._manager = manager;
         this._natContract = nat;
         this._voteContract = vote;
     },
     name: function() {
         return this._contractName;
+    },
+    admin: function() {
+        return this._admin;
     },
     manager: function() {
         return this._manager;
@@ -138,6 +143,11 @@ CouncilVote.prototype = {
         this._verifyPermission();
 
         this._manager = manager;
+    },
+    _verifyAdmin: function () {
+        if (this._admin !== Blockchain.transaction.from) {
+            throw new Error("Admin Permission Denied!");
+        }
     },
     _verifyPermission: function () {
         if (this._manager !== Blockchain.transaction.from) {
@@ -318,7 +328,7 @@ CouncilVote.prototype = {
         });
     },
     withdraw: function(addr) {
-        this._verifyPermission();
+        this._verifyAdmin();
         this._verifyAddress(addr);
 
         let balance = Blockchain.getAccountState(Blockchain.transaction.to).balance;

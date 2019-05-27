@@ -180,6 +180,7 @@ function CouncilPledge() {
     });
 
     LocalContractStorage.defineProperties(this, {
+        _admin: null,
         _config: null,
         _state: null,
         _pledgePeriod: null,
@@ -188,10 +189,10 @@ function CouncilPledge() {
 };
 
 CouncilPledge.prototype = {
-    init: function(multiSig, distribute, period, height) {
+    init: function(admin,multiSig, period, height) {
+        this._admin = admin;
         let config = {
-            multiSig: multiSig,
-            distribute: distribute
+            multiSig: multiSig
         }
         this._config = config;
         this._state = STATE_PLEDGE_WORK;
@@ -201,6 +202,9 @@ CouncilPledge.prototype = {
     name: function() {
         return this._contractName;
     },
+    admin: function() {
+        return this._admin;
+    },
     getConfig: function() {
         return this._config;
     },
@@ -208,6 +212,11 @@ CouncilPledge.prototype = {
         this._verifyPermission();
 
         this._config = config;
+    },
+    _verifyAdmin: function () {
+        if (this._admin !== Blockchain.transaction.from) {
+            throw new Error("Admin Permission Denied!");
+        }
     },
     _verifyPermission: function () {
         if (this._config.multiSig !== Blockchain.transaction.from) {
@@ -217,6 +226,11 @@ CouncilPledge.prototype = {
     _verifyDistribute: function () {
         if (this._config.distribute !== Blockchain.transaction.from) {
             throw new Error("Distribute Permission Denied!");
+        }
+    },
+    _verifyDistributeManager: function () {
+        if (this._config.distributeManager !== Blockchain.transaction.from) {
+            throw new Error("Distribute Manager Permission Denied!");
         }
     },
     _verifyStatus: function() {
@@ -237,11 +251,11 @@ CouncilPledge.prototype = {
         return data;
     },
     updateStatus: function(state) {
-        this._verifyPermission();
+        this._verifyDistributeManager();
         this._state = state;
     },
     addCandidates: function(list) {
-        this._verifyPermission();
+        this._verifyDistributeManager();
 
         if (list instanceof Array) {
             for (let index = 0; index < list.length; index++) {
@@ -445,7 +459,7 @@ CouncilPledge.prototype = {
     // if candidate pledge value > 100000 NAS, pledge success
     // if candidate pledge value < 100000 NAS, withdraw to users.
     liquidation: function() {
-        this._verifyPermission();
+        this._verifyDistributeManager();
         this._verifyStatus();
 
         // liquidation limit is 100000 NAS
@@ -516,7 +530,7 @@ CouncilPledge.prototype = {
         });
     },
     withdraw: function(addr) {
-        this._verifyPermission();
+        this._verifyAdmin();
         this._verifyAddress(addr);
 
         let balance = Blockchain.getAccountState(Blockchain.transaction.to).balance;
