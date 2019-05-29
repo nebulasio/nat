@@ -153,7 +153,7 @@
                 period: 0,
                 page: 0,
                 height: 0
-            }, {period: 0, page: 0, height: 0}, multiSignAddress]);
+            }, {period: 0, page: 0, height: 0}, multiSignAddress, adminAddress, [councilPledgeAddress]]);
 
             // NAT
             BlockchainTool.callContract(customerAddress, natAddress, 0, "init", ["NAT", "NAT", 18, multiSignAddress]);
@@ -166,7 +166,7 @@
 
             BlockchainTool.callContract(customerAddress, councilVoteDataAddress, 0, "init", [adminAddress, distributeManageAddress, natAddress, voteAddress]);
 
-            BlockchainTool.callContract(customerAddress, councilPledgeAddress, 0, "init", [adminAddress, multiSignAddress, 0, 1]);
+            BlockchainTool.callContract(customerAddress, councilPledgeAddress, 0, "init", [adminAddress, multiSigConfig.natConfig, 0, 1]);
         }
 
 
@@ -444,6 +444,8 @@
             let data = BlockchainTool.callContract(distributeManageAddress, distributeAddress, 0, "getConfig", []);
             console.log("pledge config:", data);
 
+            BlockchainTool.callContract(adminAddress, distributeAddress, 0, "setProducers", [[councilPledgeAddress]]);
+
             console.log("*** Trigger Pledge");
             triggerPledge();
             console.log("*** Trigger Pledge");
@@ -463,8 +465,13 @@
             console.log("*** Trigger NAT produce");
             triggerNATProduce();
 
+            data = BlockchainTool.callContract(distributeManageAddress, distributeAddress, 0, "getProducers", []);
+            console.log("producers:", data);
+
             data = BlockchainTool.callContract(distributeManageAddress, distributeAddress, 0, "getPledgeSection", []);
             console.log("pledge section:", data);
+
+
         }
 
 

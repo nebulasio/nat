@@ -272,7 +272,9 @@ function Distribute() {
     LocalContractStorage.defineProperties(this, {
         _state: null,
         _config: null,
-        _blacklist: null
+        _blacklist: null,
+        _admin: null,
+        _natProducers: null
     });
 
     LocalContractStorage.defineMapProperties(this, {
@@ -285,7 +287,7 @@ function Distribute() {
 };
 
 Distribute.prototype = {
-    init: function (pledgeSection, nrSection, multiSig) {
+    init: function (pledgeSection, nrSection, multiSig, admin, producers) {
         this._state = STATE_WORK;
         this._pledge._pledge_period = pledgeSection.period;
         this._pledge._pledge_page = pledgeSection.page;
@@ -299,6 +301,13 @@ Distribute.prototype = {
         let config = {multiSig: multiSig};
         this._config = config;
         this._blacklist = [];
+        this._admin = admin;
+        this._natProducers = producers;
+    },
+    _verifyAdmin: function () {
+        if (this._admin !== Blockchain.transaction.from) {
+            throw new Error("Admin Permission Denied!");
+        }
     },
     _verifyPermission: function () {
         if (this._config.multiSig !== Blockchain.transaction.from) {
@@ -312,7 +321,7 @@ Distribute.prototype = {
     },
     _verifyNATProducer: function (producer) {
         this._verifyAddress(producer);
-        if (this._config.natProducers.indexOf(producer) < 0) {
+        if (this._natProducers.indexOf(producer) < 0) {
             throw new Error("NAT Producer Permission Denied!");
         }
     },
@@ -358,6 +367,26 @@ Distribute.prototype = {
         this._pledge.update_contract(natConfig.pledge);
         this._vote.update_contract(natConfig.vote, natConfig.distributeVoteTaxAddr);
         this._nr.update_contract(natConfig.nrData);
+    },
+    getAdmin: function() {
+        return this._admin;
+    },
+    setAdmin: function(admin) {
+        this._verifyAdmin();
+
+        this._admin = admin;
+    },
+    getProducers: function() {
+        return this._natProducers;
+    },
+    setProducers: function(producers) {
+        this._verifyAdmin();
+
+        for(let idx in producers) {
+            let addr = producers[idx];
+            this._verifyAddress(addr);
+        }
+        this._natProducers = producers;
     },
     getConfig: function () {
         return this._config;

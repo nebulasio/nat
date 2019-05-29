@@ -189,11 +189,8 @@ function CouncilPledge() {
 };
 
 CouncilPledge.prototype = {
-    init: function(admin,multiSig, period, height) {
+    init: function(admin, config, period, height) {
         this._admin = admin;
-        let config = {
-            multiSig: multiSig
-        }
         this._config = config;
         this._state = STATE_PLEDGE_WORK;
         this._pledgePeriod = period;
@@ -205,13 +202,19 @@ CouncilPledge.prototype = {
     admin: function() {
         return this._admin;
     },
+    setAdmin: function(admin) {
+        this._admin = admin;
+    },
     getConfig: function() {
         return this._config;
     },
     setConfig: function(config) {
-        this._verifyPermission();
-
-        this._config = config;
+        let from = Blockchain.transaction.from;
+        if (from === this._config.multiSig || from === this._admin) {
+            this._config = config;
+        } else {
+            throw new Error("Permission Denied!");
+        }
     },
     _verifyAdmin: function () {
         if (this._admin !== Blockchain.transaction.from) {

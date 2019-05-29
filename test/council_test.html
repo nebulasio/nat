@@ -153,7 +153,7 @@
                 period: 0,
                 page: 0,
                 height: 0
-            }, {period: 0, page: 0, height: 0}, multiSignAddress]);
+            }, {period: 0, page: 0, height: 0}, multiSignAddress, adminAddress, [councilPledgeAddress]]);
 
             // NAT
             BlockchainTool.callContract(customerAddress, natAddress, 0, "init", ["NAT", "NAT", 18, multiSignAddress]);
@@ -167,7 +167,7 @@
             BlockchainTool.callContract(customerAddress, councilVoteDataAddress, 0, "init", [adminAddress, distributeManageAddress, natAddress, voteAddress]);
 
             // council pledge
-            BlockchainTool.callContract(customerAddress, councilPledgeAddress, 0, "init", [adminAddress, multiSignAddress, 0, 1]);
+            BlockchainTool.callContract(customerAddress, councilPledgeAddress, 0, "init", [adminAddress, multiSigConfig.natConfig, 0, 1]);
         }
 
 
