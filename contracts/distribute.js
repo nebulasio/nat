@@ -487,11 +487,11 @@ Distribute.prototype = {
         }
         return nat;
     },
-    // uploadVoteData: function(data) {
-    //     this._verifyManager();
+    uploadVoteData: function(data) {
+        this._verifyManager();
 
-    //     this._vote.upload(data);
-    // },
+        this._vote.upload(data);
+    },
     getVoteData: function(start, size) {
         this._verifyManager();
 
