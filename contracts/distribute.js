@@ -177,6 +177,7 @@ DVote.prototype = {
         if (period > 0) {
             period = period - 1;
         }
+        let y = new BigNumber(0.997).pow(period);
         if (nrData === null || nrData.period !== period) {
             if (nrData === null) {
                 let count = this._vote_addr_count;
@@ -187,9 +188,8 @@ DVote.prototype = {
             let score = context._nr.getNRByAddress(addr);
             if (new BigNumber(score).gt(0)) {
                 // 12.663 * 0.997^i * x
-                let value = new BigNumber(12.663).times(score);
-                let y = new BigNumber(0.997).pow(period);
-                let nrReward = value.times(y);
+                let scoreReward = new BigNumber(12.663).times(score);
+                let nrReward = scoreReward.times(y);
                 nrData = {
                     period: period,
                     reward: nrReward.toString(10)
@@ -215,7 +215,9 @@ DVote.prototype = {
             reward = reward.times(10);
         }
         let  rewardStr = reward.toString(10);
-        value = reward.minus(value);
+        // burning = (1 − 3%) * 0.997^period * value
+        let burning = new BigNumber(value).times(0.97).times(y);
+        value = reward.minus(burning);
 
         data.push({addr: addr, nat: value.toString(10)});
         // vote reward
