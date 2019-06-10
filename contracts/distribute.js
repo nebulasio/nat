@@ -409,8 +409,6 @@ Distribute.prototype = {
         return {needTrigger: pledge.hasNext, section: pledge.section};
     },
     getPledgeSection: function() {
-        this._verifyManager();
-
         let section = {
             period: this._pledge._pledge_period,
             page: this._pledge._pledge_page,
@@ -428,8 +426,6 @@ Distribute.prototype = {
         return {needTrigger: nr.hasNext, section: nr.section};
     },
     getNRSection: function() {
-        this._verifyManager();
-
         let section = {
             period: this._nr._nr_period,
             page: this._nr._nr_page,
