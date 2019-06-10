@@ -456,7 +456,6 @@ Distribute.prototype = {
         return producePage;
     },
     getNATPage: function(datasource) {
-        this._verifyManager();
         this._verifyNATProducer(datasource);
 
         return this._getNATPage(datasource);
