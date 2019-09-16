@@ -29,7 +29,7 @@ class CallTrigger:
         self.height_next = self.height_begin + self.period_height
 
         # time_skip, 300seconds
-        self.time_skip = 30
+        self.time_skip = 120
 
         # times checking the balance，3 times one day
         self.check_times = 3
